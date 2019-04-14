@@ -39,7 +39,7 @@ a configuration section that looks like this:
 
 ::
 
-    [[Provider.PluginKaetzchen]]
+    [[Provider.CBORPluginKaetzchen]]
       Capability = "zec"
       Endpoint = "+zec"
       Disable = false
@@ -79,7 +79,7 @@ Finally, we can build our example C wallet:
 
 ::
 
-   gcc ./examples/wallet.c ./common/bindings/currency_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/katzenpost/server_plugins/currency/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
+   gcc ./examples/wallet.c ./common/bindings/currency_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/katzenpost/currency/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
 
 
 license
