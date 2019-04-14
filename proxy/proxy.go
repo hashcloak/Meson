@@ -25,9 +25,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/btcsuite/btcd/btcjson"
-	"github.com/katzenpost/currency/common"
-	"github.com/katzenpost/currency/config"
+	"github.com/hashcloak/Meson/common"
+	"github.com/hashcloak/Meson/config"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -74,10 +73,11 @@ type Currency struct {
 
 	params map[string]string
 
-	ticker  string
-	rpcUser string
-	rpcPass string
-	rpcUrl  string
+	ticker   string
+	chaindId int
+	rpcUser  string
+	rpcPass  string
+	rpcUrl   string
 }
 
 func (k *Currency) Parameters() (map[string]string, error) {
@@ -88,7 +88,7 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 	k.log.Debugf("Handling request %d", id)
 
 	// Send request to HTTP RPC.
-	req, err := common.RequestFromJson(k.ticker, payload)
+	req, err := common.RequestFromJson(k.ticker, k.chaindId, payload)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.NewResponse(ResponseError, err.Error()).ToJson(), nil
@@ -107,10 +107,10 @@ func (k *Currency) sendTransaction(txHex string) error {
 	k.log.Debug("sendTransaction")
 
 	// marshall new transaction blob
-	allowHighFees := true
-	cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
-	txId := 0 // this txId is not important
-	marshalledJSON, err := btcjson.MarshalCmd(txId, cmd)
+	// allowHighFees := true
+	// cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
+	// txId := 0 // this txId is not important
+	marshalledJSON, err := marshalRequest(k.chaindId, []string{txHex})
 	bodyReader := bytes.NewReader(marshalledJSON)
 
 	// create an http request
@@ -135,11 +135,12 @@ func (k *Currency) sendTransaction(txHex string) error {
 
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
-		ticker:  cfg.Ticker,
-		rpcUser: cfg.RPCUser,
-		rpcPass: cfg.RPCPass,
-		rpcUrl:  cfg.RPCURL,
-		params:  make(map[string]string),
+		ticker:   cfg.Ticker,
+		chaindId: cfg.ChainID,
+		rpcUser:  cfg.RPCUser,
+		rpcPass:  cfg.RPCPass,
+		rpcUrl:   cfg.RPCURL,
+		params:   make(map[string]string),
 	}
 	currency.jsonHandle.Canonical = true
 	currency.jsonHandle.ErrorIfNoField = true
@@ -159,13 +160,13 @@ func New(cfg *config.Config) (*Currency, error) {
 
 	// Log to a file.
 	level, err := stringToLogLevel(cfg.LogLevel)
-	logFile := path.Join(cfg.LogDir, fmt.Sprintf("currency-go.%d.log", os.Getpid()))
+	logFile := path.Join(cfg.LogDir, fmt.Sprintf("meson-go.%d.log", os.Getpid()))
 	f, err := os.Create(logFile)
 	if err != nil {
 		return nil, err
 	}
 	logBackend := setupLoggerBackend(level, f)
-	currency.log = logging.MustGetLogger("currency-go")
+	currency.log = logging.MustGetLogger("meson-go")
 	currency.log.SetBackend(logBackend)
 
 	return currency, nil

@@ -27,31 +27,35 @@ const (
 	CurrencyVersion    = 0
 	CurrencyCapability = "currency"
 	CurrencyTicker     = "ticker"
+	CurrencyChainId    = "chainId"
 )
 
 var (
 	jsonHandle                codec.JsonHandle
-	ErrInvalidCurrencyRequest = errors.New("kaetzchen/currency: invalid request")
-	errInvalidJson            = errors.New("currency: bad json")
-	errWrongVersion           = errors.New("currency: request version mismatch")
-	errWrongTicker            = errors.New("currency: request ticker mismatch")
+	ErrInvalidCurrencyRequest = errors.New("kaetzchen/meson: invalid request")
+	errInvalidJson            = errors.New("meson: bad json")
+	errWrongVersion           = errors.New("meson: request version mismatch")
+	errWrongTicker            = errors.New("meson: request ticker mismatch")
+	errWrongChainID           = errors.New("meson: request chaindId mismatch")
 )
 
 type CurrencyRequest struct {
 	Version int
 	Tx      string
 	Ticker  string
+	ChainID int
 }
 
-func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
+func NewRequest(ticker string, hexBlob string, chaindId int) *CurrencyRequest {
 	return &CurrencyRequest{
 		Version: CurrencyVersion,
 		Ticker:  ticker,
 		Tx:      hexBlob,
+		ChainID: chaindId,
 	}
 }
 
-func RequestFromJson(expectedTicker string, rawRequest []byte) (*CurrencyRequest, error) {
+func RequestFromJson(expectedTicker string, expectedChainId int, rawRequest []byte) (*CurrencyRequest, error) {
 	// Parse out the request payload.
 	req := CurrencyRequest{}
 	dec := codec.NewDecoderBytes(bytes.TrimRight(rawRequest, "\x00"), &jsonHandle)
@@ -65,6 +69,9 @@ func RequestFromJson(expectedTicker string, rawRequest []byte) (*CurrencyRequest
 	}
 	if req.Ticker != expectedTicker {
 		return nil, errWrongTicker
+	}
+	if req.ChainID != expectedChainId {
+		return nil, errWrongChainID
 	}
 	return &req, nil
 }
