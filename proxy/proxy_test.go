@@ -35,7 +35,7 @@ const (
 type ethSendRequest struct {
 	Version int
 	Tx      string
-	ChainId int
+	ChainID int
 }
 
 func TestProxy(t *testing.T) {

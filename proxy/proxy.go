@@ -36,7 +36,9 @@ var logFormat = logging.MustStringFormatter(
 )
 
 const (
+	// ResponseSuccess : Indicates whether a Response was successful
 	ResponseSuccess = 0
+	// ResponseError : Indicates whether a Response was unsuccessful
 	ResponseError   = 1
 )
 
@@ -67,6 +69,7 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 	return leveler
 }
 
+// Currency :  Handles logging and RPC details
 type Currency struct {
 	log        *logging.Logger
 	jsonHandle codec.JsonHandle
@@ -74,21 +77,23 @@ type Currency struct {
 	params map[string]string
 
 	ticker   string
-	chaindId int
+	chaindID int
 	rpcUser  string
 	rpcPass  string
-	rpcUrl   string
+	rpcURL   string
 }
 
+// Parameters : Returns params from Currency struct
 func (k *Currency) Parameters() (map[string]string, error) {
 	return k.params, nil
 }
 
+// OnRequest : Request Handler
 func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, error) {
 	k.log.Debugf("Handling request %d", id)
 
 	// Send request to HTTP RPC.
-	req, err := common.RequestFromJson(k.ticker, k.chaindId, payload)
+	req, err := common.RequestFromJson(k.ticker, k.chaindID, payload)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.NewResponse(ResponseError, err.Error()).ToJson(), nil
@@ -110,11 +115,11 @@ func (k *Currency) sendTransaction(txHex string) error {
 	// allowHighFees := true
 	// cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
 	// txId := 0 // this txId is not important
-	marshalledJSON, err := marshalRequest(k.chaindId, []string{txHex})
+	marshalledJSON, err := marshalRequest(k.chaindID, []string{txHex})
 	bodyReader := bytes.NewReader(marshalledJSON)
 
 	// create an http request
-	httpReq, err := http.NewRequest("POST", k.rpcUrl, bodyReader)
+	httpReq, err := http.NewRequest("POST", k.rpcURL, bodyReader)
 	if err != nil {
 		return err
 	}
@@ -133,13 +138,14 @@ func (k *Currency) sendTransaction(txHex string) error {
 	return nil
 }
 
+// New : Returns a pointer to a newly instantiated Currency struct
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
 		ticker:   cfg.Ticker,
-		chaindId: cfg.ChainID,
+		chaindID: cfg.ChainID,
 		rpcUser:  cfg.RPCUser,
 		rpcPass:  cfg.RPCPass,
-		rpcUrl:   cfg.RPCURL,
+		rpcURL:   cfg.RPCURL,
 		params:   make(map[string]string),
 	}
 	currency.jsonHandle.Canonical = true
