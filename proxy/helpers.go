@@ -8,7 +8,7 @@ import (
 // Only need it for one method, though.
 type ethRequest struct {
 	// ChainId to indicate which Ethereum-based network
-	Id int `json:"id"` 
+	ID int `json:"id"` 
 	// Indicates which version of JSON RPC to use
 	// Since all networks support JSON RPC 2.0,
 	// this attribute is a constant
@@ -23,7 +23,7 @@ type ethRequest struct {
 // Returns a JSON encoding of the request
 func marshalRequest(id int, params []string) ([]byte, error) {
 	request := ethRequest {
-		Id: id,
+		ID: id,
 		JSONRPC: "2.0",
 		METHOD: "eth_sendRawTransaction",
 		Params: params,

@@ -1,4 +1,4 @@
-// main.go - Katzenpost wallet client for Zcash
+// main.go - Katzenpost wallet client for Ethereum
 // Copyright (C) 2018  David Stainton
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@ import (
 
 	"github.com/katzenpost/client"
 	"github.com/katzenpost/client/config"
-	"github.com/katzenpost/currency/common"
+	"github.com/hashcloak/Meson/common"
 	"github.com/ugorji/go/codec"
 )
 
@@ -34,6 +34,7 @@ func main() {
 	cfgFile := flag.String("f", "katzenpost.toml", "Path to the server config file.")
 	hexBlob := flag.String("h", "", "Transaction hex blob to send.")
 	ticker := flag.String("t", "", "Ticker.")
+	chainID := flag.Int("c", 0, "ChainID")
 	service := flag.String("s", "", "Service Name")
 	flag.Parse()
 
@@ -57,8 +58,8 @@ func main() {
 		panic(err)
 	}
 
-	// serialize our transaction inside a zcash kaetzpost request message
-	req := common.NewRequest(*ticker, *hexBlob)
+	// serialize our transaction inside an ethereum kaetzpost request message
+	req := common.NewRequest(*ticker, *hexBlob, *chainID)
 	currencyRequest := req.ToJson()
 
 	currencyService, err := session.GetService(*service)
