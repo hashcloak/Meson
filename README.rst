@@ -78,7 +78,8 @@ Finally, we can build our example C wallet:
 
 ::
 
-   gcc ./examples/wallet.c ./common/bindings/meson_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/katzenpost/currency/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
+
+   gcc ./examples/wallet.c ./common/bindings/meson_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/hashcloak/Meson/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
 
 
 license
