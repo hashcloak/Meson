@@ -17,6 +17,7 @@
 package proxy
 
 import (
+	"encoding/json"
 	"bytes"
 	"errors"
 	"fmt"
@@ -69,7 +70,33 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 	return leveler
 }
 
-// Currency :  Handles logging and RPC details
+// An ethereum request abstraction. 
+// Only need it for one method, though.
+type ethRequest struct {
+	// ChainId to indicate which Ethereum-based network
+	ID int `json:"id"` 
+	// Indicates which version of JSON RPC to use
+	// Since all networks support JSON RPC 2.0,
+	// this attribute is a constant
+	JSONRPC string `json:"jsonrpc"`
+	// Which method you want to call
+	METHOD string `json:"method"`
+	// Params for the method you want to call
+	Params []string `json:"params"`
+}
+
+// Takes a chainId and signed transaction data as parameters
+// Returns a new ethereum request
+func newEthRequest(id int, params []string) ethRequest {
+	return ethRequest {
+		ID: id,
+		JSONRPC: "2.0",
+		METHOD: "eth_sendRawTransaction",
+		Params: params,
+	}
+}
+
+// Currency :  Handles logging and RPC details. Implements the ServicePlugin interface
 type Currency struct {
 	log        *logging.Logger
 	jsonHandle codec.JsonHandle
@@ -83,9 +110,9 @@ type Currency struct {
 	rpcURL   string
 }
 
-// Parameters : Returns params from Currency struct
-func (k *Currency) Parameters() (map[string]string, error) {
-	return k.params, nil
+// GetParameters : Returns params from Currency struct
+func (k *Currency) GetParameters() (map[string]string) {
+	return k.params
 }
 
 // OnRequest : Request Handler
@@ -108,6 +135,11 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 	return common.NewResponse(ResponseSuccess, message).ToJson(), nil
 }
 
+// Halt : Stops the plugin
+func (k *Currency) Halt() {
+
+}
+
 func (k *Currency) sendTransaction(txHex string) error {
 	k.log.Debug("sendTransaction")
 
@@ -115,8 +147,9 @@ func (k *Currency) sendTransaction(txHex string) error {
 	// allowHighFees := true
 	// cmd := btcjson.NewSendRawTransactionCmd(txHex, &allowHighFees)
 	// txId := 0 // this txId is not important
-	marshalledJSON, err := marshalRequest(k.chaindID, []string{txHex})
-	bodyReader := bytes.NewReader(marshalledJSON)
+	ethRequest := newEthRequest(k.chaindID, []string{txHex})
+	marshalledRequest, err := json.Marshal(ethRequest)
+	bodyReader := bytes.NewReader(marshalledRequest)
 
 	// create an http request
 	httpReq, err := http.NewRequest("POST", k.rpcURL, bodyReader)

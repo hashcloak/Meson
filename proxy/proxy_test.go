@@ -47,12 +47,12 @@ func TestProxy(t *testing.T) {
 	content := []byte(fmt.Sprintf(`
 Ticker = "ETH"
 ChainID = 4
-RPCUser = "%s"
+RPCUser = "somerpcusername"
 RPCPass = "somepassword"
-RPCURL = "https://rinkeby.infura.io/v3/%s"
+RPCURL = "localhost:8545"
 LogDir = "%s"
 LogLevel = "DEBUG"
-`, os.Getenv("INFURA_KATZENPOST_SECRET"), os.Getenv("INFURA_KATZENPOST_ID"), logDir))
+`, logDir))
 	tmpfn := filepath.Join(logDir, "currency.toml")
 	err = ioutil.WriteFile(tmpfn, content, 0666)
 	assert.NoError(err)
