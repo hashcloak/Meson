@@ -1,13 +1,11 @@
 
-crypto currency transaction proxy mixnet microservice
+Meson mixnet microservice for Ethereum-based transactions
 =====================================================
 
-The currency plugin proxies crypto currency transaction blocks to a
-daemon via the BTC JSON HTTP RPC. That is to say, many of the crypto
-currency daemons use this RPC besides just bitcoin. Here we only make
-use of the ``Send Raw Transaction`` command. This simple mixnet
-service receives transaction blobs from arbitrary anonymous clients on
-the mixnet and submits them to the blockchain.
+Meson is a fork of the [katzenpost currency plugin](https://github.com/katzenpost/currency).
+It proxies transactions to a daemon via the ETH JSON HTTP RPC. As such, as long as a cryptocurrency
+conforms to the ETH JSON HTTP RPC, it can make use of this plugin. One needs to only submit a raw transaction
+and this mixnet service will submit them to the respective blockchain.
 
 usage
 -----
@@ -21,8 +19,8 @@ See the handbook to learn how to configure external plugins:
 
 ::
 
-    ./currency-go -h
-      Usage of ./currency-go:
+    ./meson-go -h
+      Usage of ./meson-go:
         -f string
             Path to the currency config file. (default "currency.toml")
         -log_dir string
@@ -40,14 +38,14 @@ a configuration section that looks like this:
 ::
 
     [[Provider.CBORPluginKaetzchen]]
-      Capability = "zec"
-      Endpoint = "+zec"
+      Capability = "eth"
+      Endpoint = "+eth"
       Disable = false
-      Command = "/home/user/test_mixnet/bin/currency-go"
+      Command = "/home/user/test_mixnet/bin/meson-go"
       MaxConcurrency = 10
       [Provider.PluginKaetzchen.Config]
-        log_dir = "/home/user/test_mixnet/zec_tx_logs"
-        f = "/home/user/test_mixnet/currency_zec/curreny.toml"
+        log_dir = "/home/user/test_mixnet/eth_tx_logs"
+        f = "/home/user/test_mixnet/meson/curreny.toml"
 
 
 Here's a sample configuration file for currency-go to learn it's
@@ -55,10 +53,11 @@ Ticker and RPC connection information, currency.toml:
 
 ::
 
-   Ticker = "ZEC"
+   Ticker = "ETH"
+   ChainID = 1
    RPCUser = "rpcuser"
    RPCPass = "rpcpassword"
-   RPCURL = "http://127.0.0.1:18232/"
+   RPCURL = "http://127.0.0.1:8545/"
 
 
 C bindings
@@ -73,13 +72,14 @@ And then build the currency common bindings:
 ::
 
    cd common/bindings
-   go build -o currency_bindings.so -buildmode=c-shared bindings.go
+   go build -o meson_bindings.so -buildmode=c-shared bindings.go
 
 Finally, we can build our example C wallet:
 
 ::
 
-   gcc ./examples/wallet.c ./common/bindings/currency_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/katzenpost/currency/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
+
+   gcc ./examples/wallet.c ./common/bindings/meson_bindings.so ../../client_bindings/client_bindings.so -I /home/user/gopath/src/github.com/hashcloak/Meson/common/bindings/ -I /home/user/gopath/src/github.com/katzenpost/client_bindings/ -o wallet
 
 
 license

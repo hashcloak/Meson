@@ -27,14 +27,14 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/katzenpost/currency/config"
-	"github.com/katzenpost/currency/proxy"
+	"github.com/hashcloak/Meson/config"
+	"github.com/hashcloak/Meson/proxy"
 	"github.com/katzenpost/server/cborplugin"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )
 
-var log = logging.MustGetLogger("currency")
+var log = logging.MustGetLogger("Meson")
 var logFormat = logging.MustStringFormatter(
 	"%{level:.4s} %{id:03x} %{message}",
 )

@@ -23,18 +23,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/katzenpost/server_plugins/grpc_plugins/currency/common"
-	"github.com/katzenpost/server_plugins/grpc_plugins/currency/config"
+	"github.com/hashcloak/Meson/common"
+	"github.com/hashcloak/Meson/config"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	zcashSendVersion = 0
+	ethSendVersion = 0
 )
 
-type zcashSendRequest struct {
+type ethSendRequest struct {
 	Version int
 	Tx      string
+	ChainID int
 }
 
 func TestProxy(t *testing.T) {
@@ -44,10 +45,11 @@ func TestProxy(t *testing.T) {
 	assert.NoError(err)
 	defer os.RemoveAll(logDir) // clean up
 	content := []byte(fmt.Sprintf(`
-Ticker = "ZEC"
-RPCUser = "rpcuser"
-RPCPass = "rpcsecretpassword"
-RPCURL = "http://127.0.0.1:18232/"
+Ticker = "ETH"
+ChainID = 4
+RPCUser = "somerpcusername"
+RPCPass = "somepassword"
+RPCURL = "localhost:8545"
 LogDir = "%s"
 LogLevel = "DEBUG"
 `, logDir))
@@ -61,11 +63,11 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob)
-	zcashRequest := currencyRequest.ToJson()
+	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob, cfg.ChainID)
+	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true
-	reply, err := p.OnRequest(id, zcashRequest, hasSURB)
+	reply, err := p.OnRequest(id, ethRequest, hasSURB)
 	assert.NoError(err)
 
 	t.Logf("reply: %s", reply)
