@@ -67,7 +67,7 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 }
 
 func parametersHandler(currency *proxy.Currency, response http.ResponseWriter, req *http.Request) {
-	p, err := currency.Parameters()
+	p, err := currency.GetParameters()
 	if err != nil {
 		panic(err)
 	}

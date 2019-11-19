@@ -111,8 +111,8 @@ type Currency struct {
 }
 
 // GetParameters : Returns params from Currency struct
-func (k *Currency) GetParameters() (map[string]string) {
-	return k.params
+func (k *Currency) GetParameters() (map[string]string, error) {
+	return k.params, nil
 }
 
 // OnRequest : Request Handler
