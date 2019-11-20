@@ -15,10 +15,6 @@ RUN go build
 
 FROM katzenpost/server
 
-RUN apk update && \
-    apk add --no-cache ca-certificates tzdata && \
-    update-ca-certificates
-
 COPY --from=builder /go/Meson/Meson /go/bin/Meson
 
 # Expose the application port
