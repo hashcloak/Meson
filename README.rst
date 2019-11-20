@@ -2,7 +2,8 @@
 Meson mixnet microservice for Ethereum-based transactions
 =====================================================
 
-Meson is a fork of the [katzenpost currency plugin](https://github.com/katzenpost/currency).
+Meson is a fork of the `katzenpost currency plugin
+<https://github.com/katzenpost/currency>`_.
 It proxies transactions to a daemon via the ETH JSON HTTP RPC. As such, as long as a cryptocurrency
 conforms to the ETH JSON HTTP RPC, it can make use of this plugin. One needs to only submit a raw transaction
 and this mixnet service will submit them to the respective blockchain.
