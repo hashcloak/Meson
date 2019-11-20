@@ -159,13 +159,16 @@ func main() {
 	// Load config file.
 	cfg, err := config.LoadFile(*cfgFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load config file '%v': %v\n", *cfgFile, err)
+		log.Errorf("Failed to load config file '%v: %v\n'", *cfgFile, err)
+		log.Error("Exiting")
 		os.Exit(-1)
 	}
 
 	// Start service.
 	currency, err := proxy.New(cfg)
 	if err != nil {
+		log.Errorf("Failed to load proxy config: %v\n", err)
+		log.Error("Exiting")
 		panic(err)
 	}
 	_requestHandler := func(response http.ResponseWriter, request *http.Request) {
