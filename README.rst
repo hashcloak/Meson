@@ -8,7 +8,16 @@ It proxies transactions to a daemon via the ETH JSON HTTP RPC. As such, as long 
 conforms to the ETH JSON HTTP RPC, it can make use of this plugin. One needs to only submit a raw transaction
 and this mixnet service will submit them to the respective blockchain.
 
-usage
+
+Dependecies
+-----------
+
+::
+
+  docker-compose
+  make
+
+Usage
 -----
 
 It's a plugin. You are not supposed to run it yourself on the commandline.
@@ -18,19 +27,18 @@ See the handbook to learn how to configure external plugins:
 
 ( if that's not enough then read our spec: https://github.com/katzenpost/docs/blob/master/specs/kaetzchen.rst )
 
+Running a local docker-compose tesnet:
 ::
 
-    ./meson-go -h
-      Usage of ./meson-go:
-        -f string
-            Path to the currency config file. (default "currency.toml")
-        -log_dir string
-            logging directory
-        -log_level string
-            logging level could be set to: DEBUG, INFO, NOTICE, WARNING, ERROR, CRITICAL (default "DEBUG")
+   make up
+
+Bring down the local docker-compose tesnet:
+::
+
+   make down
 
 
-configuration
+Configuration
 -------------
 
 In order to use this plugin your Katzenpost server will need
@@ -38,27 +46,29 @@ a configuration section that looks like this:
 
 ::
 
-    [[Provider.CBORPluginKaetzchen]]
-      Capability = "eth"
-      Endpoint = "+eth"
-      Disable = false
-      Command = "/home/user/test_mixnet/bin/meson-go"
-      MaxConcurrency = 10
-      [Provider.PluginKaetzchen.Config]
-        log_dir = "/home/user/test_mixnet/eth_tx_logs"
-        f = "/home/user/test_mixnet/meson/curreny.toml"
+  [[Provider.CBORPluginKaetzchen]]
+    Disable = false
+    Capability = "eth"
+    Endpoint = "+eth"
+    Command = "/go/bin/Meson"
+    MaxConcurrency = 1
+    [Provider.CBORPluginKaetzchen.Config]
+      log_dir = "/conf/service_logs"
+      log_level = "DEBUG"
+      f = "/conf/currency.toml"
 
 
-Here's a sample configuration file for currency-go to learn it's
-Ticker and RPC connection information, currency.toml:
+And you will also need a `currency.toml` file as the config file for Meson:
 
 ::
 
    Ticker = "ETH"
-   ChainID = 1
    RPCUser = "rpcuser"
    RPCPass = "rpcpassword"
-   RPCURL = "http://127.0.0.1:8545/"
+   RPCURL = "http://127.0.0.1:9545"
+   ChainId = 4
+   LogDir = "/conf/service_logs"
+   LogLevel = "DEBUG"
 
 
 C bindings

@@ -1,0 +1,7 @@
+Ticker = "ETH"
+RPCUser = "rpcuser"
+RPCPass = "rpcpassword"
+RPCURL = "http://172.28.1.10:9545"
+ChainId = 5
+LogDir = "/conf/service_logs"
+LogLevel = "DEBUG"

@@ -27,8 +27,8 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/hashcloak/Meson/config"
-	"github.com/hashcloak/Meson/proxy"
+	"github.com/hashcloak/Meson/cmd/config"
+	"github.com/hashcloak/Meson/cmd/proxy"
 	"github.com/katzenpost/server/cborplugin"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
@@ -67,7 +67,7 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 }
 
 func parametersHandler(currency *proxy.Currency, response http.ResponseWriter, req *http.Request) {
-	p, err := currency.Parameters()
+	p, err := currency.GetParameters()
 	if err != nil {
 		panic(err)
 	}
@@ -159,13 +159,16 @@ func main() {
 	// Load config file.
 	cfg, err := config.LoadFile(*cfgFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to load config file '%v': %v\n", *cfgFile, err)
+		log.Errorf("Failed to load config file '%v: %v\n'", *cfgFile, err)
+		log.Error("Exiting")
 		os.Exit(-1)
 	}
 
 	// Start service.
 	currency, err := proxy.New(cfg)
 	if err != nil {
+		log.Errorf("Failed to load proxy config: %v\n", err)
+		log.Error("Exiting")
 		panic(err)
 	}
 	_requestHandler := func(response http.ResponseWriter, request *http.Request) {

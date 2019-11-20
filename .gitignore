@@ -1,0 +1,6 @@
+*Meson
+.makeFlags
+*.log
+*.db
+*geth
+*.storage

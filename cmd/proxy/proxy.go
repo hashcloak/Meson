@@ -17,8 +17,8 @@
 package proxy
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -26,8 +26,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/hashcloak/Meson/common"
-	"github.com/hashcloak/Meson/config"
+	"github.com/hashcloak/Meson/cmd/config"
+	"github.com/hashcloak/Meson/pkg/common"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )
@@ -40,7 +40,7 @@ const (
 	// ResponseSuccess : Indicates whether a Response was successful
 	ResponseSuccess = 0
 	// ResponseError : Indicates whether a Response was unsuccessful
-	ResponseError   = 1
+	ResponseError = 1
 )
 
 func stringToLogLevel(level string) (logging.Level, error) {
@@ -70,11 +70,11 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 	return leveler
 }
 
-// An ethereum request abstraction. 
+// An ethereum request abstraction.
 // Only need it for one method, though.
 type ethRequest struct {
 	// ChainId to indicate which Ethereum-based network
-	ID int `json:"id"` 
+	ID int `json:"id"`
 	// Indicates which version of JSON RPC to use
 	// Since all networks support JSON RPC 2.0,
 	// this attribute is a constant
@@ -88,11 +88,11 @@ type ethRequest struct {
 // Takes a chainId and signed transaction data as parameters
 // Returns a new ethereum request
 func newEthRequest(id int, params []string) ethRequest {
-	return ethRequest {
-		ID: id,
+	return ethRequest{
+		ID:      id,
 		JSONRPC: "2.0",
-		METHOD: "eth_sendRawTransaction",
-		Params: params,
+		METHOD:  "eth_sendRawTransaction",
+		Params:  params,
 	}
 }
 
@@ -111,8 +111,8 @@ type Currency struct {
 }
 
 // GetParameters : Returns params from Currency struct
-func (k *Currency) GetParameters() (map[string]string) {
-	return k.params
+func (k *Currency) GetParameters() (map[string]string, error) {
+	return k.params, nil
 }
 
 // OnRequest : Request Handler
