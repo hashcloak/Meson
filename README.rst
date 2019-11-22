@@ -55,10 +55,13 @@ Ticker and RPC connection information, currency.toml:
 ::
 
    Ticker = "ETH"
-   ChainID = 1
    RPCUser = "rpcuser"
    RPCPass = "rpcpassword"
-   RPCURL = "http://127.0.0.1:8545/"
+   RPCURL = "http://127.0.0.1:18232"
+   ChainId = 4
+   LogDir = "/conf/service_logs"
+   LogLevel = "DEBUG"
+
 
 
 C bindings
