@@ -67,17 +67,14 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 }
 
 func parametersHandler(currency *proxy.Currency, response http.ResponseWriter, req *http.Request) {
-	p, err := currency.GetParameters()
-	if err != nil {
-		panic(err)
-	}
+	p := currency.GetParameters()
 	params := cborplugin.Parameters(p)
 	var serialized []byte
 	enc := codec.NewEncoderBytes(&serialized, new(codec.CborHandle))
 	if err := enc.Encode(params); err != nil {
 		panic(err)
 	}
-	_, err = response.Write(serialized)
+	_, err := response.Write(serialized)
 	if err != nil {
 		panic(err)
 	}
