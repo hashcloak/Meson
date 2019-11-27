@@ -1,4 +1,4 @@
-module github.com/hashcloak/Meson
+module github.com/hashcloak/Meson/plugin
 
 go 1.13
 
