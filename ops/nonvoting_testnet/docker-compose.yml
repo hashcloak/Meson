@@ -2,7 +2,7 @@ version: "3"
 
 services:
   goerli:
-    image: hashcloack/client-go:${GETH_VERSION}
+    image: hashcloak/client-go:${GETH_VERSION}
     environment:
       - "CHAIN=goerli"
     ports:
@@ -16,7 +16,7 @@ services:
         ipv4_address: 172.28.1.10
 
   rinkeby:
-    image: hashcloack/client-go:${GETH_VERSION}
+    image: hashcloak/client-go:${GETH_VERSION}
     environment:
       - "CHAIN=rinkeby"
     ports:
@@ -31,7 +31,7 @@ services:
 
   provider1:
     restart: unless-stopped
-    image: hashcloack/meson
+    image: hashcloak/meson
     volumes:
       - ./conf/provider1:/conf
     command: /go/bin/server -f /conf/katzenpost.toml
@@ -46,7 +46,7 @@ services:
 
   provider2:
     restart: unless-stopped
-    image: hashcloack/meson
+    image: hashcloak/meson
     volumes:
       - ./conf/provider2:/conf
     command: /go/bin/server -f /conf/katzenpost.toml

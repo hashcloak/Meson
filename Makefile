@@ -5,12 +5,12 @@ $(shell mkdir -p $(flags))
 gethVersion=v1.9.8
 .PHONY:up down
 
-all: hashcloack-geth katzenpost-server meson katzenpost-nonvoting-authority
+all: hashcloak-geth katzenpost-server meson katzenpost-nonvoting-authority
 
 pull:
 	git clone https://github.com/katzenpost/server /tmp/server || true
 	git clone https://github.com/katzenpost/authority /tmp/authority || true
-	git clone https://github.com/sebohe/Meson /tmp/Meson || true
+	git clone https://github.com/hashcloak/Meson /tmp/Meson || true
 	@touch $(flags)/$@
 
 clean:
@@ -19,9 +19,9 @@ clean:
 	rm -rf /tmp/Meson
 	rm -rf .makeFlags
 
-hashcloack-geth:
+hashcloak-geth:
 	sed -i 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile
-	docker build -f ./ops/geth.Dockerfile -t hashcloack/client-go:$(gethVersion) .
+	docker build -f ./ops/geth.Dockerfile -t hashcloak/client-go:$(gethVersion) .
 	sed -i 's|$(gethVersion)|%%GETH_VERSION%%|g' ./ops/geth.Dockerfile
 	@touch $(flags)/$@
 
@@ -62,4 +62,4 @@ down-nonvoting:
 rebuild: rebuild-meson
 
 rebuild-meson:
-	docker build -f ./Dockerfile -t hashcloack/meson .
+	docker build -f ./Dockerfile -t hashcloak/meson .
