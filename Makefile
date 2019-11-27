@@ -38,7 +38,7 @@ katzenpost-nonvoting-authority: pull
 	@touch $(flags)/$@
 
 meson:
-	docker build -f ./Dockerfile -t hashcloack/meson .
+	docker build -f ./plugin/Dockerfile -t hashcloack/meson ./plugin
 	@touch $(flags)/$@
 
 up: up-nonvoting
