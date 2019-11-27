@@ -43,6 +43,13 @@ meson:
 
 up: up-nonvoting
 
+permits:
+	chmod -R 700 ops/nonvoting_testnet/conf/provider?
+	chmod -R 700 ops/nonvoting_testnet/conf/mix?
+	chmod -R 700 ops/nonvoting_testnet/conf/auth
+	chmod -R 700 ops/nonvoting_testnet/conf/goerli
+	chmod -R 700 ops/nonvoting_testnet/conf/rinkeby
+
 up-nonvoting: all
 	GETH_VERSION=$(gethVersion) \
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
