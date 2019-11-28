@@ -1,4 +1,4 @@
-Ticker = "ETH"
+Ticker = "RIN"
 RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
 RPCURL = "http://172.28.1.11:9545"

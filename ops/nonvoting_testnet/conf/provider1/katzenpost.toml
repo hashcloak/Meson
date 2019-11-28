@@ -100,8 +100,8 @@ AdvertiseUserRegistrationHTTPAddresses = ["http://127.0.0.1:36968"]
 
   [[Provider.CBORPluginKaetzchen]]
     Disable = false
-    Capability = "eth"
-    Endpoint = "+eth"
+    Capability = "gor"
+    Endpoint = "+gor"
     Command = "/go/bin/Meson"
     MaxConcurrency = 1
     [Provider.CBORPluginKaetzchen.Config]
