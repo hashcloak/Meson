@@ -1,0 +1,9 @@
+language: go
+
+sudo: false
+
+go:
+  - "1.13"
+
+script:
+  - if [ -n "$(gofmt -l ./plugin)" ]; then echo "Go code is not formatted:"; gofmt -d ./plugin; exit 1; fi
