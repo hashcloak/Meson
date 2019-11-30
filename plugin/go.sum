@@ -60,6 +60,9 @@ github.com/katzenpost/core v0.0.7/go.mod h1:UXMLmMXlBHrhMXhWTy4DvCXqwTRLOh4DP/mR
 github.com/katzenpost/core v0.0.8-0.20190907182339-71fec89c259d/go.mod h1:gqp6bR2MDW8dy8bQ+BzvEwlBfHC3WYrKaNODK1TAS+4=
 github.com/katzenpost/core v0.0.8-0.20190929084830-9b01094782c6 h1:9CNf8x/HBUa1Te1yTV7SC4UEFQklzdVzEqNXh7Vmkqs=
 github.com/katzenpost/core v0.0.8-0.20190929084830-9b01094782c6/go.mod h1:gqp6bR2MDW8dy8bQ+BzvEwlBfHC3WYrKaNODK1TAS+4=
+github.com/katzenpost/core v0.0.8-0.20191102182224-0c2d40bb92ac/go.mod h1:gqp6bR2MDW8dy8bQ+BzvEwlBfHC3WYrKaNODK1TAS+4=
+github.com/katzenpost/core v0.0.8-0.20191117121951-d5cf686c5a78 h1:ntg8WXZeCfe/WCaUFsjj1Bf1D5nuj6r1bYX5ZhwMNMU=
+github.com/katzenpost/core v0.0.8-0.20191117121951-d5cf686c5a78/go.mod h1:gqp6bR2MDW8dy8bQ+BzvEwlBfHC3WYrKaNODK1TAS+4=
 github.com/katzenpost/currency v0.0.0-20191107223443-74cc3784e047 h1:1rK2dicn/6mYB5CiYd7HIaj0Fo3A6og9GFdjhemAd48=
 github.com/katzenpost/currency v0.0.0-20191107223443-74cc3784e047/go.mod h1:g7h1QYhh6Ec/bVfCfmJ5fDqra2D52bWl0Z2X9hslYsM=
 github.com/katzenpost/kimchi v0.0.0-20190919180141-c3fbd2593e78 h1:3bcNlWlHTAAbU65MKrz9AFSyuy5baYI6u710Y4BQEZI=
@@ -78,6 +81,7 @@ github.com/katzenpost/server v0.0.7/go.mod h1:sOea2sG8ggASFYNTXhjEGmdanyXYsJz0wE
 github.com/katzenpost/server v0.0.8-0.20190724072104-f047a32043f3/go.mod h1:sOea2sG8ggASFYNTXhjEGmdanyXYsJz0wE2BTA/mCo0=
 github.com/katzenpost/server v0.0.8-0.20190910174632-99fb3d5cec86 h1:r/EAwAkWUuRFZLI3USCNagZ9Z9iUoLQds96OMvgHrXg=
 github.com/katzenpost/server v0.0.8-0.20190910174632-99fb3d5cec86/go.mod h1:CXvtbnouH1jIPgAcZcpqDimvz7NPn1N3XW6Chkax3dc=
+github.com/katzenpost/server v0.0.8-0.20191108130557-3c51956494eb/go.mod h1:6v1FsbflNve7LAour+WdWrkwmVZGt/RptBXGXQhqEgg=
 github.com/kkdai/bstream v0.0.0-20161212061736-f391b8402d23/go.mod h1:J+Gs4SYgM6CZQHDETBtE9HaSEkGmuNXF86RwHhHUvq4=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
