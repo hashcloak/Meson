@@ -7,3 +7,7 @@ go:
 
 script:
   - if [ -n "$(gofmt -l ./plugin)" ]; then echo "Go code is not formatted:"; gofmt -d ./plugin; exit 1; fi
+  - cd plugin && go build cmd/main.go
+cache:
+  directories:
+    - $GOPATH/pkg/mod
