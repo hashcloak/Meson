@@ -1,4 +1,4 @@
-Ticker = "GOR"
+Ticker = "gor"
 RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
 RPCURL = "http://172.28.1.10:9545"
