@@ -19,6 +19,13 @@ clean:
 	rm -rf /tmp/Meson
 	rm -rf .makeFlags
 
+clean-data:
+	rm -rf ./ops/nonvoting_testnet/conf/provider?
+	rm -rf ./ops/nonvoting_testnet/conf/mix?
+	rm -rf ./ops/nonvoting_testnet/conf/auth
+	git checkout ./ops/nonvoting_testnet/conf
+	$(MAKE) permits
+
 hashcloak-geth:
 	sed -i 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile
 	docker build -f ./ops/geth.Dockerfile -t hashcloak/client-go:$(gethVersion) .
@@ -41,18 +48,20 @@ meson:
 	docker build -f ./plugin/Dockerfile -t hashcloak/meson ./plugin
 	@touch $(flags)/$@
 
-up: up-nonvoting
+up: permits up-nonvoting
 
 permits:
-	chmod -R 700 ops/nonvoting_testnet/conf/provider?
-	chmod -R 700 ops/nonvoting_testnet/conf/mix?
-	chmod -R 700 ops/nonvoting_testnet/conf/auth
-	chmod -R 700 ops/nonvoting_testnet/conf/goerli
-	chmod -R 700 ops/nonvoting_testnet/conf/rinkeby
+	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
+	sudo chmod -R 700 ops/nonvoting_testnet/conf/mix?
+	sudo chmod -R 700 ops/nonvoting_testnet/conf/auth
+	sudo chmod -R 700 ops/nonvoting_testnet/conf/goerli
+	sudo chmod -R 700 ops/nonvoting_testnet/conf/rinkeby
+	@touch $(flags)/$@
 
-up-nonvoting: all
+up-nonvoting: permits all
 	GETH_VERSION=$(gethVersion) \
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
+	@touch $(flags)/$@
 
 down: down-nonvoting
 
@@ -63,3 +72,13 @@ rebuild: rebuild-meson
 
 rebuild-meson:
 	docker build -f ./Dockerfile -t hashcloak/meson .
+
+test-client:
+	git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
+	docker run \
+		-v /tmp/Meson-client:/client \
+		-v /tmp/gopath-pkg:/go/pkg \
+		--network nonvoting_testnet_nonvoting_test_net \
+		-w /client \
+		golang:buster \
+		/bin/bash -c "GORACE=history_size=7 go test -race"
