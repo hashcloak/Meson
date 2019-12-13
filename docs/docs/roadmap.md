@@ -1,6 +1,6 @@
 # Roadmap
 
-We have a vision for Meson and that is to be THE mixnet for cryptocurrency transactions. As such, in order to achieve our vision, we need a plan to get their. Here, we outline various things that we need to work on in order to make Meson the best mixnet it can be.
+We have a vision for Meson and that is to be THE mixnet for cryptocurrency transactions. As such, in order to achieve our vision, we need a plan to get there. Here, we outline various things that we need to work on in order to make Meson the best mixnet it can be.
 
 ## Adding support for other chains
 Currently, Meson supports Ethereum-based transactions and has the ability to support Bitcoin-based transactions. We want to build Katzenpost plugins that can support other chains. On our immediate list are the following chains:
