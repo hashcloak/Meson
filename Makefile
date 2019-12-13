@@ -61,6 +61,7 @@ permits:
 up-nonvoting: permits all
 	GETH_VERSION=$(gethVersion) \
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
+	@touch $(flags)/$@
 
 down: down-nonvoting
 
@@ -71,3 +72,13 @@ rebuild: rebuild-meson
 
 rebuild-meson:
 	docker build -f ./Dockerfile -t hashcloak/meson .
+
+test-client:
+	git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
+	docker run \
+		-v /tmp/Meson-client:/client \
+		-v /tmp/gopath-pkg:/go/pkg \
+		--network nonvoting_testnet_nonvoting_test_net \
+		-w /client \
+		golang:buster \
+		/bin/bash -c "GORACE=history_size=7 go test -race"

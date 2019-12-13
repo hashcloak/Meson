@@ -1,13 +1,27 @@
 language: go
 
-sudo: false
+sudo: true
+
+env:
+  - DOCKER_COMPOSE_VERSION=1.24.1
+
+before_install:
+  - sudo rm /usr/local/bin/docker-compose
+  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+  - chmod +x docker-compose
+  - sudo mv docker-compose /usr/local/bin
+
+services:
+  docker
 
 go:
   - "1.13"
 
 script:
   - if [ -n "$(gofmt -l ./plugin)" ]; then echo "Go code is not formatted:"; gofmt -d ./plugin; exit 1; fi
-  - cd plugin && go build cmd/main.go
+  - make up
+  - make test-client
 cache:
   directories:
     - $GOPATH/pkg/mod
+    - /tmp/gopath-pkg
