@@ -11,7 +11,7 @@ mesonServer=$(dockerRepo)/meson
 mesonClient=$(dockerRepo)/meson-client
 
 GIT_HASH := $(shell git log --format='%h' -n1)
-TRAVIS_BRANCH ?= $(shell git log --format='%D' -n1 | cut -d'/' -f2)
+TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
 BRANCH=$(TRAVIS_BRANCH)
 
 .PHONY: up down
@@ -48,9 +48,8 @@ push-tags: build-images
 build-images: hashcloak-geth katzenpost-server katzenpost-nonvoting-authority meson
 
 hashcloak-geth:
-	sed -i 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile
-	docker build -f ./ops/geth.Dockerfile -t $(gethImage) .
-	sed -i 's|$(gethVersion)|%%GETH_VERSION%%|g' ./ops/geth.Dockerfile
+	sed 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile > /tmp/geth.Dockerfile
+	docker build -f /tmp/geth.Dockerfile -t $(gethImage) .
 	@touch $(flags)/$@
 
 katzenpost-server:
@@ -63,10 +62,9 @@ katzenpost-nonvoting-authority:
 	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
 	@touch $(flags)/$@
 
-meson: pull-katzen-server hashcloak-geth
-	sed -i 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile
-	docker build -f ./plugin/Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
-	sed -i 's|$(katzenServer)|%%KATZEN_SERVER%%|g' ./plugin/Dockerfile
+meson: pull
+	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
+	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
 	@touch $(flags)/$@
 
 up: permits pull meson up-nonvoting
