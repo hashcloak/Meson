@@ -1,73 +1,95 @@
+GIT_HASH := $(shell git log --format='%h' -n1)
+TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
+BRANCH=$(TRAVIS_BRANCH)
+
 flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
 dockerRepo=hashcloak
-katzenBranch=master
-katzenServer=$(dockerRepo)/katzenpost-server:$(katzenBranch)
-katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenBranch)
+
+katzenServerRepo=https://github.com/katzenpost/server
+katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
+katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
+
+katzenAuthRepo=https://github.com/katzenpost/authority
+katzenAuthTag=$(shell git ls-remote --heads https://github.com/katzenpost/authority  | grep master | cut -c1-7)
+katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenAuthTag)
+
 gethVersion=v1.9.9
 gethImage=$(dockerRepo)/client-go:$(gethVersion)
 mesonServer=$(dockerRepo)/meson
 mesonClient=$(dockerRepo)/meson-client
 
-GIT_HASH := $(shell git log --format='%h' -n1)
-TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
-BRANCH=$(TRAVIS_BRANCH)
-
-.PHONY: up down
+messagePush="LOG: Image already exists in docker.io/$(repo). Not pushing: "
+messagePull="LOG: success in pulling image: "
 
 clean:
 	rm -rf /tmp/server
 	rm -rf /tmp/authority
-	rm -rf /tmp/Meson
 	rm -rf $(flags)
 
 clean-data:
-	rm -r $(flags)/permits
 	rm -rf ./ops/nonvoting_testnet/conf/provider?
 	rm -rf ./ops/nonvoting_testnet/conf/mix?
 	rm -rf ./ops/nonvoting_testnet/conf/auth
 	git checkout ./ops/nonvoting_testnet/conf
+	rm -r $(flags)/permits || true
 	$(MAKE) permits
 
-pull: pull-tags
+pull:
+	docker pull $(katzenAuth) \
+		&& echo $(messagePull)$(katzenAuth) \
+		|| $(MAKE) build-katzenpost-nonvoting-authority
+	docker pull $(katzenServer) \
+		&& echo $(messagePull)$(katzenServer) \
+		|| $(MAKE) build-katzenpost-server
+	docker pull $(gethImage) \
+		&& echo $(messagePull)$(gethImage) \
+		|| $(MAKE) build-geth
 
-pull-tags: pull-katzen-server
-	docker pull $(katzenAuth) && echo "success!" || $(MAKE) katzenpost-nonvoting-authority
-	docker pull $(gethImage) && echo "success!" || $(MAKE) hashcloak-geth
+push: push-katzen-server push-katzen-auth push-geth push-meson
 
-pull-katzen-server:
-	docker pull $(katzenServer) && echo "success!" || $(MAKE) katzenpost-server
+push-katzen-server:
+	docker pull $(katzenServer) \
+		&& echo $(messagePush)$(katzenServer) \
+		|| ($(MAKE) build-katzenpost-server && docker push $(katzenServer))
 
-push-tags: build-images
-	docker push $(katzenServer)
-	docker push $(katzenAuth)
+push-katzen-auth:
+	docker pull $(katzenAuth) \
+		&& echo $(messagePush)$(katzenAuth) \
+		|| ($(MAKE) build-katzenpost-nonvoting-authority && docker push $(katzenAuth))
+
+push-geth:
+	docker pull $(gethImage) \
+		&& echo $(messagePush)$(gethImage) \
+		|| ($(MAKE) build-geth && docker push $(gethImage))
+
+push-meson: build-meson
 	docker push '$(mesonServer):$(BRANCH)'
-	docker push $(gethImage)
 
-build-images: hashcloak-geth katzenpost-server katzenpost-nonvoting-authority meson
+build: build-geth build-katzenpost-server build-katzenpost-nonvoting-authority build-meson
 
-hashcloak-geth:
+build-geth:
 	sed 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile > /tmp/geth.Dockerfile
 	docker build -f /tmp/geth.Dockerfile -t $(gethImage) .
 	@touch $(flags)/$@
 
-katzenpost-server:
-	git clone https://github.com/katzenpost/server /tmp/server || true
+build-katzenpost-server:
+	git clone $(katzenServerRepo) /tmp/server || true
 	docker build -f /tmp/server/Dockerfile -t $(katzenServer) /tmp/server
 	@touch $(flags)/$@
 
-katzenpost-nonvoting-authority:
-	git clone https://github.com/katzenpost/authority /tmp/authority || true
+build-katzenpost-nonvoting-authority:
+	git clone $(katzenAuthRepo) /tmp/authority || true
 	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
 	@touch $(flags)/$@
 
-meson: pull
+build-meson: pull
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
 	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
 	@touch $(flags)/$@
 
-up: permits pull meson up-nonvoting
+up: permits pull build-meson up-nonvoting
 
 permits:
 	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
@@ -85,9 +107,6 @@ up-nonvoting:
 down:
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml down
 
-rebuild-meson:
-	docker build -f ./Dockerfile -t $(mesonServer):latest .
-
 test-client:
 	git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
 	docker run \
@@ -97,9 +116,4 @@ test-client:
 		-w /client \
 		golang:buster \
 		/bin/bash -c "GORACE=history_size=7 go test -race"
-
-failure:
-	false && ([ $$? -eq 0 ] && echo "success!") || echo "failure"
-
-success:
-	true && ([ $$? -eq 0 ] && echo "success!") || echo "failure!"     
+	[ ${CI} ]; sudo chown ${USER} -R /tmp/gopath-pkg
