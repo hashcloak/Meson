@@ -1,7 +1,0 @@
-Ticker = "RIN"
-RPCUser = "rpcuser"
-RPCPass = "rpcpassword"
-RPCURL = "http://172.28.1.11:9545"
-ChainId = 4
-LogDir = "/conf/service_logs"
-LogLevel = "DEBUG"
