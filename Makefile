@@ -36,28 +36,37 @@ clean-data:
 	rm -r $(flags)/permits || true
 	$(MAKE) permits
 
-pull:
+pull: pull-katzen-auth pull-katzen-server pull-geth
+
+pull-katzen-auth:
 	docker pull $(katzenAuth) \
 		&& echo $(messagePull)$(katzenAuth) \
-		|| $(MAKE) build-katzenpost-nonvoting-authority
+		|| $(MAKE) build-katzen-nonvoting-authority
+	@touch $(flags)/$@
+
+pull-katzen-server:
 	docker pull $(katzenServer) \
 		&& echo $(messagePull)$(katzenServer) \
-		|| $(MAKE) build-katzenpost-server
+		|| $(MAKE) build-katzen-server
+	@touch $(flags)/$@
+
+pull-geth:
 	docker pull $(gethImage) \
 		&& echo $(messagePull)$(gethImage) \
 		|| $(MAKE) build-geth
+	@touch $(flags)/$@
 
-push: push-katzen-server push-katzen-auth push-geth push-meson push-hashcloak-auth
+push: push-katzen-server push-katzen-auth push-geth push-meson push-hashcloak-nonvoting-auth
 
 push-katzen-server:
 	docker pull $(katzenServer) \
 		&& echo $(messagePush)$(katzenServer) \
-		|| ($(MAKE) build-katzenpost-server && docker push $(katzenServer))
+		|| ($(MAKE) build-katzen-server && docker push $(katzenServer))
 
 push-katzen-auth:
 	docker pull $(katzenAuth) \
 		&& echo $(messagePush)$(katzenAuth) \
-		|| ($(MAKE) build-katzenpost-nonvoting-authority && docker push $(katzenAuth))
+		|| ($(MAKE) build-katzen-nonvoting-authority && docker push $(katzenAuth))
 
 push-geth:
 	docker pull $(gethImage) \
@@ -70,28 +79,28 @@ push-meson: build-meson
 push-hashcloak-nonvoting-auth: build-hashcloak-nonvoting-authority
 	docker push '$(hashcloakAuth):$(BRANCH)'
 
-build: build-geth build-katzenpost-server build-katzenpost-nonvoting-authority build-meson
+build: build-geth build-katzen-server build-katzen-nonvoting-authority build-meson build-hashcloak-nonvoting-authority
 
 build-geth:
 	sed 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile > /tmp/geth.Dockerfile
 	docker build -f /tmp/geth.Dockerfile -t $(gethImage) .
 	@touch $(flags)/$@
 
-build-katzenpost-server:
+build-katzen-server:
 	git clone $(katzenServerRepo) /tmp/server || true
 	docker build -f /tmp/server/Dockerfile -t $(katzenServer) /tmp/server
 	@touch $(flags)/$@
 
-build-katzenpost-nonvoting-authority:
+build-katzen-nonvoting-authority:
 	git clone $(katzenAuthRepo) /tmp/authority || true
 	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
 
-build-meson: pull
+build-meson: pull-katzen-server
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
 	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
 	@touch $(flags)/$@
 
-build-hashcloak-nonvoting-authority:
+build-hashcloak-nonvoting-authority: pull-katzen-auth
 	sed 's|%%KATZENPOST_AUTH%%|$(katzenAuth)|g' ./ops/auth.nonvoting.Dockerfile > /tmp/auth.nonvoting.Dockerfile
 	docker build -f /tmp/auth.nonvoting.Dockerfile -t $(hashcloakAuth):$(BRANCH) ./ops
 	@touch $(flags)/$@
