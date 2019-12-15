@@ -5,12 +5,11 @@ BRANCH=$(TRAVIS_BRANCH)
 flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
-dockerRepo=hashcloak
 
+dockerRepo=hashcloak
 katzenServerRepo=https://github.com/katzenpost/server
 katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
 katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
-
 katzenAuthRepo=https://github.com/katzenpost/authority
 katzenAuthTag=$(shell git ls-remote --heads https://github.com/katzenpost/authority  | grep master | cut -c1-7)
 katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenAuthTag)
@@ -19,6 +18,7 @@ gethVersion=v1.9.9
 gethImage=$(dockerRepo)/client-go:$(gethVersion)
 mesonServer=$(dockerRepo)/meson
 mesonClient=$(dockerRepo)/meson-client
+hashcloakAuth=$(dockerRepo)/authority
 
 messagePush="LOG: Image already exists in docker.io/$(repo). Not pushing: "
 messagePull="LOG: success in pulling image: "
@@ -47,7 +47,7 @@ pull:
 		&& echo $(messagePull)$(gethImage) \
 		|| $(MAKE) build-geth
 
-push: push-katzen-server push-katzen-auth push-geth push-meson
+push: push-katzen-server push-katzen-auth push-geth push-meson push-hashcloak-auth
 
 push-katzen-server:
 	docker pull $(katzenServer) \
@@ -67,6 +67,9 @@ push-geth:
 push-meson: build-meson
 	docker push '$(mesonServer):$(BRANCH)'
 
+push-hashcloak-nonvoting-auth: build-hashcloak-nonvoting-authority
+	docker push '$(hashcloakAuth):$(BRANCH)'
+
 build: build-geth build-katzenpost-server build-katzenpost-nonvoting-authority build-meson
 
 build-geth:
@@ -82,14 +85,18 @@ build-katzenpost-server:
 build-katzenpost-nonvoting-authority:
 	git clone $(katzenAuthRepo) /tmp/authority || true
 	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
-	@touch $(flags)/$@
 
 build-meson: pull
 	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
 	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
 	@touch $(flags)/$@
 
-up: permits pull build-meson up-nonvoting
+build-hashcloak-nonvoting-authority:
+	sed 's|%%KATZENPOST_AUTH%%|$(katzenAuth)|g' ./ops/auth.nonvoting.Dockerfile > /tmp/auth.nonvoting.Dockerfile
+	docker build -f /tmp/auth.nonvoting.Dockerfile -t $(hashcloakAuth):$(BRANCH) ./ops
+	@touch $(flags)/$@
+
+up: permits pull build-meson build-hashcloak-nonvoting-authority up-nonvoting
 
 permits:
 	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
@@ -100,7 +107,7 @@ permits:
 up-nonvoting:
 	GETH_IMAGE=$(gethImage) \
 	KATZEN_SERVER=$(katzenServer) \
-	KATZEN_AUTH=$(katzenAuth) \
+	KATZEN_AUTH=$(hashcloakAuth):$(BRANCH) \
 	MESON_IMAGE=$(mesonServer):$(BRANCH) \
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
 
@@ -116,4 +123,4 @@ test-client:
 		-w /client \
 		golang:buster \
 		/bin/bash -c "GORACE=history_size=7 go test -race"
-	[ ${CI} ]; sudo chown ${USER} -R /tmp/gopath-pkg
+	if [ ${CI} ];then sudo chown ${USER} -R /tmp/gopath-pkg;  fi
