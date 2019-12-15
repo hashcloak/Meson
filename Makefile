@@ -19,6 +19,7 @@ gethImage=$(dockerRepo)/client-go:$(gethVersion)
 mesonServer=$(dockerRepo)/meson
 mesonClient=$(dockerRepo)/meson-client
 hashcloakAuth=$(dockerRepo)/authority
+hashcloakMixer=$(dockerRepo)/mixer
 
 messagePush="LOG: Image already exists in docker.io/$(repo). Not pushing: "
 messagePull="LOG: success in pulling image: "
@@ -56,7 +57,7 @@ pull-geth:
 		|| $(MAKE) build-geth
 	@touch $(flags)/$@
 
-push: push-katzen-server push-katzen-auth push-geth push-meson push-hashcloak-nonvoting-auth
+push: push-katzen-server push-katzen-auth push-geth push-meson push-hashcloak-nonvoting-auth push-hashcloak-mixer
 
 push-katzen-server:
 	docker pull $(katzenServer) \
@@ -79,7 +80,10 @@ push-meson: build-meson
 push-hashcloak-nonvoting-auth: build-hashcloak-nonvoting-authority
 	docker push '$(hashcloakAuth):$(BRANCH)'
 
-build: build-geth build-katzen-server build-katzen-nonvoting-authority build-meson build-hashcloak-nonvoting-authority
+push-hashcloak-mixer: build-hashcloak-mixer
+	docker push '$(hashcloakAuth):$(BRANCH)'
+
+build: build-geth build-katzen-server build-katzen-nonvoting-authority build-meson build-hashcloak-nonvoting-authority build-hashcloak-mixer
 
 build-geth:
 	sed 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile > /tmp/geth.Dockerfile
@@ -105,7 +109,12 @@ build-hashcloak-nonvoting-authority: pull-katzen-auth
 	docker build -f /tmp/auth.nonvoting.Dockerfile -t $(hashcloakAuth):$(BRANCH) ./ops
 	@touch $(flags)/$@
 
-up: permits pull build-meson build-hashcloak-nonvoting-authority up-nonvoting
+build-hashcloak-mixer: pull-katzen-server
+	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./ops/mixer.Dockerfile > /tmp/mixer.Dockerfile
+	docker build -f /tmp/mixer.Dockerfile -t $(hashcloakMixer):$(BRANCH) ./ops
+	@touch $(flags)/$@
+
+up: permits pull build-meson build-hashcloak-nonvoting-authority build-hashcloak-mixer up-nonvoting
 
 permits:
 	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
@@ -115,7 +124,7 @@ permits:
 
 up-nonvoting:
 	GETH_IMAGE=$(gethImage) \
-	KATZEN_SERVER=$(katzenServer) \
+	HASHCLOAK_MIXER=$(hashcloakMixer):$(BRANCH) \
 	KATZEN_AUTH=$(hashcloakAuth):$(BRANCH) \
 	MESON_IMAGE=$(mesonServer):$(BRANCH) \
 	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d

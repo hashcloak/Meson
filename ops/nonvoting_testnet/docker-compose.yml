@@ -34,10 +34,10 @@ services:
     image: ${MESON_IMAGE}
     volumes:
       - ./conf/provider1:/conf
-    command: /go/bin/server -f /conf/katzenpost.toml
-    ports:
-      - "127.0.0.1:59484:59484"
-      - "127.0.0.1:36968:36968"
+    environment:
+      - IS_PROVIDER=true
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
     depends_on:
       - auth
     networks:
@@ -47,25 +47,33 @@ services:
   provider2:
     restart: unless-stopped
     image: ${MESON_IMAGE}
+    environment:
+      - PORT=29484
+      - REGISTRATION_PORT=36967
+      - IDENTIFIER=provider2
+      - IS_PROVIDER=true
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+      - SERVICE_TICKER=rin
+      - CHAIN_ID=4
+      - RPC_URL=http://172.28.1.11:9545
     volumes:
       - ./conf/provider2:/conf
-    command: /go/bin/server -f /conf/katzenpost.toml
-    ports:
-      - "127.0.0.1:29484:29484"
-      - "127.0.0.1:36967:36967"
     depends_on:
       - auth
-      - provider1
     networks:
       nonvoting_test_net:
         ipv4_address: 172.28.1.4
 
   mix1:
     restart: unless-stopped
-    image: ${KATZEN_SERVER}
+    image: ${HASHCLOAK_MIXER}
     volumes:
       - ./conf/mix1:/conf
-    command: /go/bin/server -f /conf/katzenpost.toml
+    environment:
+      - IDENTIFIER=mix1
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
     depends_on:
       - auth
       - provider1
@@ -76,10 +84,14 @@ services:
 
   mix2:
     restart: unless-stopped
-    image: ${KATZEN_SERVER}
+    image: ${HASHCLOAK_MIXER}
     volumes:
       - ./conf/mix2:/conf
-    command: /go/bin/server -f /conf/katzenpost.toml
+    environment:
+      - IDENTIFIER=mix2
+      - PORT=29486
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
     depends_on:
       - auth
       - provider1
@@ -90,10 +102,14 @@ services:
 
   mix3:
     restart: unless-stopped
-    image: ${KATZEN_SERVER}
+    image: ${HASHCLOAK_MIXER}
     volumes:
       - ./conf/mix3:/conf
-    command: /go/bin/server -f /conf/katzenpost.toml
+    environment:
+      - IDENTIFIER=mix3
+      - PORT=29487
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
     depends_on:
       - auth
       - provider1
@@ -107,7 +123,6 @@ services:
     image: ${KATZEN_AUTH}
     volumes:
       - ./conf/auth:/conf
-    command: /go/bin/nonvoting -f /conf/authority.toml
     environment:
       - DISABLE_LOGS=false
       - LOG_LEVEL=DEBUG
