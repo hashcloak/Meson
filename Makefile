@@ -21,7 +21,7 @@ mesonClient=$(dockerRepo)/meson-client
 hashcloakAuth=$(dockerRepo)/authority
 hashcloakMixer=$(dockerRepo)/mixer
 
-messagePush="LOG: Image already exists in docker.io/$(repo). Not pushing: "
+messagePush="LOG: Image already exists in docker.io/$(dockerRepo). Not pushing: "
 messagePull="LOG: success in pulling image: "
 
 clean:
