@@ -29,12 +29,6 @@ clean:
 	rm -rf /tmp/authority
 	rm -rf $(flags)
 
-clean-data:
-	rm -rf ./ops/nonvoting_testnet/conf/provider?
-	rm -rf ./ops/nonvoting_testnet/conf/mix?
-	rm -rf ./ops/nonvoting_testnet/conf/auth
-	git checkout ./ops/nonvoting_testnet/conf
-
 pull: pull-katzen-auth pull-katzen-server pull-geth
 
 pull-katzen-auth:
@@ -98,8 +92,8 @@ build-katzen-nonvoting-authority:
 	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
 
 build-meson: pull-katzen-server
-	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
-	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
+	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./ops/meson.Dockerfile > /tmp/meson.Dockerfile
+	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) .
 	@touch $(flags)/$@
 
 build-hashcloak-nonvoting-authority: pull-katzen-auth
