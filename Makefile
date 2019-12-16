@@ -79,7 +79,7 @@ push-hashcloak-nonvoting-auth: build-hashcloak-nonvoting-authority
 	docker push '$(hashcloakAuth):$(BRANCH)'
 
 push-hashcloak-mixer: build-hashcloak-mixer
-	docker push '$(hashcloakAuth):$(BRANCH)'
+	docker push '$(hashcloakMixer):$(BRANCH)'
 
 build: build-geth build-katzen-server build-katzen-nonvoting-authority build-meson build-hashcloak-nonvoting-authority build-hashcloak-mixer
 
