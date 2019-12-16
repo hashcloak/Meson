@@ -16,5 +16,5 @@ RUN go build -o Meson cmd/main.go
 FROM %%KATZEN_SERVER%%
 COPY --from=builder /go/Meson/Meson /go/bin/Meson
 RUN apk update --no-cache && apk add --no-cache bash
-ADD ./ops/provider.entry.sh /entry.sh
+ADD ./ops/meson.entry.sh /entry.sh
 ENTRYPOINT /entry.sh
