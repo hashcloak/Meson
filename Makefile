@@ -34,8 +34,6 @@ clean-data:
 	rm -rf ./ops/nonvoting_testnet/conf/mix?
 	rm -rf ./ops/nonvoting_testnet/conf/auth
 	git checkout ./ops/nonvoting_testnet/conf
-	rm -r $(flags)/permits || true
-	$(MAKE) permits
 
 pull: pull-katzen-auth pull-katzen-server pull-geth
 
@@ -114,13 +112,7 @@ build-hashcloak-mixer: pull-katzen-server
 	docker build -f /tmp/mixer.Dockerfile -t $(hashcloakMixer):$(BRANCH) ./ops
 	@touch $(flags)/$@
 
-up: permits pull build-meson build-hashcloak-nonvoting-authority build-hashcloak-mixer up-nonvoting
-
-permits:
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/mix?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/auth
-	@touch $(flags)/$@
+up: pull build-meson build-hashcloak-nonvoting-authority build-hashcloak-mixer up-nonvoting
 
 up-nonvoting:
 	GETH_IMAGE=$(gethImage) \
