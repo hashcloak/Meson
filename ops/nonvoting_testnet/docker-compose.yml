@@ -1,5 +1,15 @@
 version: "3"
 
+volumes:
+  provider1:
+  provider2:
+  auth:
+  mix1:
+  mix2:
+  mix3:
+  goerli:
+  rinkeby:
+
 services:
   goerli:
     image: ${GETH_IMAGE}
@@ -8,7 +18,7 @@ services:
     ports:
       - "127.0.0.1:19545:9545"
     volumes:
-      - ./conf/goerli:/blockchain
+      - goerli:/blockchain
     depends_on:
       - provider1
     networks:
@@ -22,7 +32,7 @@ services:
     ports:
       - "127.0.0.1:19546:9545"
     volumes:
-      - ./conf/rinkeby:/blockchain
+      - rinkeby:/blockchain
     depends_on:
       - provider2
     networks:
@@ -33,7 +43,7 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     volumes:
-      - ./conf/provider1:/conf
+      - provider1:/conf
     environment:
       - IS_PROVIDER=true
       - LOG_LEVEL=DEBUG
@@ -58,7 +68,7 @@ services:
       - CHAIN_ID=4
       - RPC_URL=http://172.28.1.11:9545
     volumes:
-      - ./conf/provider2:/conf
+      - provider2:/conf
     depends_on:
       - auth
     networks:
@@ -69,7 +79,7 @@ services:
     restart: unless-stopped
     image: ${HASHCLOAK_MIXER}
     volumes:
-      - ./conf/mix1:/conf
+      - mix1:/conf
     environment:
       - IDENTIFIER=mix1
       - LOG_LEVEL=DEBUG
@@ -86,7 +96,7 @@ services:
     restart: unless-stopped
     image: ${HASHCLOAK_MIXER}
     volumes:
-      - ./conf/mix2:/conf
+      - mix2:/conf
     environment:
       - IDENTIFIER=mix2
       - PORT=29486
@@ -104,7 +114,7 @@ services:
     restart: unless-stopped
     image: ${HASHCLOAK_MIXER}
     volumes:
-      - ./conf/mix3:/conf
+      - mix3:/conf
     environment:
       - IDENTIFIER=mix3
       - PORT=29487
@@ -122,7 +132,7 @@ services:
     restart: unless-stopped
     image: ${KATZEN_AUTH}
     volumes:
-      - ./conf/auth:/conf
+      - auth:/conf
     environment:
       - DISABLE_LOGS=false
       - LOG_LEVEL=DEBUG
