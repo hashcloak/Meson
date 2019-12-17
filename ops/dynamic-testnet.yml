@@ -1,0 +1,124 @@
+version: "3.7"
+
+networks:
+  nonvoting_testnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.1.0/24
+
+services:
+  auth:
+    restart: unless-stopped
+    image: ${AUTHORITY_IMAGE}
+    environment:
+      - DISABLE_LOGS=false
+      - LOG_LEVEL=DEBUG
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.2
+
+  provider1:
+    restart: unless-stopped
+    image: ${MESON_IMAGE}
+    environment:
+      - IDENTIFIER=provider1
+      - PORT=59483
+      - IS_PROVIDER=true
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+    depends_on:
+      - auth
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.3
+
+  provider2:
+    restart: unless-stopped
+    image: ${MESON_IMAGE}
+    environment:
+      - PORT=29484
+      - REGISTRATION_PORT=36967
+      - IDENTIFIER=provider2
+      - IS_PROVIDER=true
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+      - SERVICE_TICKER=rin
+      - CHAIN_ID=4
+      - RPC_URL=http://172.28.1.11:9545
+    depends_on:
+      - auth
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.4
+
+  mix1:
+    restart: unless-stopped
+    image: ${MESON_IMAGE}
+    environment:
+      - IDENTIFIER=mix1
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+    depends_on:
+      - auth
+      - provider1
+      - provider2
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.5
+
+  mix2:
+    restart: unless-stopped
+    image: ${MESON_IMAGE}
+    environment:
+      - IDENTIFIER=mix2
+      - PORT=29486
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+    depends_on:
+      - auth
+      - provider1
+      - provider2
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.6
+
+  mix3:
+    restart: unless-stopped
+    image: ${MESON_IMAGE}
+    environment:
+      - IDENTIFIER=mix3
+      - PORT=29487
+      - LOG_LEVEL=DEBUG
+      - DISABLE_LOGS=false
+    depends_on:
+      - auth
+      - provider1
+      - provider2
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.7
+  goerli:
+    image: ${GETH_IMAGE}
+    environment:
+      - "CHAIN=goerli"
+    volumes:
+      - /tmp/goerli:/blockchain
+    depends_on:
+      - provider1
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.10
+
+  rinkeby:
+    image: ${GETH_IMAGE}
+    environment:
+      - "CHAIN=rinkeby"
+    volumes:
+      - /tmp/rinkeby:/blockchain
+    depends_on:
+      - provider2
+    networks:
+      nonvoting_testnet:
+        ipv4_address: 172.28.1.11
+
