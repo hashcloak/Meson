@@ -27,6 +27,7 @@ services:
       - IS_PROVIDER=true
       - LOG_LEVEL=DEBUG
       - DISABLE_LOGS=false
+      - RPC_URL=https://g.sebas.tech
     depends_on:
       - auth
     networks:
@@ -45,7 +46,7 @@ services:
       - DISABLE_LOGS=false
       - SERVICE_TICKER=rin
       - CHAIN_ID=4
-      - RPC_URL=http://172.28.1.11:9545
+      - RPC_URL=https://rinkeby.sebas.tech
     depends_on:
       - auth
     networks:
@@ -98,27 +99,3 @@ services:
     networks:
       nonvoting_testnet:
         ipv4_address: 172.28.1.7
-  goerli:
-    image: ${GETH_IMAGE}
-    environment:
-      - "CHAIN=goerli"
-    volumes:
-      - /tmp/goerli:/blockchain
-    depends_on:
-      - provider1
-    networks:
-      nonvoting_testnet:
-        ipv4_address: 172.28.1.10
-
-  rinkeby:
-    image: ${GETH_IMAGE}
-    environment:
-      - "CHAIN=rinkeby"
-    volumes:
-      - /tmp/rinkeby:/blockchain
-    depends_on:
-      - provider2
-    networks:
-      nonvoting_testnet:
-        ipv4_address: 172.28.1.11
-

@@ -8,10 +8,7 @@ go:
 
 script:
   - if [ -n "$(gofmt -l ./plugin)" ]; then echo "Go code is not formatted:"; gofmt -d ./plugin; exit 1; fi
-  - make up && sleep 30
-  - make test-client
-  - make down
-  - make up-dynamic && sleep 30
+  - make up-dynamic && sleep 20
   - make test-client
 
 after_success:

@@ -22,7 +22,7 @@ enableUserRegistrationHTTP=${ALLOW_HTTP_USER_REGISTRATION:=true}
 management=${ALLOW_MANAGEMENT:=false}
 service="${SERVICE_TICKER:=gor}"
 chainID="${CHAIN_ID:=5}"
-rpcURL="${RPC_URL:=http://172.28.1.10:9545}"
+rpcURL="${RPC_URL:=https://g.sebas.tech}"
 plugins="${PLUGINS:=echo panda memspool}"
 
 
