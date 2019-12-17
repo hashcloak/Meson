@@ -110,7 +110,7 @@ permits:
 	sudo chmod -R 700 ops/nonvoting_testnet/conf/auth
 	@touch $(flags)/$@
 
-up: permits build-meson build-hashcloak-nonvoting-authority up-nonvoting
+up: permits build-meson build-hashcloak-nonvoting-authority
 	GETH_IMAGE=$(gethImage) \
 	KATZEN_SERVER=$(katzenServer) \
 	KATZEN_AUTH=$(katzenAuth) \
