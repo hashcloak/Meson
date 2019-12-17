@@ -1,9 +1,11 @@
 TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
+
 BRANCH=$(TRAVIS_BRANCH)
-TRAVIS_PULL_REQUEST_BRANCH ?= ""
-ifneq ($(TRAVIS_PULL_REQUEST_BRANCH), "")
-	BRANCH=$(TRAVIS_PULL_REQUEST_BRANCH)
-endif
+
+#TRAVIS_PULL_REQUEST_BRANCH ?= ""
+#ifneq ($(TRAVIS_PULL_REQUEST_BRANCH), "")
+	#BRANCH=$(TRAVIS_PULL_REQUEST_BRANCH)
+#endif
 
 flags=.makeFlags
 VPATH=$(flags)
