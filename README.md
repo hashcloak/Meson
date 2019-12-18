@@ -1,4 +1,6 @@
 # Meson
+[![Build Status](https://travis-ci.com/hashcloak/Meson.svg?branch=master)](https://travis-ci.com/hashcloak/Meson)
+
 This is the main repository related to the Meson project. 
 Meson is a mixnet for cryptocurrency transactions. Meson is based on the [Katzenpost software project](https://katzenpost.mixnetworks.org/).
 
