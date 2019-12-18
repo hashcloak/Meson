@@ -38,5 +38,4 @@ Meson is an experimental project built on experimental software implementing an 
 We can't rely on donations and grants forever. As such, we want to find a way to self-sustain the development and maintainance of Meson. We will not do an ICO as there is no need for a token. The current ideas we have around this are:
 
 * Payment channels
-* Building a privacy-focused wallet
-
+* Support
