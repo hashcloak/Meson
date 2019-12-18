@@ -1,11 +1,11 @@
 TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
-
 BRANCH=$(TRAVIS_BRANCH)
 
-#TRAVIS_PULL_REQUEST_BRANCH ?= ""
-#ifneq ($(TRAVIS_PULL_REQUEST_BRANCH), "")
-	#BRANCH=$(TRAVIS_PULL_REQUEST_BRANCH)
-#endif
+ifdef $(TRAVIS_PULL_REQUEST_BRANCH)
+ifneq ($(TRAVIS_PULL_REQUEST_BRANCH), "")
+	BRANCH = $(TRAVIS_PULL_REQUEST_BRANCH)
+endif
+endif
 
 flags=.makeFlags
 VPATH=$(flags)
@@ -32,6 +32,7 @@ clean:
 	rm -rf /tmp/server
 	rm -rf /tmp/authority
 	rm -rf $(flags)
+	mkdir $(flags)
 
 clean-data:
 	rm -rf ./ops/nonvoting_testnet/conf/provider?
@@ -72,7 +73,6 @@ push-geth:
 
 push-hashcloak-nonvoting-auth: build-hashcloak-nonvoting-authority
 	docker push '$(hashcloakAuth):$(BRANCH)'
-
 
 push-meson: build-meson
 	docker push '$(mesonServer):$(BRANCH)'
