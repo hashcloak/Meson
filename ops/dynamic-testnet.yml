@@ -12,8 +12,13 @@ services:
     restart: unless-stopped
     image: ${AUTHORITY_IMAGE}
     environment:
+      - MIXERS=4r9jePAbuzhytcnM3nbD5UQOmzl1X1hI8QOMbhTrg8s=,1x8tq04hY+i83o9Yn2nrfTkFj4jXIMWCWilR7fgrWyM=,La2FnsbKoU8dzQhfN4zkxSYn6T7LRWmFn0JgtlEklQw=
+      - PROVIDERS=provider1:2krwfNDfbakZCSTUUZYKXwdduzlEgS9Jfwm7eyZ0sCg=,provider2:imigzI26tTRXyYLXujLEPI9QrNYOEgC4DElsFdP9acQ=
       - DISABLE_LOGS=false
       - LOG_LEVEL=DEBUG
+    volumes:
+      - ./nonvoting_testnet/conf/auth/authority_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/auth/authority_data/public.private.pem:/conf/data/identity.public.pem
     networks:
       nonvoting_testnet:
         ipv4_address: 172.28.1.2
@@ -22,12 +27,17 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     environment:
+      - AUTHORITY_KEY=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
+      - AUTHORITY_ADDRESS=172.28.1.2:29483
       - IDENTIFIER=provider1
       - PORT=59483
       - IS_PROVIDER=true
       - LOG_LEVEL=DEBUG
       - DISABLE_LOGS=false
       - RPC_URL=https://g.sebas.tech
+    volumes:
+      - ./nonvoting_testnet/conf/provider1/provider_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/provider1/provider_data/public.private.pem:/conf/data/identity.public.pem
     depends_on:
       - auth
     networks:
@@ -38,6 +48,8 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     environment:
+      - AUTHORITY_KEY=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
+      - AUTHORITY_ADDRESS=172.28.1.2:29483
       - PORT=29484
       - REGISTRATION_PORT=36967
       - IDENTIFIER=provider2
@@ -47,6 +59,9 @@ services:
       - SERVICE_TICKER=rin
       - CHAIN_ID=4
       - RPC_URL=https://rinkeby.sebas.tech
+    volumes:
+      - ./nonvoting_testnet/conf/provider2/provider_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/provider2/provider_data/public.private.pem:/conf/data/identity.public.pem
     depends_on:
       - auth
     networks:
@@ -57,9 +72,14 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     environment:
+      - AUTHORITY_KEY=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
+      - AUTHORITY_ADDRESS=172.28.1.2:29483
       - IDENTIFIER=mix1
       - LOG_LEVEL=DEBUG
       - DISABLE_LOGS=false
+    volumes:
+      - ./nonvoting_testnet/conf/mix1/mix_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/mix1/mix_data/identity.public.pem:/conf/data/identity.public.pem
     depends_on:
       - auth
       - provider1
@@ -72,10 +92,15 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     environment:
+      - AUTHORITY_KEY=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
+      - AUTHORITY_ADDRESS=172.28.1.2:29483
       - IDENTIFIER=mix2
       - PORT=29486
       - LOG_LEVEL=DEBUG
       - DISABLE_LOGS=false
+    volumes:
+      - ./nonvoting_testnet/conf/mix2/mix_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/mix2/mix_data/identity.public.pem:/conf/data/identity.public.pem
     depends_on:
       - auth
       - provider1
@@ -88,10 +113,15 @@ services:
     restart: unless-stopped
     image: ${MESON_IMAGE}
     environment:
+      - AUTHORITY_KEY=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
+      - AUTHORITY_ADDRESS=172.28.1.2:29483
       - IDENTIFIER=mix3
       - PORT=29487
       - LOG_LEVEL=DEBUG
       - DISABLE_LOGS=false
+    volumes:
+      - ./nonvoting_testnet/conf/mix3/mix_data/identity.private.pem:/conf/data/identity.private.pem
+      - ./nonvoting_testnet/conf/mix3/mix_data/identity.public.pem:/conf/data/identity.public.pem
     depends_on:
       - auth
       - provider1

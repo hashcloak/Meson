@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 port="${PORT:=29483}"
 dockerNetworkIP=$(ip addr show eth0 | grep inet | grep -v inet6 | cut -d' ' -f6 | cut -d\/ -f1)
 address="${ADDRESS:=$dockerNetworkIP}"
@@ -6,25 +7,28 @@ configFile="${CONFIG_FILE:=/conf/authority.toml}"
 dataDir="${DATA_DIR:=/conf/data}"
 mkdir -p $dataDir
 chmod -R 700 $dataDir
-
 # Level specifies the log level out of `ERROR`, `WARNING`, `NOTICE`,
 # `INFO` and `DEBUG`.
 logLevel="${LOG_LEVEL:=ERROR}"
 disableLogging="${DISABLE_LOGS:=true}"
 logFile=$dataDir/katzenpost.log
-
+rm -f $logFile
 ln -s /dev/stdout $logFile
 
-default="4r9jePAbuzhytcnM3nbD5UQOmzl1X1hI8QOMbhTrg8s=
-1x8tq04hY+i83o9Yn2nrfTkFj4jXIMWCWilR7fgrWyM=
-La2FnsbKoU8dzQhfN4zkxSYn6T7LRWmFn0JgtlEklQw="
-mixes="${MIXES:=$default}"
-
-default="provider1,2krwfNDfbakZCSTUUZYKXwdduzlEgS9Jfwm7eyZ0sCg=
-provider2,imigzI26tTRXyYLXujLEPI9QrNYOEgC4DElsFdP9acQ="
-providers="${PROVIDERS:=$default}"
-
-cat - > $configFile <<EOF
+function generateConfig {
+  if [[ -z $MIXERS ]]; then
+    echo "ERROR: Value MIXERS is not set."
+    echo "Please set this value with the public keys of the mix nodes spaced with a comma"
+    echo "example: key1,key2,key3...keyN"
+    exit 1
+  fi
+  if [ -z $PROVIDERS ]; then
+    echo "ERROR: Value PROVIDERS is not set."
+    echo "Please set this value with the public keys of the provider nodes with their identifiers and keys"
+    echo "example: identifier1:key1,identifier2:key2...identifierN:keyN"
+    exit 1
+  fi
+  cat - > $configFile <<EOF
 # Katzenpost non-voting authority configuration file.
 [Authority]
   Addresses = [ "${address}:${port}" ]
@@ -48,39 +52,30 @@ cat - > $configFile <<EOF
   LambdaLMaxDelay = 30000
   LambdaD = 0.0001234
   LambdaDMaxDelay = 30000
-
 EOF
 
-for mix_id_key in $mixes; do
-cat - >> $configFile <<EOF
+  IFS=,
+  for prov in $PROVIDERS; do
+    cat - >> $configFile <<EOF
+[[Providers]]
+  Identifier = "$(echo $prov | cut -d':' -f1)"
+  IdentityKey = "$(echo $prov | cut -d':' -f2)"
+EOF
+  done
+
+  for mix_id_key in $MIXERS; do
+    cat - >> $configFile <<EOF
 [[Mixes]]
   IdentityKey = "${mix_id_key}"
-
 EOF
-done
+  done
+}
 
-for prov in $providers; do
-cat - >> $configFile <<EOF
-[[Providers]]
-  Identifier = "$(echo $prov | cut -d',' -f1)"
-  IdentityKey = "$(echo $prov | cut -d',' -f2)"
-
-EOF
-done
-
-
-cat - > ${dataDir}/identity.private.pem << EOF
------BEGIN ED25519 PRIVATE KEY-----
-bI4vCmWUlQOupW2Tr/rLbDjzDmE1kL5Qb7doaSpHOWKjjDU3KP+co3CGjlJZ8Ah+
-HtIxTwVHHnacwcaBiwwepA==
------END ED25519 PRIVATE KEY-----
-EOF
-
-
-cat - > ${dataDir}/identity.public.pem << EOF
------BEGIN ED25519 PUBLIC KEY-----
-o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=
------END ED25519 PUBLIC KEY-----
-EOF
+if [[ ! -f $configFile ]]; then
+  echo "Generating config file..."
+  generateConfig
+else
+  echo "Using exsiting config file at: $configFile"
+fi
 
 exec /go/bin/nonvoting -f $configFile

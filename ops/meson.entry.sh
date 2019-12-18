@@ -10,12 +10,11 @@ mkdir -p $dataDir
 chmod -R 700 $dataDir
 currencyFile="${CURRENCY_FILE:=/conf/currency.toml}"
 isProvider=${IS_PROVIDER:=false}
-authorityAddress="${AUTH_ADDRESS:=172.28.1.2:29483}"
-authorityPubKey="${AUTH_PUBK:=o4w1Nyj/nKNwho5SWfAIfh7SMU8FRx52nMHGgYsMHqQ=}"
 # logLevelValues can be: `ERROR`, `WARNING`, `NOTICE`, `INFO` and `DEBUG`.
 logLevel="${LOG_LEVEL:=ERROR}"
 disableLogging=${DISABLE_LOGS:=true}
 logFile=$dataDir/katzenpost.log
+rm -f $logFile
 ln -s /dev/stdout $logFile
 disableRateLimit=${DISABLE_RATE_LIM:=true}
 enableUserRegistrationHTTP=${ALLOW_HTTP_USER_REGISTRATION:=true}
@@ -25,11 +24,22 @@ chainID="${CHAIN_ID:=5}"
 rpcURL="${RPC_URL:=https://g.sebas.tech}"
 plugins="${PLUGINS:=echo panda memspool}"
 
+if [[ -z $AUTHORITY_ADDRESS ]]; then
+  echo "ERROR: Value AUTHORITY_ADDRESS is not set."
+  echo "Please set this value with the public ipv4 or ipv6 address with the port included"
+  echo "example: key1,key2,key3...keyN"
+  exit 1
+fi
 
+if [[ -z $AUTHORITY_KEY ]]; then
+  echo "ERROR: Value AUTHORITY_KEY is not set."
+  echo "Please set this value with the public key of the authority"
+  exit 1
+fi
 
-if $isProvider; then
-echo "Setting up provider"
-cat - > $configFile <<EOF
+function generateProviderConfig {
+  echo "Setting up provider"
+  cat - > $configFile <<EOF
 # Katzenpost server configuration file.
 [Server]
   Identifier = "${IDENTIFIER}"
@@ -39,8 +49,8 @@ cat - > $configFile <<EOF
 
 [PKI]
   [PKI.Nonvoting]
-    Address = "${authorityAddress}"
-    PublicKey = "${authorityPubKey}"
+    Address = "${AUTHORITY_ADDRESS}"
+    PublicKey = "${AUTHORITY_KEY}"
 
 [Logging]
   Disable = ${disableLogging}
@@ -75,8 +85,8 @@ AdvertiseUserRegistrationHTTPAddresses = ["http://${address}:${registrationPort}
       f = "$currencyFile"
 EOF
 
-if [[ $plugins == *"echo"* ]]; then
-cat - >> $configFile <<EOF
+  if [[ $plugins == *"echo"* ]]; then
+    cat - >> $configFile <<EOF
    [[Provider.CBORPluginKaetzchen]]
      Disable = false
      Capability = "echo"
@@ -87,10 +97,10 @@ cat - >> $configFile <<EOF
       log_dir = "${dataDir}"
       log_level = "${logLevel}"
 EOF
-fi
+  fi
 
-if [[ $plugins == *"panda"* ]]; then
-cat - >> $configFile <<EOF
+  if [[ $plugins == *"panda"* ]]; then
+    cat - >> $configFile <<EOF
    [[Provider.CBORPluginKaetzchen]]
      Disable = false
      Capability = "panda"
@@ -102,10 +112,10 @@ cat - >> $configFile <<EOF
       log_level = "${logLevel}"
       fileStore = "${dataDir}/panda.storage"
 EOF
-fi
+  fi
 
-if [[ $plugins == *"memspool"* ]]; then
-cat - >> $configFile <<EOF
+  if [[ $plugins == *"memspool"* ]]; then
+    cat - >> $configFile <<EOF
   [[Provider.CBORPluginKaetzchen]]
     Disable = false
     Capability = "spool"
@@ -116,9 +126,9 @@ cat - >> $configFile <<EOF
       data_store = "${dataDir}/memspool.storage"
       log_dir = "${dataDir}"
 EOF
-fi
+  fi
 
-cat - > $currencyFile <<EOF
+  cat - > $currencyFile <<EOF
 Ticker = "${service}"
 RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
@@ -128,9 +138,11 @@ LogDir = "${dataDir}"
 LogLevel = "${logLevel}"
 EOF
 
-else
-echo "Setting up mix"
-cat - > $configFile <<EOF
+}
+
+function generateMixConfig {
+  echo "Setting up mix"
+  cat - > $configFile <<EOF
 # Katzenpost server configuration file.
 [Server]
   Identifier = "${IDENTIFIER}"
@@ -140,93 +152,24 @@ cat - > $configFile <<EOF
 
 [PKI]
   [PKI.Nonvoting]
-    Address = "${authorityAddress}"
-    PublicKey = "${authorityPubKey}"
-
+    Address = "${AUTHORITY_ADDRESS}"
+    PublicKey = "${AUTHORITY_KEY}"
 [Logging]
   Disable = ${disableLogging}
   File = "${logFile}"
   Level = "${logLevel}"
 EOF
+}
+
+if [[ ! -f "$configFile" ]]; then
+  echo "Generating config file..."
+  if $isProvider; then
+    generateProviderConfig
+  else
+    generateMixConfig
+  fi
+else
+  echo "Using existing config file at: $configFile"
 fi
-
-if [ ${IDENTIFIER} == "mix1" ]; then
-pk='-----BEGIN ED25519 PRIVATE KEY-----
-LGH1LpJqJAG+Hg1wV6oMgYtQ838xZS9vRwjQ0B0kybfiv2N48Bu7OHK1yczedsPl
-RA6bOXVfWEjxA4xuFOuDyw==
------END ED25519 PRIVATE KEY-----'
-pub='-----BEGIN ED25519 PUBLIC KEY-----
-4r9jePAbuzhytcnM3nbD5UQOmzl1X1hI8QOMbhTrg8s=
------END ED25519 PUBLIC KEY-----'
-link='-----BEGIN X25519 PRIVATE KEY-----
-Xv4PJ6gPCJEvuLVQ7dsUMT21KnASz4O82CyJhpCPoXg=
------END X25519 PRIVATE KEY-----'
-fi
-
-
-if [ ${IDENTIFIER} == "mix2" ]; then
-pk='-----BEGIN ED25519 PRIVATE KEY-----
-ApYndNBRTyY5Peu9sO7fQiZphU04Kepp3ai+dFXDdrLXHy2rTiFj6Lzej1ifaet9
-OQWPiNcgxYJaKVHt+CtbIw==
------END ED25519 PRIVATE KEY-----'
-pub='-----BEGIN ED25519 PUBLIC KEY-----
-1x8tq04hY+i83o9Yn2nrfTkFj4jXIMWCWilR7fgrWyM=
------END ED25519 PUBLIC KEY-----'
-link='-----BEGIN X25519 PRIVATE KEY-----
-MpTalIlC0SqMEWvgqiohvu18vfxxq6Rm5cTVZBFE9eY=
------END X25519 PRIVATE KEY-----'
-fi
-
-if [ ${IDENTIFIER} == "mix3" ]; then
-pk='-----BEGIN ED25519 PRIVATE KEY-----
-olXV48urFRPjucBUbvZ1i8bDGQozzyaazDndya9OmiAtrYWexsqhTx3NCF83jOTF
-JifpPstFaYWfQmC2USSVDA==
------END ED25519 PRIVATE KEY-----'
-pub='-----BEGIN ED25519 PUBLIC KEY-----
-La2FnsbKoU8dzQhfN4zkxSYn6T7LRWmFn0JgtlEklQw=
------END ED25519 PUBLIC KEY-----'
-link='-----BEGIN X25519 PRIVATE KEY-----
-87rDmtVXd1DW3eqh6Zfs+ICrRu0YT2Rx8CuRs9sIfCE=
------END X25519 PRIVATE KEY-----'
-fi
-
-
-if [ ${IDENTIFIER} == "provider1" ]; then
-pk='-----BEGIN ED25519 PRIVATE KEY-----
-ndkH4sYkxVXPFU7OF6wryVar5cWxsZEBcFXWOHnEM3/aSvB80N9tqRkJJNRRlgpf
-B127OUSBL0l/Cbt7JnSwKA==
------END ED25519 PRIVATE KEY-----'
-pub='-----BEGIN ED25519 PUBLIC KEY-----
-2krwfNDfbakZCSTUUZYKXwdduzlEgS9Jfwm7eyZ0sCg=
------END ED25519 PUBLIC KEY-----'
-link='-----BEGIN X25519 PRIVATE KEY-----
-iboFtIVykmdzQoL3rDha5Vs0RtxfmQJT8CyWRbT09Xg=
------END X25519 PRIVATE KEY-----'
-fi
-
-if [ ${IDENTIFIER} == "provider2" ]; then
-pk='-----BEGIN ED25519 PRIVATE KEY-----
-xun4XQfdsh+w8pD+e1Rml9RCaOTfCoZHG3s6OOek9v2KaKDMjbq1NFfJgte6MsQ8
-j1Cs1g4SALgMSWwV0/1pxA==
------END ED25519 PRIVATE KEY-----'
-pub='-----BEGIN ED25519 PUBLIC KEY-----
-imigzI26tTRXyYLXujLEPI9QrNYOEgC4DElsFdP9acQ=
------END ED25519 PUBLIC KEY-----'
-link='-----BEGIN X25519 PRIVATE KEY-----
-04XSX85Ov4jDTb0vqEMv3McYME7weayniGLKtmF6UwQ=
------END X25519 PRIVATE KEY-----'
-fi
-
-cat - > ${dataDir}/identity.private.pem << EOF
-${pk}
-EOF
-
-cat - > ${dataDir}/identity.public.pem << EOF
-${pub}
-EOF
-
-cat - > ${dataDir}/link.private.pem << EOF
-${link}
-EOF
 
 exec /go/bin/server -f $configFile
