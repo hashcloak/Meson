@@ -6,14 +6,13 @@ dockerNetworkIP=$(ip addr show eth0 | grep inet | grep -v inet6 | cut -d' ' -f6 
 address="${ADDRESS:=$dockerNetworkIP}"
 configFile="${CONFIG_FILE:=/conf/katzenpost.toml}"
 dataDir="${DATA_DIR:=/conf/data}"
-mkdir -p $dataDir
-chmod -R 700 $dataDir
 currencyFile="${CURRENCY_FILE:=/conf/currency.toml}"
 isProvider=${IS_PROVIDER:=false}
 # logLevelValues can be: `ERROR`, `WARNING`, `NOTICE`, `INFO` and `DEBUG`.
 logLevel="${LOG_LEVEL:=ERROR}"
 disableLogging=${DISABLE_LOGS:=true}
-logFile=$dataDir/katzenpost.log
+logDir="${LOG_DIR:=/conf/logs}"
+logFile=$logDir/katzenpost.log
 disableRateLimit=${DISABLE_RATE_LIM:=true}
 enableUserRegistrationHTTP=${ALLOW_HTTP_USER_REGISTRATION:=true}
 management=${ALLOW_MANAGEMENT:=false}
@@ -65,7 +64,7 @@ AdvertiseUserRegistrationHTTPAddresses = ["http://${address}:${registrationPort}
     Command = "/go/bin/Meson"
     MaxConcurrency = 1
     [Provider.CBORPluginKaetzchen.Config]
-      log_dir = "${dataDir}"
+      log_dir = "${logDir}"
       log_level = "${logLevel}"
       f = "$currencyFile"
 
@@ -80,7 +79,7 @@ EOF
     Command = "/go/bin/echo_server"
     MaxConcurrency = 1
     [Provider.CBORPluginKaetzchen.Config]
-      log_dir = "${dataDir}"
+      log_dir = "${logDir}"
       log_level = "${logLevel}"
 EOF
   fi
@@ -94,7 +93,7 @@ EOF
     Command = "/go/bin/panda_server"
     MaxConcurrency = 1
     [Provider.CBORPluginKaetzchen.Config]
-      log_dir = "${dataDir}"
+      log_dir = "${logDir}"
       log_level = "${logLevel}"
       fileStore = "${dataDir}/panda.storage"
 
@@ -111,7 +110,7 @@ EOF
     MaxConcurrency = 1
     [Provider.CBORPluginKaetzchen.Config]
       data_store = "${dataDir}/memspool.storage"
-      log_dir = "${dataDir}"
+      log_dir = "${logDir}"
 EOF
   fi
 
@@ -121,7 +120,7 @@ RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
 RPCURL = "${RPC_URL}"
 ChainId = ${chainID}
-LogDir = "${dataDir}"
+LogDir = "${logDir}"
 LogLevel = "${logLevel}"
 EOF
 
@@ -149,11 +148,12 @@ EOF
 }
 
 
-rm -f $logFile
-ln -s /dev/stdout $logFile
-
 if [[ ! -f "$configFile" ]]; then
-
+  mkdir -p $dataDir
+  chmod -R 700 $dataDir
+  mkdir -p $logDir
+  rm -f $logFile
+  ln -s /dev/stdout $logFile
   if [[ -z $AUTHORITY_ADDRESS ]]; then
     echo "ERROR: Value AUTHORITY_ADDRESS is not set."
     echo "Please set this value with the public ipv4 or ipv6 address with the port included"
@@ -183,10 +183,16 @@ else
   echo "Using existing config file at: $configFile"
 fi
 
+printf '
+########
 
-printf '\n\n\n\n'
+'
 echo "The public key of this node is:"
 echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
-printf '\n\n\n\n'
+printf '
+
+
+########
+'
 
 exec /go/bin/server -f $configFile

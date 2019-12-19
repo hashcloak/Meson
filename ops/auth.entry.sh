@@ -5,15 +5,11 @@ dockerNetworkIP=$(ip addr show eth0 | grep inet | grep -v inet6 | cut -d' ' -f6 
 address="${ADDRESS:=$dockerNetworkIP}"
 configFile="${CONFIG_FILE:=/conf/authority.toml}"
 dataDir="${DATA_DIR:=/conf/data}"
-mkdir -p $dataDir
-chmod -R 700 $dataDir
-# Level specifies the log level out of `ERROR`, `WARNING`, `NOTICE`,
-# `INFO` and `DEBUG`.
+# logLevelValues can be: `ERROR`, `WARNING`, `NOTICE`, `INFO` and `DEBUG`.
 logLevel="${LOG_LEVEL:=ERROR}"
+logDir="${LOG_DIR:=/conf/logs}"
+logFile=$logDir/katzenpost.log
 disableLogging="${DISABLE_LOGS:=true}"
-logFile=$dataDir/katzenpost.log
-rm -f $logFile
-ln -s /dev/stdout $logFile
 
 function generateConfig {
   if [[ -z $MIX_KEYS ]]; then
@@ -73,14 +69,25 @@ EOF
 
 if [[ ! -f $configFile ]]; then
   echo "Generating config file..."
+  mkdir -p $dataDir
+  chmod -R 700 $dataDir
+  rm -f $logFile
+  ln -s /dev/stdout $logFile
   generateConfig
 else
   echo "Using exsiting config file at: $configFile"
 fi
 
-printf '\n\n\n\n'
+printf '
+########
+
+'
 echo "The public key of this node is:"
 echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
-printf '\n\n\n\n'
+printf '
+
+
+########
+'
 
 exec /go/bin/nonvoting -f $configFile
