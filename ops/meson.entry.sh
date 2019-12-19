@@ -14,28 +14,13 @@ isProvider=${IS_PROVIDER:=false}
 logLevel="${LOG_LEVEL:=ERROR}"
 disableLogging=${DISABLE_LOGS:=true}
 logFile=$dataDir/katzenpost.log
-rm -f $logFile
-ln -s /dev/stdout $logFile
 disableRateLimit=${DISABLE_RATE_LIM:=true}
 enableUserRegistrationHTTP=${ALLOW_HTTP_USER_REGISTRATION:=true}
 management=${ALLOW_MANAGEMENT:=false}
 service="${SERVICE_TICKER:=gor}"
 chainID="${CHAIN_ID:=5}"
-rpcURL="${RPC_URL:=https://g.sebas.tech}"
 plugins="${PLUGINS:=echo panda memspool}"
 
-if [[ -z $AUTHORITY_ADDRESS ]]; then
-  echo "ERROR: Value AUTHORITY_ADDRESS is not set."
-  echo "Please set this value with the public ipv4 or ipv6 address with the port included"
-  echo "example: key1,key2,key3...keyN"
-  exit 1
-fi
-
-if [[ -z $AUTHORITY_KEY ]]; then
-  echo "ERROR: Value AUTHORITY_KEY is not set."
-  echo "Please set this value with the public key of the authority"
-  exit 1
-fi
 
 function generateProviderConfig {
   echo "Setting up provider"
@@ -83,17 +68,18 @@ AdvertiseUserRegistrationHTTPAddresses = ["http://${address}:${registrationPort}
       log_dir = "${dataDir}"
       log_level = "${logLevel}"
       f = "$currencyFile"
+
 EOF
 
   if [[ $plugins == *"echo"* ]]; then
     cat - >> $configFile <<EOF
-   [[Provider.CBORPluginKaetzchen]]
-     Disable = false
-     Capability = "echo"
-     Endpoint = "+echo"
-     Command = "/go/bin/echo_server"
-     MaxConcurrency = 1
-     [Provider.CBORPluginKaetzchen.Config]
+  [[Provider.CBORPluginKaetzchen]]
+    Disable = false
+    Capability = "echo"
+    Endpoint = "+echo"
+    Command = "/go/bin/echo_server"
+    MaxConcurrency = 1
+    [Provider.CBORPluginKaetzchen.Config]
       log_dir = "${dataDir}"
       log_level = "${logLevel}"
 EOF
@@ -101,16 +87,17 @@ EOF
 
   if [[ $plugins == *"panda"* ]]; then
     cat - >> $configFile <<EOF
-   [[Provider.CBORPluginKaetzchen]]
-     Disable = false
-     Capability = "panda"
-     Endpoint = "+panda"
-     Command = "/go/bin/panda_server"
-     MaxConcurrency = 1
-     [Provider.CBORPluginKaetzchen.Config]
+  [[Provider.CBORPluginKaetzchen]]
+    Disable = false
+    Capability = "panda"
+    Endpoint = "+panda"
+    Command = "/go/bin/panda_server"
+    MaxConcurrency = 1
+    [Provider.CBORPluginKaetzchen.Config]
       log_dir = "${dataDir}"
       log_level = "${logLevel}"
       fileStore = "${dataDir}/panda.storage"
+
 EOF
   fi
 
@@ -161,9 +148,33 @@ function generateMixConfig {
 EOF
 }
 
+
+rm -f $logFile
+ln -s /dev/stdout $logFile
+
 if [[ ! -f "$configFile" ]]; then
+
+  if [[ -z $AUTHORITY_ADDRESS ]]; then
+    echo "ERROR: Value AUTHORITY_ADDRESS is not set."
+    echo "Please set this value with the public ipv4 or ipv6 address with the port included"
+    echo "example: key1,key2,key3...keyN"
+    exit 1
+  fi
+
+  if [[ -z $AUTHORITY_KEY ]]; then
+    echo "ERROR: Value AUTHORITY_KEY is not set."
+    echo "Please set this value with the public key of the authority"
+    exit 1
+  fi
+
   echo "Generating config file..."
+
   if $isProvider; then
+    if [[ -z $RPC_URL ]]; then
+      echo "ERROR: Value RPC_URL is not set."
+      echo "Please set this value to a blockchain node that Meson is capable of connecting to"
+      exit 1
+    fi
     generateProviderConfig
   else
     generateMixConfig
@@ -171,5 +182,11 @@ if [[ ! -f "$configFile" ]]; then
 else
   echo "Using existing config file at: $configFile"
 fi
+
+
+printf '\n\n\n\n'
+echo "The public key of this node is:"
+echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
+printf '\n\n\n\n'
 
 exec /go/bin/server -f $configFile

@@ -16,8 +16,8 @@ rm -f $logFile
 ln -s /dev/stdout $logFile
 
 function generateConfig {
-  if [[ -z $MIXERS ]]; then
-    echo "ERROR: Value MIXERS is not set."
+  if [[ -z $MIX_KEYS ]]; then
+    echo "ERROR: Value MIX_KEYS is not set."
     echo "Please set this value with the public keys of the mix nodes spaced with a comma"
     echo "example: key1,key2,key3...keyN"
     exit 1
@@ -63,7 +63,7 @@ EOF
 EOF
   done
 
-  for mix_id_key in $MIXERS; do
+  for mix_id_key in $MIX_KEYS; do
     cat - >> $configFile <<EOF
 [[Mixes]]
   IdentityKey = "${mix_id_key}"
@@ -77,5 +77,10 @@ if [[ ! -f $configFile ]]; then
 else
   echo "Using exsiting config file at: $configFile"
 fi
+
+printf '\n\n\n\n'
+echo "The public key of this node is:"
+echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
+printf '\n\n\n\n'
 
 exec /go/bin/nonvoting -f $configFile

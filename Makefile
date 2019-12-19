@@ -25,7 +25,7 @@ gethImage=$(dockerRepo)/client-go:$(gethVersion)
 mesonServer=$(dockerRepo)/meson
 hashcloakAuth=$(dockerRepo)/authority
 
-messagePush="LOG: Image already exists in docker.io/$(repoRepo). Not pushing: "
+messagePush="LOG: Image already exists in docker.io/$(dockerRepo). Not pushing: "
 messagePull="LOG: success in pulling image: "
 
 clean:
