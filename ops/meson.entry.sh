@@ -119,7 +119,7 @@ EOF
 Ticker = "${service}"
 RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
-RPCURL = "${rpcURL}"
+RPCURL = "${RPC_URL}"
 ChainId = ${chainID}
 LogDir = "${dataDir}"
 LogLevel = "${logLevel}"
