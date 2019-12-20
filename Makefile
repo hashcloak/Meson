@@ -13,11 +13,12 @@ $(shell mkdir -p $(flags))
 
 dockerRepo=hashcloak
 katzenServerRepo=https://github.com/katzenpost/server
-katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
+katzenservertag=$(shell git ls-remote --heads $(katzenserverrepo) | grep master | cut -c1-7)
 katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
 
 katzenAuthRepo=https://github.com/katzenpost/authority
 katzenAuthTag=$(shell git ls-remote --heads $(katzenAuthRepo) | grep master | cut -c1-7)
+katzenAuthTag=1c00188
 katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenAuthTag)
 
 gethVersion=v1.9.9
@@ -137,3 +138,9 @@ test-client:
 		golang:buster \
 		/bin/bash -c "GORACE=history_size=7 go test -race"
 	if [ ${CI} ];then sudo chown ${USER} -R /tmp/gopath-pkg;  fi
+
+r: down
+	rm $(flags)/build-meson
+	rm $(flags)/build-hashcloak-nonvoting-authority
+	make up-dynamic
+

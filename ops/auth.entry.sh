@@ -76,6 +76,19 @@ if [[ ! -f $configFile ]]; then
   generateConfig
 else
   echo "Using exsiting config file at: $configFile"
+  dataDir=$(grep DataDir $configFile | grep -v \# | cut -d'=' -f2 | sed 's|"||g')
+fi
+
+publicKey=$dataDir/identity.private.pem
+privateKey=$dataDir/identity.private.pem
+cat $privateKey
+echo "$"
+ls $dataDir
+echo "$"
+
+if [[ ! -f $privateKey ]]; then
+  echo "No identity key files found. Generating new key files.."
+  /go/bin/nonvoting -f $configFile -g
 fi
 
 printf '

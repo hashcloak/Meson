@@ -179,20 +179,20 @@ if [[ ! -f "$configFile" ]]; then
   else
     generateMixConfig
   fi
+  printf '
+  ########
+
+  '
+  echo "The public key of this node is:"
+  echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
+  printf '
+
+
+  ########
+  '
 else
   echo "Using existing config file at: $configFile"
 fi
 
-printf '
-########
-
-'
-echo "The public key of this node is:"
-echo $(cat ${dataDir}/identity.public.pem | grep -v PUBLIC)
-printf '
-
-
-########
-'
 
 exec /go/bin/server -f $configFile
