@@ -18,7 +18,7 @@ TODO
 
 __⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use.  There is currently is support for both goerli and rinkeby.
 
-Dependencies:
+Requirements:
 - `go` version 1.13
 - a private key that has goerli or rinkeby balance __OR__ a signed raw transaction blob
 
