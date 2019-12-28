@@ -45,7 +45,7 @@ $ go run ./cmd/wallet/main.go \
   -s gor \ # the Meson service name
   -rt $RAW_TXN \ # The raw transaction blob
   -c client.toml \ # the config file
-  -chain 5 \ # Chain id for rinkeby
+  -chain 5 \ # Chain id for goerli
 ```
 
 The contents of `client.toml` are:
