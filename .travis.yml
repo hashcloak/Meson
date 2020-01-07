@@ -11,9 +11,13 @@ script:
   - make up && sleep 30
   - make test-client
 
-after_success:
-  - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-  - make push
+deploy:
+  - provider: script
+    script:
+      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - make push
+    on:
+      branch: master
 
 cache:
   directories:
