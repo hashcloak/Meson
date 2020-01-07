@@ -1,6 +1,11 @@
-GIT_HASH := $(shell git log --format='%h' -n1)
 TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
 BRANCH=$(TRAVIS_BRANCH)
+
+ifdef $(TRAVIS_PULL_REQUEST_BRANCH)
+ifneq ($(TRAVIS_PULL_REQUEST_BRANCH), "")
+	BRANCH = $(TRAVIS_PULL_REQUEST_BRANCH)
+endif
+endif
 
 flags=.makeFlags
 VPATH=$(flags)
