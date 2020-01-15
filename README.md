@@ -8,7 +8,29 @@ Meson is a mixnet for cryptocurrency transactions. Meson is based on the [Katzen
 These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit out [project site](hashcloak.com/Meson).
 
 ### How to run a provider
-TODO
+
+Requirements:
+- `go` version 1.13
+- `docker swarm`
+
+All of our infrastructure uses solely docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/) script:
+
+```bash
+$ git clone https://github.com/hashcloak/genconfig.git
+$ cd genconfig
+$ go run main.go -a 138.197.57.19  \ # This is the current authority config address
+  -prov \ # prov indicates to generate a provider config
+  -name <provider-name> \ # Provider name
+  -pubtcp4 <your public ip address> # public ipv4 address
+```
+
+The last command will make a directory called `output` with another subdir called `<provider-name>`. Send us your public at our [Riot.im](https://riot.im/app/#/room/#hashcloak:matrix.org) room. We will then help you to get added as a provider.
+
+One you gave us your Public key we need to get the node running by using the following command:
+
+```
+$ docker service create --name <provider-name> -d -p 30001:30001 -p 40001:40001 --mount type=bind,source=$HOME/configs/<provider-name>,destination=/conf hashcloak/meson:master
+```
 
 ### How to run a mix
 TODO
