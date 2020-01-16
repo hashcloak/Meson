@@ -154,13 +154,18 @@ find ./configs -name "*.log" | sudo xargs tail -f
 
 ## Waiting for Katzenpost Epoch
 
-Due to how katzenpost is designed, when you join the mixnet you will have to wait a new epoch to publish your node descriptor. An epoch right is about 10 minutes. While you wait for a new epoch you will see this message appear in the log files
+Due to how katzenpost is designed, when you join the mixnet you will have to wait a new epoch to publish your node descriptor. An epoch right is about 10 minutes. While you wait for a new epoch you will see this message appear in the log files:
 
 ```
 01:40:35.977 WARN pki: Authority rejected upload for epoch: 138106 (Conflict/Late)
 01:40:35.977 WARN pki: Failed to post to PKI: pki: post for epoch will never succeeed
 ```
 
+And in the authority you will see this log appear:
+
+```
+18:36:31.688 ERRO authority: Peer 10.0.0.2:57660: Rejected probably a conflict: state: Node oRh8boMS6VzJW57m5lMNqfK8EZ+LYfkfV0eJXKAJcJc=: Late descriptor upload for for epoch 138207
+```
 
 Once you your node has published its descriptor to the authority you will get a message that starts with this:
 
