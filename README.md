@@ -26,7 +26,7 @@ go run main.go \
   -provider \ # flag to indicate you only want a provider config
 ```
 
-This will make a directory called `./output/provider-name`. Send us your public key at our [Riot.im](https://riot.im/app/#/room/#hashcloak:matrix.org) room. We will then help you to get added as a provider. Once you give is your public key you can get your node running with:
+This will make a directory called `output/provider-name`. Send us your public to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a provider. Once you give is your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -37,7 +37,9 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Note__ You will have to wait for about 10 minutes before your node is being used in the mixnet. It has to wait for a new epoch to be generated.
+__Note__ You will have to wait for about 10 minutes before your node is being used in the mixnet. It has to wait for a [new epoch](https://hashcloak.com/Meson/docs/#waiting-for-epoch).
+
+To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/docs/#how-to-run-a-mix-node).
 
 ### How to send transactions
 
