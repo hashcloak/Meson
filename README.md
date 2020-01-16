@@ -9,16 +9,12 @@ These are the basics for joining the Meson mixnet as a provider, authority or mi
 
 ### How to run a provider or mix node
 
-Requirements:
-- `go` version 1.13
-- `docker swarm`
 
 All of our infrastructure uses docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
 
 ```bash
-git clone https://github.com/hashcloak/genconfig.git
-cd genconfig
-go run main.go \
+go get github.com/hashcloak/genconfig
+genconfig \
   -a 138.197.57.19 \ # current ip address of authority
   -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # current public key of authority
   -name provider-name \ # your provider name
@@ -44,9 +40,6 @@ To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/d
 ### How to send transactions
 
 __⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use.  There is currently is support for both goerli and rinkeby.
-
-Requirements:
-- `go` version 1.13
 
 ```bash
 # Clone the github repo with the demo wallet
