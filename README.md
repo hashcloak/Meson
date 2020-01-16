@@ -7,36 +7,37 @@ Meson is a mixnet for cryptocurrency transactions. Meson is based on the [Katzen
 ## Docs
 These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit out [project site](hashcloak.com/Meson).
 
-### How to run a provider
+### How to run a provider or mix node
 
 Requirements:
 - `go` version 1.13
 - `docker swarm`
 
-All of our infrastructure uses solely docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/) script:
+All of our infrastructure uses docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
 
 ```bash
-$ git clone https://github.com/hashcloak/genconfig.git
-$ cd genconfig
-$ go run main.go -a 138.197.57.19  \ # This is the current authority config address
-  -prov \ # prov indicates to generate a provider config
-  -name <provider-name> \ # Provider name
-  -pubtcp4 <your public ip address> # public ipv4 address
+git clone https://github.com/hashcloak/genconfig.git
+cd genconfig
+go run main.go \
+  -a 138.197.57.19 \ # current ip address of authority
+  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # current public key of authority
+  -name provider-name \ # your provider name
+  -ipv4 1.1.1.1 \ # your public ipv4 address
+  -provider \ # flag to indicate you only want a provider config
 ```
 
-The last command will make a directory called `output` with another subdir called `<provider-name>`. Send us your public at our [Riot.im](https://riot.im/app/#/room/#hashcloak:matrix.org) room. We will then help you to get added as a provider.
+This will make a directory called `./output/provider-name`. Send us your public key at our [Riot.im](https://riot.im/app/#/room/#hashcloak:matrix.org) room. We will then help you to get added as a provider. Once you give is your public key you can get your node running with:
 
-One you gave us your Public key we need to get the node running by using the following command:
-
+```bash
+docker service create \
+  --name meson -d \
+  -p 30001:30001 \ # Mixnet port
+  -p 40001:40001 \ # User registration port
+  --mount type=bind,source=`pwd`/output/provider-name,destination=/conf \
+  hashcloak/meson:master
 ```
-$ docker service create --name <provider-name> -d -p 30001:30001 -p 40001:40001 --mount type=bind,source=$HOME/configs/<provider-name>,destination=/conf hashcloak/meson:master
-```
 
-### How to run a mix
-TODO
-
-### How to join the Authority PKI
-TODO
+__Note__ You will have to wait for about 10 minutes before your node is being used in the mixnet. It has to wait for a new epoch to be generated.
 
 ### How to send transactions
 
@@ -44,30 +45,17 @@ __⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it
 
 Requirements:
 - `go` version 1.13
-- a private key that has goerli or rinkeby balance __OR__ a signed raw transaction blob
 
 ```bash
 # Clone the github repo with the demo wallet
-$ git clone https://github.com/hashcloak/Meson-wallet-demo
-$ cd Meson-wallet-demo
+git clone https://github.com/hashcloak/Meson-wallet-demo
+cd Meson-wallet-demo
 
-
-# Send a rinkeby transaction using a private key
-$ go run ./cmd/wallet/main.go \
-  -t rin \ # rin is the ethereum chain identifier for the rinkeby testnet
-  -s rin \ # the Meson service name
-  -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # the private key 
-  -c client.toml \ # the config file
-  -chain 4 \ # Chain id for rinkeby
-  -rpc https://rinkeby.hashcloak.com # An rpc endpoint to obtain the latest nonce count and gas price. Only necesary when using a private key.
-
-
-# Send a goerli transaction using a transaction blob
 RAW_TXN=0xf8640284540be40083030d409400b1c66f34d680cb8bf82c64dcc1f39be5d6e77501802ca0c434f4d4b894b7cce2d880c250f7a67e4ef64cf0a921e3e4859219dff7b086fda0375a6195e221be77afda1d7c9e7d91bf39845065e9c56f7b5154e077a1ef8a77
-$ go run ./cmd/wallet/main.go \
-  -t gor \ # gor is the ethereum chain identifier for the goerli testnet
+go run ./cmd/wallet/main.go \
+  -t gor \ # gor is the ethereum chain ticker for the goerli testnet
   -s gor \ # the Meson service name
-  -rt $RAW_TXN \ # The raw transaction blob
+  -rt $RAW_TXN \ # The signed raw transaction blob
   -c client.toml \ # the config file
   -chain 5 \ # Chain id for goerli
 ```
@@ -82,12 +70,12 @@ The contents of `client.toml` are:
 [UpstreamProxy]
   Type = "none"
 [Debug]
-  DisableDecoyTraffic = true # Not a safe parameter for privacy
+  DisableDecoyTraffic = true # Not a safe value for privacy
   CaseSensitiveUserIdentifiers = false
   PollingInterval = 1
 [NonvotingAuthority]
-    Address = "134.209.46.0:30000"
-    PublicKey = "3mAR/JpJzSqHKm0gcupG00gbT+kB52wrckA6i+sjXy8="
+    Address = "138.197.57.19:30000"
+    PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A="
 ```
 
 ## Donations
