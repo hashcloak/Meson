@@ -14,7 +14,7 @@ You will need to have initialized your docker swarm.
 ###### __⚠️ WARNING ⚠️__ These instructions for joining or running a mixnet are only for the current alpha version of a Meson mixnet. The alpha version is not ready for production usage.
 
 
-### How to Run a Provider Node
+#### How to Run a Provider Node
 
 All of our infrastructure uses docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
 
@@ -41,7 +41,11 @@ docker service create \
 
 It is important that the ipv4 address you use is reachable by the authority node.
 
-### How to Run a Mix Node
+##### Currency Service for the Provider 
+
+In the `katzentpost.toml` fie of the provider node there is a section that has the `CBORPlugins` configuration.
+
+#### How to Run a Mix Node
 
 To run a mix node we have to run the same command to generate the config file. The only difference is changing the `-provider` flag with `-node`.
 
@@ -82,7 +86,7 @@ __Notice__ above that the ports above are the same as the provider node. If the 
 Then you can run the docker service command with the new port numbers.
 
 
-### How to Run an Nonvoting Authority
+#### How to Run an Nonvoting Authority
 
 Only one non voting authority is needed per mixnet. Once you have a valid authority.toml file you can user the following docker command to run a mixnet. Take note of the docker tag at the end.
 
@@ -93,13 +97,13 @@ docker service create --name authority -d \
   hashcloak/katzenpost-auth:1c00188
 ```
 
-#### Updating Authority Config
+##### Updating Authority Config
 
 When a node wants to join the non voting mixnet it needs to get added to the `authority.toml`.
 
 ```toml
 # authority.toml
-....
+...
 [[Mixes]]
   Identifier = ""
   IdentityKey = "RVAjV/p1azndjGUjuyOUq2p5X46tva2DmXJhGo84DUk="
@@ -107,14 +111,14 @@ When a node wants to join the non voting mixnet it needs to get added to the `au
 [[Providers]]
   Identifier = "provider-name"
   IdentityKey = "92gxXY/Y8BaCWoDMCFERWGxQBMensH9v/kVLLwBFFg8="
-....
+...
 ```
 
 __Note__ that the `Identifier` key for the Mixes is empty. From production usage we recommend you leave this value as an empty string.
 
 Once the new keys are added to `authority.toml` you need to restart your authority by running `docker service rm authority` and restarting the docker service of the authority.
 
-### Sending Transactions
+## Sending Transactions
 
 Currently, the way we send transactions is by using our wallet demo [application](https://github.com/hashcloak/Meson-wallet-demo).
 
@@ -176,3 +180,8 @@ Once you your node has published its descriptor to the authority you will get a 
 ## Other Blockchains
 
 We intend to add support for other chains but, for now, only Ethereum based transactions are supported. We are currently only running `Goerli` and `Rinkeby` testnets but you can run a provider with access to an rpc node of any Ethereum compatible chain such as `ETC` or `Mordor`. If you want help setting up a provider for another chain please get in contact with us at info@hashcloak.com!
+
+The steps needed to add a new Ethereum based chain are:
+
+- Obtain access to an rpc endpoint
+- Configure currency.toml with the new service.
