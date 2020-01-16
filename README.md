@@ -74,4 +74,4 @@ The contents of `client.toml` are:
 ```
 
 ## Donations
-If you want to support the development of the Meson mixnet project, you can send us some ETH or any token you like at meson.eth.
+If you want to support the development of the Meson mixnet project, you can send us some ETH or any token you like at meson.eth or you can donate directly on [our gitcoin grants page](https://gitcoin.co/grants/290/meson?tab=description)
