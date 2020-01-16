@@ -20,11 +20,11 @@ All of our infrastructure uses docker setups. You will first need to generate a 
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
-  -a 138.197.57.19 \ # current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # current public key of authority
-  -name provider-name \ # your provider name
-  -ipv4 1.1.1.1 \ # your public ipv4 address
-  -provider # flag to indicate you only want a provider config
+  -a 138.197.57.19 \ # Current ip address of authority
+  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -name provider-name \ # Your provider name
+  -ipv4 1.1.1.1 \ # Your public ipv4 address
+  -provider # Flag to indicate you only want a provider config
 ```
 
 This will make a directory called `output/provider-name` with a file called `identity.public.pem` Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then get your node added as a provider. Once you give is your public key you can get your node running with:
@@ -38,11 +38,11 @@ docker service create \
   hashcloak/meson:master
 ```
 
-It is important that the ipv4 address you use is reachable by the authority node. To look at the logs see [Logs](#log-files)
+It is important that the IPv4 address you use is reachable by the authority node. To look at the logs see [Logs](#log-files)
 
 #### Currency Service for the Provider 
 
-A service is synonymous to a Katzenpost plugin. Each Katzenpost plugin has a capability that is advertised to the mixnet during each epoch. In the `katzentpost.toml` fie of the provider node, there is a section that has the `CBORPluginsKaetzchen` configuration. This is where the different services can be configured.
+A service is the capability of a Katzenpost plugin. Each Katzenpost plugin has a capability that is advertised to the mixnet during each epoch. In `katzentpost.toml` of the provider node, there is a section called `CBORPluginsKaetzchen`. This is where the different services can be configured.
 
 ```toml
 # katzenpost.toml 
@@ -85,11 +85,11 @@ To run a mix node we have to run the same command to generate the config file. T
 
 ```bash
 genconfig \
-  -a 138.197.57.19 \ # current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # current public key of authority
-  -name mix-node-name \ # your provider name
-  -ipv4 1.1.1.1 \ # your public ipv4 address
-  -node # flag to indicate you only want a mix node config
+  -a 138.197.57.19 \ # Current ip address of authority
+  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -name mix-node-name \ # Your provider name
+  -ipv4 1.1.1.1 \ # Your public ipv4 address
+  -node # Flag to indicate you only want a mix node config
 ```
 
 This will make a directory called `output/mix-node-name` with a file called `identity.public.pem` Send us your public key [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a mix. Once you give is your public key you can get your node running with:
@@ -102,22 +102,21 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Notice__ above that the ports above are the same as the provider node. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mixn-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
+__Notice__ that the ports that docker exposes are the same as the provider node docker container. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mixn-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
 
 ```toml
 # output/mix-node-name/katzenpost.toml
 [Server]
   Identifier = "mix-node-name"
-  Addresses = ["0.0.0.0:30002"] # <- Here
+  Addresses = ["0.0.0.0:30002"] # <- Here from 30001 to 300002
   OnlyAdvertiseAltAddresses = true
   DataDir = "/conf"
   IsProvider = false
   [Server.AltAddresses]
-    tcp4 = ["1.1.1.1:30002"] # <- Here
+    tcp4 = ["1.1.1.1:30002"] # <- Here from 30001 to 300002
 ```
 
-Then you can run the docker service command with the new port numbers.
-
+After changing the port numbers you can run the docker service command with `-p 30002:30002`.
 
 ### How to Run an Nonvoting Authority
 
@@ -147,7 +146,7 @@ When a node wants to join the non voting mixnet it needs to get added to the `au
 ...
 ```
 
-__Note__ that the `Identifier` key for the Mixes is empty. From production usage we recommend you leave this value as an empty string.
+__Note__ that the `Identifier` key for the Mixes is empty. From testnet usage we recommend you leave this value as an empty string.
 
 Once the new keys are added to `authority.toml` you need to restart your authority by running `docker service rm authority` and restarting the docker service of the authority.
 
@@ -160,9 +159,9 @@ git clone https://github.com/hascloak/Meson-wallet-demo
 cd Meson-wallet-demo
 go run ./cmd/wallet/main.go \
   -t rin \ # rin is the ethereum chain identifier for the rinkeby testnet
-  -s rin \ # the Meson service name
-  -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # the private key 
-  -c client.toml \ # the config file
+  -s rin \ # Meson service name
+  -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # Private key 
+  -c client.toml \ # Config file
   -chain 4 \ # Chain id for rinkeby
   -rpc https://rinkeby.hashcloak.com # An rpc endpoint to obtain the latest nonce count and gas price. Only necessary when using a private key.
 ```
@@ -173,15 +172,38 @@ Another way of sending a transaction with our wallet is by using a presigned raw
 RAW_TXN=0xf8640284540be40083030d409400b1c66f34d680cb8bf82c64dcc1f39be5d6e77501802ca0c434f4d4b894b7cce2d880c250f7a67e4ef64cf0a921e3e4859219dff7b086fda0375a6195e221be77afda1d7c9e7d91bf39845065e9c56f7b5154e077a1ef8a77
 go run ./cmd/wallet/main.go \
   -t gor \ # gor is the ethereum chain ticker for the goerli testnet
-  -s gor \ # the Meson service name
-  -rt $RAW_TXN \ # The signed raw transaction blob
-  -c client.toml \ # the config file
+  -s gor \ # Meson service name
+  -rt $RAW_TXN \ # Signed raw transaction blob
+  -c client.toml \ # Config file
   -chain 5 \ # Chain id for goerli
 ```
 
+The contents of `client.toml` are:
+
+```toml
+#client.toml
+[Logging]
+  Disable = false
+  Level = "DEBUG"
+  File = ""
+
+[UpstreamProxy]
+  Type = "none"
+
+[Debug]
+  DisableDecoyTraffic = true
+  CaseSensitiveUserIdentifiers = false
+  PollingInterval = 1
+
+[NonvotingAuthority]
+    Address = "138.197.57.19:30000"
+    PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A="
+```
+
+
 ## Log files
 
-Because of the way our docker services are being configured, all of the log file are saved to the mounted docker volume, thus all of the log files will be located in the mount the directory of the docker service. So if docker volume is mounted `./mixnet/nonvoting` the logs of the authority will be saved in that directory. The same goes for all of the nodes.
+Because of the way our docker services are being created, all of the log files are saved to the mounted docker volume, thus all of the log files will be located in the mount the directory of the docker host. If the docker volume is mounted `$HOME/configs/nonvoting` the logs of the authority will be saved in that directory. The same goes for all of the nodes.
 
 If you are running a full mixnet this little command will be useful to looking at all of the logs.
 
@@ -191,20 +213,20 @@ find ./configs -name "*.log" | sudo xargs tail -f
 
 ## Waiting for Katzenpost Epoch
 
-Due to how katzenpost is designed, when you join the mixnet you will have to wait a new epoch to publish your node descriptor. An epoch right is about 10 minutes. While you wait for a new epoch you will see this message appear in the log files:
+Due to how katzenpost is designed, when you join the mixnet you will have to wait a new epoch to publish your node descriptor. An epoch right now 10 minutes. While you wait for a new epoch you will see this message appear in the log files:
 
 ```
-01:40:35.977 WARN pki: Authority rejected upload for epoch: 138106 (Conflict/Late)
+01:40:35.977 WARN pki: Authority rejected upload for epoch: 138107 (Conflict/Late)
 01:40:35.977 WARN pki: Failed to post to PKI: pki: post for epoch will never succeeed
 ```
 
-And in the authority you will see this log appear:
+The above log occurs every time your node tries to post a new epoch description. In the authority you will see this log appear:
 
 ```
 18:36:31.688 ERRO authority: Peer 10.0.0.2:57660: Rejected probably a conflict: state: Node oRh8boMS6VzJW57m5lMNqfK8EZ+LYfkfV0eJXKAJcJc=: Late descriptor upload for for epoch 138207
 ```
 
-Once you your node has published its descriptor to the authority you will get a message that starts with this:
+Once you your node has successfully published its descriptor to the authority you will get a message that starts with this:
 
 ```
 01:51:37.821 DEBU pki/nonvoting/client: Document: &{Epoch:138108...
@@ -212,7 +234,7 @@ Once you your node has published its descriptor to the authority you will get a 
 
 ## Other Blockchains
 
-We intend to add support for other chains but, for now, only Ethereum based transactions are supported. We are currently only running `Goerli` and `Rinkeby` testnets but you can run a provider with access to an rpc node of any Ethereum compatible chain such as `ETC` or `Mordor`. If you want help setting up a provider for another chain please get in contact with us at info@hashcloak.com!
+We intend to add support for other chains but, for now, only Ethereum based transactions are the only ones  supported. We are currently only running `Goerli` and `Rinkeby` testnets but you can run a provider with access to an rpc node of any Ethereum compatible chain such as `ETC` or `Mordor`. If you want help setting up a provider for another chain please get in contact with us at info@hashcloak.com!
 
 The steps needed to add a new Ethereum based chain are:
 
