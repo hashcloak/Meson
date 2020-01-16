@@ -5,7 +5,7 @@ This is the main repository related to the Meson project.
 Meson is a mixnet for cryptocurrency transactions. Meson is based on the [Katzenpost software project](https://katzenpost.mixnetworks.org/).
 
 ## Docs
-These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit out [project site](hashcloak.com/Meson).
+These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit out [project site](https://hashcloak.com/Meson).
 
 ### How to run a provider or mix node
 
