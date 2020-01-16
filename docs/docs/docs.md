@@ -5,10 +5,14 @@ This is documentation related to the Meson mixnet project. Here, you can find ou
 ## Running Meson
 
 Requirements:
+
 - `go` version 1.13
 - `docker swarm`
 
 You will need to have initialized your docker swarm.
+
+###### __⚠️ WARNING ⚠️__ These instructions for joining or running a mixnet are only for the current alpha version of a Meson mixnet. The alpha version is not ready for production usage.
+
 
 ### How to Run a Provider Node
 
@@ -64,7 +68,7 @@ docker service create \
 __Notice__ above that the ports above are the same as the provider node. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mixn-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
 
 ```toml
-#output/mix-node-name/katzenpost.toml
+# output/mix-node-name/katzenpost.toml
 [Server]
   Identifier = "mix-node-name"
   Addresses = ["0.0.0.0:30002"] # <- Here
@@ -112,7 +116,7 @@ Once the new keys are added to `authority.toml` you need to restart your authori
 
 ### Sending Transactions
 
-Currently, the way we send transactions is by using our wallet demo [application](https://github.com/hashcloak/Meson-wallet-demo). We intend to add support for other chains but for now only ethereum based transactions are supported. 
+Currently, the way we send transactions is by using our wallet demo [application](https://github.com/hashcloak/Meson-wallet-demo).
 
 ```bash
 git clone https://github.com/hascloak/Meson-wallet-demo
@@ -163,3 +167,7 @@ Once you your node has published its descriptor to the authority you will get a 
 ```
 01:51:37.821 DEBU pki/nonvoting/client: Document: &{Epoch:138108...
 ```
+
+## Other Blockchains
+
+We intend to add support for other chains but, for now, only Ethereum based transactions are supported. We are currently only running `Goerli` and `Rinkeby` testnets but you can run a provider with access to an rpc node of any Ethereum compatible chain such as `ETC` or `Mordor`. If you want help setting up a provider for another chain please get in contact with us at info@hashcloak.com!
