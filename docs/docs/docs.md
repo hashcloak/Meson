@@ -143,7 +143,7 @@ When a node wants to join the non voting mixnet it needs to get added to the `au
   IdentityKey = "RVAjV/p1azndjGUjuyOUq2p5X46tva2DmXJhGo84DUk=" # Mix public key
 
 [[Providers]]
-  Identifier = "provider-name" # The name of your provider. It needs ot be the same.   
+  Identifier = "provider-name" # The name of the newly added provider
   IdentityKey = "92gxXY/Y8BaCWoDMCFERWGxQBMensH9v/kVLLwBFFg8=" # Provider public key
 ...
 ```
