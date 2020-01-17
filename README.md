@@ -57,6 +57,7 @@ go run ./cmd/wallet/main.go \
   -t gor \ # gor is the ethereum chain ticker for the goerli testnet
   -s gor \ # Meson service name
   -rt $RAW_TXN \ # Signed raw transaction blob
+  -chain 5 \ # ChainID that cross checks with Meson
   -c client.toml \ # Config file
 ```
 The contents of `client.toml` are:

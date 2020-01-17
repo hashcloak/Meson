@@ -8,9 +8,7 @@ This is the documentation related to the Meson mixnet project. Here, you can fin
 Requirements:
 
 - `go` version 1.13
-- `docker swarm`
-
-You will need to have [initialized](https://docs.docker.com/engine/reference/commandline/swarm_init) your docker swarm.
+- `docker swarm`. You will need to have [initialized](https://docs.docker.com/engine/reference/commandline/swarm_init) your docker swarm.
 
 ### How to Run a Provider Node
 
@@ -37,7 +35,7 @@ docker service create \
   hashcloak/meson:master
 ```
 
-It is important that the IPv4 address you use is reachable by the authority node. To look at the logs see [Logs](#log-files).
+It is important that the IPv4 address you use is reachable by the authority node. To look at the logs see [Logs](#log-files). Also be aware that your provider will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
 
 #### Currency Service for the Provider 
 
@@ -69,16 +67,16 @@ The Meson plugin uses an additional configuration file to be able to connect to 
 # currency.toml is the configuration of Meson
 Ticker = "gor" # This is the name of service provided by Meson
 ChainID = 5 # ChainID to distinguish between different chains
-RPCUser = "rpcuser" # Http login user
-RPCPass = "rpcpassword" # Http password
-RPCURL = "https://goerli.hashcloak.com" # The dpc url of the node that will receive the transaction
+RPCUser = "rpcuser" # HTTP login for the blockchain node.
+RPCPass = "rpcpassword" # HTTP password
+RPCURL = "https://goerli.hashcloak.com" # The RPC url of the node that will receive the transaction
 LogDir = "/conf" # Location of the logs
 LogLevel = "DEBUG" # Log level of the Meson plugin.
 ```
 
 The `ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
 
-__Note__ that to maximize the privacy of the mixnet users it is best if the rpc endpoint in the `currency.toml` file is a blockchain node that you control.
+__Note__ that to maximize the privacy of the mixnet users it is best if the RPC endpoint in the `currency.toml` file is a blockchain node that you control.
 
 ### How to Run a Mix Node
 
@@ -93,7 +91,7 @@ genconfig \
   -node # Flag to indicate you only want a mix node config
 ```
 
-This will make a directory called `output/mix-node-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a mix (this is not a decentralized step, please look at the [warning](#running-meson) at the top of this page).
+This will make a directory called `output/mix-node-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a mix (please look at the [warning](#running-meson) at the top of this page).
 
 ```bash
 docker service create \
@@ -103,7 +101,7 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Notice__ that the ports that docker exposes are the same as the provider node container. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mix-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
+__Notice__ that the ports that docker exposes are the same as the provider node instructions from above. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mix-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
 
 ```toml
 # output/mix-node-name/katzenpost.toml
@@ -117,11 +115,12 @@ __Notice__ that the ports that docker exposes are the same as the provider node 
     tcp4 = ["1.1.1.1:30002"] # <- Here from 30001 to 300002
 ```
 
-After changing the port numbers you can run the docker service command with `-p 30002:30002`.
+After changing the port numbers you can run the docker service command with `-p 30002:30002`. Also be aware that your provider will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
+
 
 ### How to Run an Nonvoting Authority
 
-Only one non voting authority is needed per nonvoting mixnet. Once you have a valid `authority.toml` file you can use the following docker command to run a mixnet. Look at the output of `genconfig` or at the [katznepost docs](https://github.com/katzenpost/docs/blob/master/handbook/nonvoting_pki.rst#configuring-the-non-voting-directory-authority) for more information on how to create the configuration of the authority.
+Only one nonvoting authority is needed per nonvoting mixnet. Once you have a valid `authority.toml` file you can use the following docker command to run a mixnet. Look at the output of `genconfig` or at [katznepost docs](https://github.com/katzenpost/docs/blob/master/handbook/nonvoting_pki.rst#configuring-the-non-voting-directory-authority) for more information on how to create the configuration of the authority.
 
 ```
 docker service create --name authority -d \
@@ -165,7 +164,7 @@ go run ./cmd/wallet/main.go \
   -s rin \ # Meson service name
   -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # Private key 
   -c client.toml \ # Config file
-  -chain 4 \ # Chain id for rinkeby. Needed only when using a private key
+  -chain 4 \ # Chain id for rinkeby. only necessary when using a private key
   -rpc https://rinkeby.hashcloak.com # An rpc endpoint to obtain the latest nonce count and gas price. Only necessary when using a private key.
 ```
 
@@ -177,6 +176,7 @@ go run ./cmd/wallet/main.go \
   -t gor \ # gor is the ethereum chain ticker for the goerli testnet
   -s gor \ # Meson service name
   -rt $RAW_TXN \ # Signed raw transaction blob
+  -chain 5 \ # ChainID that cross checks with Meson
   -c client.toml \ # Config file
 ```
 
@@ -201,6 +201,15 @@ The contents of `client.toml` are:
     Address = "138.197.57.19:30000" # The address of the authority
     PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A=" # Public key of the authority
 ```
+
+After the transaction is successfully received by Meson at the egress provider node you will see this message in the logs: 
+
+```
+reply: {"Message":"success","StatusCode":0,"Version":0}
+```
+
+This doesn't mean that the transaction was accepted by the blockchain node that Meson is using. It just means that Meson successfully forwarded the transaction to the RPC endpoint. 
+
 
 ## Log files
 
