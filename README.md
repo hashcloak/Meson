@@ -24,7 +24,7 @@ genconfig \
   -provider \ # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem` Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a provider. Once you give is your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added to the mixnet as a provider. Once you give is your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -41,7 +41,7 @@ To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/d
 
 #### How to send transactions
 
-__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use.  There is currently is support for both `Goerli` and `Rinkeby` testnets but most Ethereum based chain can be [added](https://hashcloak.com/Meson/docs/#other-blockchains).
+__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently is support for both `Goerli` and `Rinkeby` testnets but most Ethereum based chain can be [supported](https://hashcloak.com/Meson/docs/#other-blockchains) by Meson.
 
 ```bash
 # Clone the github repo with the demo wallet
