@@ -17,11 +17,11 @@ All of our infrastructure uses docker setups. You will first need to generate a 
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
-  -a 138.197.57.19 \ # current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # current public key of authority
-  -name provider-name \ # your provider name
-  -ipv4 1.1.1.1 \ # your public ipv4 address
-  -provider \ # flag to indicate you only want a provider config
+  -a 138.197.57.19 \ # Current ip address of authority
+  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -name provider-name \ # Your provider name
+  -ipv4 1.1.1.1 \ # Your public ipv4 address
+  -provider \ # Flag to indicate you only want a provider config
 ```
 
 This will make a directory called `output/provider-name` with a file called `identity.public.pem` Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a provider. Once you give is your public key you can get your node running with:
@@ -51,9 +51,9 @@ cd Meson-wallet-demo
 RAW_TXN=0xf8640284540be40083030d409400b1c66f34d680cb8bf82c64dcc1f39be5d6e77501802ca0c434f4d4b894b7cce2d880c250f7a67e4ef64cf0a921e3e4859219dff7b086fda0375a6195e221be77afda1d7c9e7d91bf39845065e9c56f7b5154e077a1ef8a77
 go run ./cmd/wallet/main.go \
   -t gor \ # gor is the ethereum chain ticker for the goerli testnet
-  -s gor \ # the Meson service name
-  -rt $RAW_TXN \ # The signed raw transaction blob
-  -c client.toml \ # the config file
+  -s gor \ # Meson service name
+  -rt $RAW_TXN \ # Signed raw transaction blob
+  -c client.toml \ # Config file
   -chain 5 \ # Chain id for goerli
 ```
 
