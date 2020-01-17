@@ -5,12 +5,13 @@ This is the main repository related to the Meson project.
 Meson is a mixnet for cryptocurrency transactions. Meson is based on the [Katzenpost software project](https://katzenpost.mixnetworks.org/).
 
 ## Docs
-These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit out [project site](https://hashcloak.com/Meson).
+These are the basics for joining the Meson mixnet as a provider, authority or mix. For more in-depth documentation on the Meson project, visit our [project site](https://hashcloak.com/Meson).
 
 ## Usage
 
 #### How to Run a Provider or Mix Node
 
+A provider node is essentially the same as a mix node just that it has more capabilities. Specifically it can provide services or capabilities in the form of [plugins](https://github.com/katzenpost/docs/blob/master/handbook/mix_server.rst#external-kaetzchen-plugin-configuration). It also acts as the edge nodes of a mixnet in which traffic either enters or leaves.
 
 All of our infrastructure uses docker setups. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our [genconfig](https://github.com/hashcloak/genconfig/#genconfig) script:
 
@@ -24,7 +25,7 @@ genconfig \
   -provider \ # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added to the mixnet as a provider. Once you give is your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added to the mixnet. Once you give us your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -44,7 +45,6 @@ To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/d
 __⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently is support for both `Goerli` and `Rinkeby` testnets but most Ethereum based chain can be [supported](https://hashcloak.com/Meson/docs/#other-blockchains) by Meson.
 
 ```bash
-# Clone the github repo with the demo wallet
 git clone https://github.com/hashcloak/Meson-wallet-demo
 cd Meson-wallet-demo
 

@@ -1,6 +1,5 @@
 # Docs
-This is documentation related to the Meson mixnet project. Here, you can find out how to deploy a provider, authority or mix node and learn how to use our client libraries.
-
+This is the documentation related to the Meson mixnet project. Here, you can find out how to deploy a provider, authority or mix node and learn how to use our client libraries.
 
 ## Running Meson
 
@@ -27,7 +26,7 @@ genconfig \
   -provider # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then get your node added as a provider. Once you give is your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then get your node added to the mixnet. Once you give is your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -104,7 +103,7 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Notice__ that the ports that docker exposes are the same as the provider node docker container. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mixn-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
+__Notice__ that the ports that docker exposes are the same as the provider node container. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file `output/mix-node-name/katzenpost.toml` and change the ports numbers under the `[Server]` section:
 
 ```toml
 # output/mix-node-name/katzenpost.toml
@@ -122,7 +121,7 @@ After changing the port numbers you can run the docker service command with `-p 
 
 ### How to Run an Nonvoting Authority
 
-Only one non voting authority is needed per mixnet. Once you have a valid `authority.toml` file you can use the following docker command to run a mixnet. Take note of the docker tag at the end.
+Only one non voting authority is needed per nonvoting mixnet. Once you have a valid `authority.toml` file you can use the following docker command to run a mixnet. Take note of the docker tag at the end.
 
 ```
 docker service create --name authority -d \
