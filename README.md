@@ -24,10 +24,10 @@ genconfig \
   -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
   -name provider-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address
-  -provider \ # Flag to indicate you only want a provider config
+  -provider # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you to get added to the mixnet. Once you give us your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you get your noded added to the mixnet (look at the [warning](#usage)). Once you give us your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -44,9 +44,9 @@ To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/d
 
 #### How to send transactions
 
-__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently is support for both `Goerli` and `Rinkeby` testnets.
+__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently support for both `Goerli` and `Rinkeby` testnets.
 
-You can easily add support for other Ethereum based [chains](https://hashcloak.com/Meson/docs/#other-blockchains) by correctly configuring a provider node and the plugin. The following example shows you how to use our wallet demo to send an Ethereum transaction on the `Goerli` testnet. It uses our [Meson-client](https://github.com/hashcloak/Meson-client) library to connect to mixnet and send the transaction through it. This demo is mostly to show that the mixnet is properly sends transactions through.
+You can easily add support for other Ethereum based [chains](https://hashcloak.com/Meson/docs/#other-blockchains) by correctly configuring a provider node and the plugin. The following example shows you how to use our wallet demo to send an Ethereum transaction on the `Goerli` testnet. It uses our [Meson-client](https://github.com/hashcloak/Meson-client) library to connect to mixnet and send the transaction through the mixnet. This demo is mostly to show that the mixnet is  working properly.
 
 ```bash
 git clone https://github.com/hashcloak/Meson-wallet-demo
@@ -58,7 +58,6 @@ go run ./cmd/wallet/main.go \
   -s gor \ # Meson service name
   -rt $RAW_TXN \ # Signed raw transaction blob
   -c client.toml \ # Config file
-  -chain 5 \ # Chain id for goerli
 ```
 The contents of `client.toml` are:
 
