@@ -27,7 +27,7 @@ genconfig \
   -provider # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you get your noded added to the mixnet (look at the [warning](#usage)). Once you give us your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to our email [info@hashcloak.com](info@hashcloak.com). We will then help you in getting your node added to the mixnet (look at the [warning](#usage)). Once you give us your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -38,7 +38,7 @@ docker service create \
   hashcloak/meson:master
 ```
 
-__Note__ You will have to wait for about 10 minutes before your node is being used in the mixnet. It has to wait for a [new epoch](https://hashcloak.com/Meson/docs/#waiting-for-epoch).
+__Note:__ You will have to wait for about 10 minutes before your node is being used in the mixnet. It has to wait for a [new epoch](https://hashcloak.com/Meson/docs/#waiting-for-epoch).
 
 To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/docs/#running-meson).
 
@@ -57,7 +57,7 @@ go run ./cmd/wallet/main.go \
   -t gor \ # gor is the ethereum chain ticker for the goerli testnet
   -s gor \ # Meson service name
   -rt $RAW_TXN \ # Signed raw transaction blob
-  -chain 5 \ # ChainID that cross checks with Meson
+  -chain 5 \ # ChainID that crosschecks with Meson
   -c client.toml \ # Config file
 ```
 The contents of `client.toml` are:
