@@ -50,15 +50,15 @@ A service is the capability of a Katzenpost plugin. Each Katzenpost plugin has a
 # katzenpost.toml looks like
 [Provider]
   [[Provider.CBORPluginKaetzchen]]
-    Capability = "gor"
-    Endpoint = "+gor"
-    Command = "/go/bin/Meson"
-    MaxConcurrency = 1
-    Disable = false
+    Capability = "gor" # The service advertised by the provider
+    Endpoint = "+gor" # The API endpoint path where clients connect to be forward to the plugin.
+    Command = "/go/bin/Meson" # The plugin executable path
+    MaxConcurrency = 1 # Amount of plugin programs to spawn
+    Disable = false # Disables the plugin if true
     [Provider.CBORPluginKaetzchen.Config]
-      f = "/conf/currency.toml"
-      log_dir = "/conf"
-      log_level = "DEBUG"
+      f = "/conf/currency.toml" # Configuration file for Meson
+      log_dir = "/conf" # Log directory.
+      log_level = "DEBUG" # Log level
 ```
 
 The Meson plugin defined above is handling the Ethereum chain of `Goerli` in this configuration. This is what the [wallet demo](#sending-transactions) application uses as the `-t` and `-s` flags.
@@ -139,15 +139,15 @@ When a node wants to join the non voting mixnet it needs to get added to the `au
 ...
 [[Mixes]]
   Identifier = ""
-  IdentityKey = "RVAjV/p1azndjGUjuyOUq2p5X46tva2DmXJhGo84DUk="
+  IdentityKey = "RVAjV/p1azndjGUjuyOUq2p5X46tva2DmXJhGo84DUk=" # Mix public key
 
 [[Providers]]
-  Identifier = "provider-name"
-  IdentityKey = "92gxXY/Y8BaCWoDMCFERWGxQBMensH9v/kVLLwBFFg8="
+  Identifier = "provider-name" # The name of your provider. It needs ot be the same.   
+  IdentityKey = "92gxXY/Y8BaCWoDMCFERWGxQBMensH9v/kVLLwBFFg8=" # Provider public key
 ...
 ```
 
-__Note__ that the `Identifier` key for the Mixes list is empty. From testnet usage we recommend you leave this value as an empty string.
+__Note__ that the `Identifier` value for mixes needs to be an empty string because of [this](https://github.com/katzenpost/authority/blob/master/nonvoting/server/config/config.go#L299-#L304).
 
 Once the new keys are added to `authority.toml`, you need to restart your authority by running `docker service rm authority` and restarting the docker service of the authority.
 
@@ -163,7 +163,7 @@ go run ./cmd/wallet/main.go \
   -s rin \ # Meson service name
   -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # Private key 
   -c client.toml \ # Config file
-  -chain 4 \ # Chain id for rinkeby
+  -chain 4 \ # Chain id for rinkeby. Needed only when using a private key
   -rpc https://rinkeby.hashcloak.com # An rpc endpoint to obtain the latest nonce count and gas price. Only necessary when using a private key.
 ```
 
@@ -176,7 +176,6 @@ go run ./cmd/wallet/main.go \
   -s gor \ # Meson service name
   -rt $RAW_TXN \ # Signed raw transaction blob
   -c client.toml \ # Config file
-  -chain 5 \ # Chain id for goerli
 ```
 
 The contents of `client.toml` are:
@@ -184,28 +183,28 @@ The contents of `client.toml` are:
 ```toml
 #client.toml
 [Logging]
-  Disable = false
-  Level = "DEBUG"
-  File = ""
+  Disable = false # Enables logging
+  Level = "DEBUG" # Log level. Possible values are: ERROR, WARNING, NOTICE, INFO, DEBUG
+  File = "" # No file name output logs to stdout
 
 [UpstreamProxy]
-  Type = "none"
+  Type = "none" # Proxy to connect to before connecting to mixnet
 
 [Debug]
-  DisableDecoyTraffic = true
-  CaseSensitiveUserIdentifiers = false
-  PollingInterval = 1
+  DisableDecoyTraffic = true # Disables the decoy traffic of the mixnet
+  CaseSensitiveUserIdentifiers = true # Checks for correct capitalization of provider identifiers
+  PollingInterval = 1 # Interval in seconds that will be used to poll the receive queue.
 
 [NonvotingAuthority]
-    Address = "138.197.57.19:30000"
-    PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A="
+    Address = "138.197.57.19:30000" # The address of the authority
+    PublicKey = "RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A=" # Public key of the authority
 ```
 
 ## Log files
 
 Because of the way our docker services are being created, all of the log files are saved to the mounted docker volume, thus all of the log files will be located in the mount the directory of the docker host. If the docker volume is mounted `$HOME/configs/nonvoting` the logs of the authority will be saved in that directory. The same goes for all of the nodes.
 
-If you are running a full mixnet this little command will be useful to looking at all of the logs of the mixnet. If you are running a single node then this command this works for you.
+If you are running a full mixnet this little command will be useful for looking at all of the logs of the mixnet. If you are running a single node then this command also works for you.
 
 ```
 find ./configs -name "*.log" | xargs tail -f
