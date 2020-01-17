@@ -79,6 +79,8 @@ LogLevel = "DEBUG"
 
 The `ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
 
+__Note__ that to maximize the users it is best if the rpc endpoint in the `currency.toml` file is a blockchain node that you control.
+
 ### How to Run a Mix Node
 
 To run a mix node we have to run the same command to generate the config file. The only difference is changing the `-provider` flag with `-node`.
