@@ -44,10 +44,10 @@ To run a mix node please take a look at the [docs](https://hashcloak.com/Meson/d
 
 #### How to send transactions
 
-__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently is support for both `Goerli` and `Rinkeby` testnets. You can easily add support for other Ethereum based [chains](https://hashcloak.com/Meson/docs/#other-blockchains) by correctly configuring a provider node and the plugin.
+__⚠️ WARNING ⚠️__: The mixnet is not ready for strong anonymity since it is still being worked on. The privacy features are not ready for production use. There is currently is support for both `Goerli` and `Rinkeby` testnets.
 
+You can easily add support for other Ethereum based [chains](https://hashcloak.com/Meson/docs/#other-blockchains) by correctly configuring a provider node and the plugin. The following example shows you how to use our wallet demo to send an Ethereum transaction on the `Goerli` testnet. It uses our [Meson-client](https://github.com/hashcloak/Meson-client) library to connect to mixnet and send the transaction through it. This demo is mostly to show that the mixnet is properly sends transactions through.
 
-If you want to try out Meson here are some quick instructions:
 ```bash
 git clone https://github.com/hashcloak/Meson-wallet-demo
 cd Meson-wallet-demo
@@ -60,9 +60,6 @@ go run ./cmd/wallet/main.go \
   -c client.toml \ # Config file
   -chain 5 \ # Chain id for goerli
 ```
-
-
-
 The contents of `client.toml` are:
 
 ```toml

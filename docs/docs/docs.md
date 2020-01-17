@@ -26,7 +26,7 @@ genconfig \
   -provider # Flag to indicate you only want a provider config
 ```
 
-This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then get your node added to the mixnet. Once you give is your public key you can get your node running with:
+This will make a directory called `output/provider-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then get your node added to the mixnet (this is not a decentralized step, please look at the warning at the top of the page). Once you give is your public key you can get your node running with:
 
 ```bash
 docker service create \
@@ -66,19 +66,19 @@ The Meson plugin defined above is handling the Ethereum chain of `Goerli` in thi
 The Meson plugin uses an additional configuration file to be able to connect to the rpc endpoint of a blockchain node. This file is called `/conf/currency.toml` in the `Provider.CBORPluginKaetzchen.Config` section of `katzenpost.toml` and it has the following parameters:
 
 ```toml
-# currency.toml
-Ticker = "gor"
-ChainID = 5
-RPCUser = "rpcuser"
-RPCPass = "rpcpassword"
-RPCURL = "https://goerli.hashcloak.com"
-LogDir = "/conf"
-LogLevel = "DEBUG"
+# currency.toml is the configuration of Meson
+Ticker = "gor" # This is the name of service provided by Meson
+ChainID = 5 # ChainID to distinguish between different chains
+RPCUser = "rpcuser" # Http login user.
+RPCPass = "rpcpassword" # Http password
+RPCURL = "https://goerli.hashcloak.com" # The dpc url of the node that will receive the transaction
+LogDir = "/conf" # Location of the logs
+LogLevel = "DEBUG" # Log level of the Meson plugin.
 ```
 
 The `ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
 
-__Note__ that to maximize the users it is best if the rpc endpoint in the `currency.toml` file is a blockchain node that you control.
+__Note__ that to maximize the privacy of the mixnet users it is best if the rpc endpoint in the `currency.toml` file is a blockchain node that you control.
 
 ### How to Run a Mix Node
 
@@ -93,7 +93,7 @@ genconfig \
   -node # Flag to indicate you only want a mix node config
 ```
 
-This will make a directory called `output/mix-node-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a mix. Once you give is your public key you can get your node running with:
+This will make a directory called `output/mix-node-name` with a file called `identity.public.pem`. Send us your public key to [info@hashcloak.com](info@hashcloak.com). We will then help you to get added as a mix (this is not a decentralized step, please look at the warning at the top of this page).
 
 ```bash
 docker service create \
@@ -185,7 +185,7 @@ The contents of `client.toml` are:
 [Logging]
   Disable = false # Enables logging
   Level = "DEBUG" # Log level. Possible values are: ERROR, WARNING, NOTICE, INFO, DEBUG
-  File = "" # No file name output logs to stdout
+  File = "" # No file name means the logs are displayed in stdout
 
 [UpstreamProxy]
   Type = "none" # Proxy to connect to before connecting to mixnet
@@ -216,7 +216,7 @@ Due to how katzenpost is designed, when you join the mixnet you will have to wai
 
 ```
 01:40:35.977 WARN pki: Authority rejected upload for epoch: 138107 (Conflict/Late)
-01:40:35.977 WARN pki: Failed to post to PKI: pki: post for epoch will never succeeed
+01:40:35.977 WARN pki: Failed to post to PKI: pki: post for epoch will never succeed
 ```
 
 The above log occurs every time your node tries to post a new epoch description to the authority. In the authority's logs you will see this:
@@ -237,8 +237,8 @@ We intend to add support for other chains but, for now, only Ethereum based tran
 
 The steps needed to add a new Ethereum based chain are:
 
-- Obtain access to an rpc endpoint of the new chain
-- Change the `Provider.CBORPluginKaetzchen` to use the new service ticker
+- Obtain access to an rpc endpoint of the new chain.
+- Change the `Provider.CBORPluginKaetzchen` to use the new service ticker.
 - Configure `currency.toml` with the new service.
 
 After updating those configuration files running a provider node should follow the same steps as detailed [above](#running-meson).
