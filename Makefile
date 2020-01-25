@@ -14,8 +14,6 @@ katzenAuthRepo=https://github.com/katzenpost/authority
 katzenAuthTag=$(shell git ls-remote --heads https://github.com/katzenpost/authority  | grep master | cut -c1-7)
 katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenAuthTag)
 
-gethVersion=v1.9.9
-gethImage=$(dockerRepo)/client-go:$(gethVersion)
 mesonServer=$(dockerRepo)/meson
 mesonClient=$(dockerRepo)/meson-client
 
@@ -36,7 +34,7 @@ clean-data:
 	rm -r $(flags)/permits || true
 	$(MAKE) permits
 
-pull: pull-katzen-auth pull-katzen-server pull-geth
+pull: pull-katzen-auth pull-katzen-server
 
 pull-katzen-auth:
 	docker pull $(katzenAuth) && $(messagePull)$(katzenAuth) \
@@ -46,11 +44,7 @@ pull-katzen-server:
 	docker pull $(katzenServer) && $(messagePull)$(katzenServer) \
 		|| ($(imageNotFound)$(katzenServer) && $(MAKE) build-katzen-server)
 
-pull-geth:
-	docker pull $(gethImage) && $(messagePull)$(gethImage) \
-		||  ($(imageNotFound)$(gethImage) && $(MAKE) build-geth)
-
-push: push-katzen-server push-katzen-auth push-geth push-meson
+push: push-katzen-server push-katzen-auth push-meson
 
 push-katzen-server:
 	docker push $(katzenServer) && $(messagePush)$(katzenServer) \
@@ -64,21 +58,10 @@ push-katzen-auth:
 				$(MAKE) build-katzen-nonvoting-authority && \
 				docker push $(katzenAuth))
 
-push-geth:
-	docker push $(gethImage) && $(messagePush)$(gethImage) \
-		|| ($(imageNotFound)$(gethImage) && \
-				$(MAKE) build-geth && \
-				docker push $(gethImage))
-
 push-meson: build-meson
 	docker push '$(mesonServer):$(BRANCH)'
 
-build: build-geth build-katzen-server build-katzen-nonvoting-authority build-meson
-
-build-geth:
-	sed 's|%%GETH_VERSION%%|$(gethVersion)|g' ./ops/geth.Dockerfile > /tmp/geth.Dockerfile
-	docker build -f /tmp/geth.Dockerfile -t $(gethImage) .
-	@touch $(flags)/$@
+build: build-katzen-server build-katzen-nonvoting-authority build-meson
 
 build-katzen-server:
 	git clone $(katzenServerRepo) /tmp/server || true
@@ -104,7 +87,6 @@ permits:
 	@touch $(flags)/$@
 
 up-nonvoting:
-	GETH_IMAGE=$(gethImage) \
 	KATZEN_SERVER=$(katzenServer) \
 	KATZEN_AUTH=$(katzenAuth) \
 	MESON_IMAGE=$(mesonServer):$(BRANCH) \
