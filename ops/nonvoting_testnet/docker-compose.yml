@@ -1,34 +1,6 @@
 version: "3"
 
 services:
-  goerli:
-    image: ${GETH_IMAGE}
-    environment:
-      - "CHAIN=goerli"
-    ports:
-      - "127.0.0.1:19545:9545"
-    volumes:
-      - ./conf/goerli:/blockchain
-    depends_on:
-      - provider1
-    networks:
-      nonvoting_test_net:
-        ipv4_address: 172.28.1.10
-
-  rinkeby:
-    image: ${GETH_IMAGE}
-    environment:
-      - "CHAIN=rinkeby"
-    ports:
-      - "127.0.0.1:19546:9545"
-    volumes:
-      - ./conf/rinkeby:/blockchain
-    depends_on:
-      - provider2
-    networks:
-      nonvoting_test_net:
-        ipv4_address: 172.28.1.11
-
   provider1:
     restart: unless-stopped
     image: ${MESON_IMAGE}
