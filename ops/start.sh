@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -ex
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
 rm /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
