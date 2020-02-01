@@ -3,7 +3,6 @@ set -ex
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
 rm -f /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
-touch $tempDir/$tempDir
 numberNodes=3
 pubIP=$(ip route get 1 | cut -d' ' -f3)
 genconfig -o $tempDir -n $numberNodes -a $pubIP
