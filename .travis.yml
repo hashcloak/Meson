@@ -11,3 +11,7 @@ before_install:
 
 script:
   - make tests
+
+cache:
+  directories:
+    - $GOPATH/pkg

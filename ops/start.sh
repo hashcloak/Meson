@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
-rm /tmp/meson-current
+rm -f /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
 numberNodes=3
 pubIP=$(ip route get 1 | cut -d' ' -f3)
