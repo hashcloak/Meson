@@ -11,26 +11,24 @@ messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not push
 messagePull=echo "LOG: Success in pulling image: "
 imageNotFound=echo "LOG: Image not found... building: "
 
+mesonServer=$(dockerRepo)/meson:master
+
+
 clean:
 	rm -rf /tmp/authority
 	rm -rf $(flags)
 
-clean-data:
-	rm -rf ./ops/nonvoting_testnet/conf/provider?
-	rm -rf ./ops/nonvoting_testnet/conf/mix?
-	rm -rf ./ops/nonvoting_testnet/conf/auth
-	git checkout ./ops/nonvoting_testnet/conf
-	rm -r $(flags)/permits || true
-	$(MAKE) permits
-
 pull: pull-katzen-auth pull-meson
+	@touch $(flags)/$@
 
 pull-katzen-auth:
 	docker pull $(katzenAuth) && $(messagePull)$(katzenAuth) \
 		|| ($(imageNotFound)$(katzenAuth) && $(MAKE) build-katzen-nonvoting-authority)
+	@touch $(flags)/$@
 
 pull-meson:
-	docker pull $(mesonServer):master
+	docker pull $(mesonServer)
+	@touch $(flags)/$@
 
 push: push-katzen-auth
 
@@ -43,25 +41,19 @@ push-katzen-auth:
 build: build-katzen-nonvoting-authority
 
 build-katzen-nonvoting-authority:
-	git clone $(katzenAuthRepo) /tmp/authority || true
-	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
+	 git clone $(katzenAuthRepo) /tmp/auth || git --git-dir=/tmp/auth/.git --work-tree=/tmp/auth pull origin master
+	docker build -f /tmp/auth/Dockerfile.nonvoting -t $(katzenAuth) /tmp/auth
 	@touch $(flags)/$@
 
-permits:
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/mix?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/auth
+genconfig:
+	go get github.com/hashcloak/genconfig
+	genconfig -o ops/conf -n 3
 	@touch $(flags)/$@
 
-up-nonvoting: permits pull up-nonvoting
-	KATZEN_SERVER=$(katzenServer) \
+integration-tests: pull genconfig
+	MESON_IMAGE=$(mesonServer) \
 	KATZEN_AUTH=$(katzenAuth) \
-	MESON_IMAGE=$(mesonServer):$(BRANCH) \
-	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
-	@touch $(flags)/$@
+	docker-compose -f ./ops/integration-test.compose.yml up -d
 
-down:
-	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml down
-
-integration-tests: up-nonvoting
-
+down-integration:
+	docker-compose -f ./ops/integration-test.compose.yml down

@@ -1,7 +1,0 @@
-Ticker = "gor"
-RPCUser = "rpcuser"
-RPCPass = "rpcpassword"
-RPCURL = "https://goerli.hashcloak.com"
-ChainId = 5
-LogDir = "/conf/service_logs"
-LogLevel = "DEBUG"
