@@ -13,13 +13,11 @@ imageNotFound=echo "LOG: Image not found... building: "
 
 mesonServer=$(dockerRepo)/meson:master
 
-
 clean:
 	rm -rf /tmp/authority
 	rm -rf $(flags)
 
 pull: pull-katzen-auth pull-meson
-	@touch $(flags)/$@
 
 pull-katzen-auth:
 	docker pull $(katzenAuth) && $(messagePull)$(katzenAuth) \
@@ -47,13 +45,12 @@ build-katzen-nonvoting-authority:
 
 genconfig:
 	go get github.com/hashcloak/genconfig
-	genconfig -o ops/conf -n 3
 	@touch $(flags)/$@
 
-integration-tests: pull genconfig
-	MESON_IMAGE=$(mesonServer) \
+start-integration: pull genconfig
 	KATZEN_AUTH=$(katzenAuth) \
-	docker-compose -f ./ops/integration-test.compose.yml up -d
+	MESON_IMAGE=$(mesonServer) \
+	bash ./ops/start.sh
 
-down-integration:
-	docker-compose -f ./ops/integration-test.compose.yml down
+stop:
+	bash ./ops/stop.sh
