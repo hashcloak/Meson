@@ -103,16 +103,12 @@ This shows Meson at the bottom with no cpu nor memory allocated to it. This is a
 
 ```log
 #currency.36.log
-[sudo] password for sebas:
 INFO 001 currency server started
-ERRO 002 Failed to load config file '/conf/currency.toml: config: rpcURL is not set
-'
+ERRO 002 Failed to load config file '/conf/currency.toml: config: RPCUrl is not set
 ERRO 003 Exiting
-
 ```
 
-In this case, the solution is self explanatory. We just need to add the `rpcURL` value to currency.toml
-
+In this case, the solution is self explanatory. We just need to add the `RPCurl` value to `currency.toml`.
 
 ### How to Run a Mix Node
 
