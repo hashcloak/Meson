@@ -78,6 +78,42 @@ The `ticker` parameter has to match the `Capability` and `Endpoint` parameters o
 
 __Note__ that to maximize the privacy of the mixnet users it is best if the RPC endpoint in the `currency.toml` file is a blockchain node that you control.
 
+#### Check that Meson is running
+
+Due do how plugin process are spawned from the main katzenpost server program, the Docker container does not have information on the exit status of the plugins inside of the container. This leads to a situation in which the container is running but the Meson plugin is not.
+
+One can check if this is the case by running the following command:
+
+```
+$ docker exec nonvoting_testnet_provider1_1 top # nonvoting_testnet_provider1_1 is the name of the container
+
+Mem: 13169904K used, 1050596K free, 581716K shrd, 969380K buff, 6457840K cached
+CPU:   2% usr   1% sys   0% nic  96% idle   0% io   0% irq   0% sirq
+Load average: 0.31 0.66 0.80 2/1636 111
+  PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
+    1     0 root     S     314m   2%   2   0% /go/bin/server -f /conf/katzenpost
+   29     1 root     S     111m   1%   6   0% /go/bin/memspool -data_store /conf
+   22     1 root     S     111m   1%   7   0% /go/bin/panda_server -log_dir /con
+   16     1 root     S     109m   1%   2   0% /go/bin/echo_server -log_level DEB
+   58     0 root     S     1572   0%   2   0% top
+   36     1 root     Z        0   0%   5   0% [Meson]
+```
+
+This shows Meson at the bottom with no cpu nor memory allocated to it. This is an indicator that Meson exited with and error and you can find the error in the currency log file:
+
+```log
+#currency.36.log
+[sudo] password for sebas:
+INFO 001 currency server started
+ERRO 002 Failed to load config file '/conf/currency.toml: config: rpcURL is not set
+'
+ERRO 003 Exiting
+
+```
+
+In this case, the solution is self explanatory. We just need to add the `rpcURL` value to currency.toml
+
+
 ### How to Run a Mix Node
 
 To run a mix node we have to run `genconfig` to generate the config file. The only difference is changing the `-provider` flag with `-node`.
