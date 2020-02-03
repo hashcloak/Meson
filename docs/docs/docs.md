@@ -80,7 +80,7 @@ __Note__ that to maximize the privacy of the mixnet users it is best if the RPC 
 
 #### Check that Meson is running
 
-Due do how plugin processes are spawned from the main katzenpost server program, the Docker container does not have information on the exit status of the plugins inside of the container. This leads to a situation in which the container is running but the Meson plugin is not.
+Due to how plugin processes are spawned from the main katzenpost server program, the Docker container does not have information on the exit status of the plugins inside of the container. This leads to a situation in which the container is running but the Meson plugin is not.
 
 One can check if this is the case by running the following command:
 
