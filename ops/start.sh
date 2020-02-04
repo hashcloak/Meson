@@ -1,6 +1,28 @@
 #!/usr/bin/env bash
 set -ex
 
+
+function generateClientToml() {
+  cat - > /tmp/meson-current/client.toml <<EOF
+[Logging]
+  Disable = false
+  Level = "DEBUG"
+  File = ""
+
+[UpstreamProxy]
+  Type = "none"
+
+[Debug]
+  DisableDecoyTraffic = $1
+  CaseSensitiveUserIdentifiers = false
+  PollingInterval = 1
+
+[NonvotingAuthority]
+    Address = "$2:30000"
+    PublicKey = "$3"
+EOF
+}
+
 if [ -z "$ETHEREUM_PK" ]; then
   echo "Need to set the ETHEREUM_PK env var"
   exit -1
@@ -33,7 +55,7 @@ for i in $(seq 0 1); do
     -p 3000$port:3000$port \
     -p 4000$port:4000$port \
     --mount type=bind,source=/tmp/meson-current/provider-$i,destination=/conf \
-    $MESON_IMAGE
+    $MESON_IMAGE &
 done
 
 for i in $(seq 0 $(($numberNodes-1))); do
@@ -42,7 +64,7 @@ for i in $(seq 0 $(($numberNodes-1))); do
   docker service create --name node-$i -d \
     -p 3000$port:3000$port \
     --mount type=bind,source=/tmp/meson-current/node-$i,destination=/conf \
-    $MESON_IMAGE
+    $MESON_IMAGE &
 done
 
 if [ ! -z "$CI" ]; then
@@ -50,26 +72,9 @@ if [ ! -z "$CI" ]; then
 fi
 
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
-cat - > /tmp/meson-current/client.toml <<EOF
-[Logging]
-  Disable = false
-  Level = "DEBUG"
-  File = ""
+generateClientToml true $publicIP $authorityPublicKey
 
-[UpstreamProxy]
-  Type = "none"
-
-[Debug]
-  DisableDecoyTraffic = true
-  CaseSensitiveUserIdentifiers = false
-  PollingInterval = 1
-
-[NonvotingAuthority]
-    Address = "${publicIP}:30000"
-    PublicKey = "${authorityPublicKey}"
-EOF
-
-sleep 10
+sleep 30
 go run /home/sebas/repos/hashcloack/Meson-client/integration/tests.go \
   -c /tmp/meson-current/client.toml \
   -t gor -s gor \
