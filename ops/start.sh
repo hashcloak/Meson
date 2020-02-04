@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 set -ex
+
+if [ -z "$ETHEREUM_PK" ]; then
+  echo "Need to set the ETHEREUM_PK env var"
+  exit -1
+fi
+
+
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
 rm -f /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
-numberNodes=${NUMBER_NODES:-6}
+numberNodes=${NUMBER_NODES:-2}
 publicIP=$(ip route get 1)
 publicIP=$(echo $publicIP | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 genconfig -o /tmp/meson-current -n $numberNodes -a $publicIP
@@ -62,18 +69,8 @@ cat - > /tmp/meson-current/client.toml <<EOF
     PublicKey = "${authorityPublicKey}"
 EOF
 
-if [ -z "$ETHEREUM_PK" ]; then
-  echo "Need to set the ETHEREUM_PK env var"
-  exit -1
-fi
-
 sleep 10
-go run /home/sebas/repos/hashcloack/Meson-wallet-demo/cmd/wallet/main.go \
+go run /home/sebas/repos/hashcloack/Meson-client/integration/tests.go \
   -c /tmp/meson-current/client.toml \
-  -rpc https://goerli.hashcloak.com -t gor -s gor \
-  -pk $ETHEREUM_PK || true
-
-go run /home/sebas/repos/hashcloack/Meson-wallet-demo/cmd/wallet/main.go \
-  -c /tmp/meson-current/client.toml \
-  -rpc https://goerli.hashcloak.com -t gor -s gor \
+  -t gor -s gor \
   -pk $ETHEREUM_PK

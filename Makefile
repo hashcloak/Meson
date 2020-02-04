@@ -1,3 +1,6 @@
+TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
+BRANCH=$(TRAVIS_BRANCH)
+
 flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
@@ -47,10 +50,16 @@ genconfig:
 	go get github.com/hashcloak/genconfig
 	@touch $(flags)/$@
 
-tests: pull genconfig
+tests: build genconfig
 	KATZEN_AUTH=$(katzenAuth) \
 	MESON_IMAGE=$(mesonServer) \
 	bash ./ops/start.sh
 
 stop:
 	bash ./ops/stop.sh
+
+logs-auth:
+	sudo tail -f /tmp/meson-current/nonvoting/authority.log
+
+logs-providers:
+	sudo tail -f /tmp/meson-current/provider-{0,1}/katzenpost.log
