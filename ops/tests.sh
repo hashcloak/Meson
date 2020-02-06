@@ -18,8 +18,8 @@ go run /tmp/Meson-client/integration/tests.go \
 }
 
 # Commit that has the integration tests 
-# Can be replaced to maaster once it is merged
-testsCommit=a8af29632080a7755d734825052f86ce5cb651a2
+# Can be replaced to master once it is merged
+testsCommit=${TEST_COMMIT:-a8af29632080a7755d734825052f86ce5cb651a2}
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client ||
   git --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client pull origin
 cd /tmp/Meson-client
