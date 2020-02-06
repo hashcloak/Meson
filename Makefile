@@ -50,7 +50,7 @@ genconfig:
 	go get github.com/hashcloak/genconfig
 	@touch $(flags)/$@
 
-tests: build genconfig
+tests: pull genconfig
 	KATZEN_AUTH=$(katzenAuth) \
 	MESON_IMAGE=$(mesonServer) \
 	bash ./ops/tests.sh
