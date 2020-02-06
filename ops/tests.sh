@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -ex
 
+if [ -z "$ETHEREUM_PK" ]; then
+  echo "Need to set the ETHEREUM_PK env var"
+  exit -1
+fi
+
 # $1 DisableDecoyTraffic
 # $2 Authority's public ipv4 address
 # $3 Authority's Public key
@@ -36,18 +41,15 @@ go run /tmp/Meson-client/integration/tests.go \
   -pk $3
 }
 
-if [ -z "$ETHEREUM_PK" ]; then
-  echo "Need to set the ETHEREUM_PK env var"
-  exit -1
-fi
-
+publicIP=$(ip route get 1 | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
 generateClientToml true $publicIP $authorityPublicKey
 
 # Commit that has the integration tests 
 # Can be replaced to maaster once it is merged
 testsCommit=a8af29632080a7755d734825052f86ce5cb651a2
-git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
+git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client ||
+  git --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client pull origin master
 cd /tmp/Meson-client
 git checkout $testsCommit
 

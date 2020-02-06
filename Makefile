@@ -21,6 +21,7 @@ clean:
 	rm -rf $(flags)
 
 pull: pull-katzen-auth pull-meson
+	@touch $(flags)/$@
 
 pull-katzen-auth:
 	docker pull $(katzenAuth) && $(messagePull)$(katzenAuth) \
@@ -55,12 +56,14 @@ containers: pull genconfig
 	MESON_IMAGE=$(mesonServer) \
 	bash ./ops/containers.sh
 	sleep 90
+	@touch $(flags)/$@
 
 tests: containers
 	bash ./ops/tests.sh
 
 stop:
 	bash ./ops/stop.sh
+	rm -f $(flags)/containers
 
 logs-auth:
 	sudo tail -f /tmp/meson-current/nonvoting/authority.log

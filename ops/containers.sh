@@ -4,8 +4,7 @@ tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
 rm -f /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
 numberNodes=${NUMBER_NODES:-2}
-publicIP=$(ip route get 1)
-publicIP=$(echo $publicIP | head -1 | sed 's/.*src//' | cut -f2 -d' ')
+publicIP=$(ip route get 1 | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 genconfig -o /tmp/meson-current -n $numberNodes -a $publicIP
 
 echo "Authority"
