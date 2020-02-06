@@ -32,7 +32,7 @@ function runIntegrationTest() {
 go run /tmp/Meson-client/integration/tests.go \
   -c /tmp/meson-current/client.toml \
   -t $1 -s $1 \
-  -k /tmp/meson-current/$2/currency.toml
+  -k /tmp/meson-current/$2/currency.toml \
   -pk $3
 }
 
