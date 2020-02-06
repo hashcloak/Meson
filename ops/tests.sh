@@ -84,7 +84,7 @@ generateClientToml true $publicIP $authorityPublicKey
 
 # Commit that has the integration tests 
 # Can be replaced to maaster once it is merged
-testsCommit=5adb4b6aa9bb1eab7a59acab0f0d9e5839369908
+testsCommit=a8af29632080a7755d734825052f86ce5cb651a2
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
 cd /tmp/Meson-client
 git checkout $testsCommit
