@@ -6,30 +6,6 @@ if [ -z "$ETHEREUM_PK" ]; then
   exit -1
 fi
 
-# $1 DisableDecoyTraffic
-# $2 Authority's public ipv4 address
-# $3 Authority's Public key
-function generateClientToml() {
-  cat - > /tmp/meson-current/client.toml <<EOF
-[Logging]
-  Disable = false
-  Level = "DEBUG"
-  File = ""
-
-[UpstreamProxy]
-  Type = "none"
-
-[Debug]
-  DisableDecoyTraffic = $1
-  CaseSensitiveUserIdentifiers = false
-  PollingInterval = 1
-
-[NonvotingAuthority]
-    Address = "$2:30000"
-    PublicKey = "$3"
-EOF
-}
-
 # $1 Service to use
 # $2 Provider name
 # $3 private key
@@ -40,10 +16,6 @@ go run /tmp/Meson-client/integration/tests.go \
   -k /tmp/meson-current/$2/currency.toml \
   -pk $3
 }
-
-publicIP=$(ip route get 1 | head -1 | sed 's/.*src//' | cut -f2 -d' ')
-authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
-generateClientToml true $publicIP $authorityPublicKey
 
 # Commit that has the integration tests 
 # Can be replaced to maaster once it is merged

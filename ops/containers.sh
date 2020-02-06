@@ -1,11 +1,37 @@
 #!/usr/bin/env bash
 set -e
+
+# $1 DisableDecoyTraffic
+# $2 Authority's public ipv4 address
+# $3 Authority's Public key
+function generateClientToml() {
+  cat - > /tmp/meson-current/client.toml <<EOF
+[Logging]
+  Disable = false
+  Level = "DEBUG"
+  File = ""
+
+[UpstreamProxy]
+  Type = "none"
+
+[Debug]
+  DisableDecoyTraffic = $1
+  CaseSensitiveUserIdentifiers = false
+  PollingInterval = 1
+
+[NonvotingAuthority]
+    Address = "$2:30000"
+    PublicKey = "$3"
+EOF
+}
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
 rm -f /tmp/meson-current
 ln -s $tempDir /tmp/meson-current 
 numberNodes=${NUMBER_NODES:-2}
 publicIP=$(ip route get 1 | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 genconfig -o /tmp/meson-current -n $numberNodes -a $publicIP
+authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
+generateClientToml true $publicIP $authorityPublicKey
 
 echo "Authority"
 docker service create --name authority -d \
