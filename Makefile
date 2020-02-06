@@ -51,12 +51,12 @@ genconfig:
 	@touch $(flags)/$@
 
 containers: pull genconfig
+	KATZEN_AUTH=$(katzenAuth) \
+	MESON_IMAGE=$(mesonServer) \
 	bash ./ops/containers.sh
 	sleep 90
 
 tests: containers
-	KATZEN_AUTH=$(katzenAuth) \
-	MESON_IMAGE=$(mesonServer) \
 	bash ./ops/tests.sh
 
 stop:
