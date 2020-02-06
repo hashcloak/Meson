@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -ex
 
-
+# $1 DisableDecoyTraffic
+# $2 Authority's public ipv4 address
+# $3 Authority's Public key
 function generateClientToml() {
   cat - > /tmp/meson-current/client.toml <<EOF
 [Logging]
@@ -23,6 +25,17 @@ function generateClientToml() {
 EOF
 }
 
+# $1 Service to use
+# $2 Provider name
+# $3 private key
+function runIntegrationTest() {
+go run /tmp/Meson-client/integration/tests.go \
+  -c /tmp/meson-current/client.toml \
+  -t $1 -s $1 \
+  -k /tmp/meson-current/$2/currency.toml
+  -pk $3
+}
+
 if [ -z "$ETHEREUM_PK" ]; then
   echo "Need to set the ETHEREUM_PK env var"
   exit -1
@@ -36,11 +49,6 @@ numberNodes=${NUMBER_NODES:-2}
 publicIP=$(ip route get 1)
 publicIP=$(echo $publicIP | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 genconfig -o /tmp/meson-current -n $numberNodes -a $publicIP
-
-echo "Binance"
-# This is temporary until a binance node is more permanent
-sed -i 's|RPCURL =.*|RPCURL = "'$publicIP':27147"|g' /tmp/meson-current/provider-1/currency.toml
-docker service create --name binance -d -e "NODETYPE=lightnode" -p 27147:27147 hashcloak/binance:latest
 
 echo "Authority"
 docker service create --name authority -d \
@@ -74,8 +82,11 @@ fi
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
 generateClientToml true $publicIP $authorityPublicKey
 
-sleep 30
-go run /home/sebas/repos/hashcloack/Meson-client/integration/tests.go \
-  -c /tmp/meson-current/client.toml \
-  -t gor -s gor \
-  -pk $ETHEREUM_PK
+# Commit that has the integration tests 
+# Can be replaced to maaster once it is merged
+testsCommit=5adb4b6aa9bb1eab7a59acab0f0d9e5839369908
+git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
+git checkout $testsCommit --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client
+
+sleep 90
+runIntegrationTest gor provider-0 $ETHEREUM_PK
