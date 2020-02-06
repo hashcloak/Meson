@@ -86,7 +86,8 @@ generateClientToml true $publicIP $authorityPublicKey
 # Can be replaced to maaster once it is merged
 testsCommit=5adb4b6aa9bb1eab7a59acab0f0d9e5839369908
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client
-git checkout $testsCommit --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client
+cd /tmp/Meson-client
+git checkout $testsCommit
 
 sleep 90
 runIntegrationTest gor provider-0 $ETHEREUM_PK

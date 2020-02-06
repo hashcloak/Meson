@@ -53,7 +53,7 @@ genconfig:
 tests: build genconfig
 	KATZEN_AUTH=$(katzenAuth) \
 	MESON_IMAGE=$(mesonServer) \
-	bash ./ops/start.sh
+	bash ./ops/tests.sh
 
 stop:
 	bash ./ops/stop.sh
