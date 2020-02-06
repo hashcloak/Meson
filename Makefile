@@ -14,7 +14,9 @@ messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not push
 messagePull=echo "LOG: Success in pulling image: "
 imageNotFound=echo "LOG: Image not found... building: "
 
-mesonServer=$(dockerRepo)/meson:master
+mesonPluginRepo=https://github.com/hashcloak/Meson-plugin
+MESON_PLUGIN_BRANCH ?= master
+mesonServer=$(dockerRepo)/meson:$(MESON_PLUGIN_BRANCH)
 
 clean:
 	rm -rf /tmp/authority
@@ -29,7 +31,8 @@ pull-katzen-auth:
 	@touch $(flags)/$@
 
 pull-meson:
-	docker pull $(mesonServer)
+	docker pull $(mesonServer) && $(messagePull)$(mesonServer) \
+		|| ($(imageNotFound)$(mesonServer) && $(MAKE) build-meson)
 	@touch $(flags)/$@
 
 push: push-katzen-auth
@@ -45,6 +48,12 @@ build: build-katzen-nonvoting-authority
 build-katzen-nonvoting-authority:
 	 git clone $(katzenAuthRepo) /tmp/auth || git --git-dir=/tmp/auth/.git --work-tree=/tmp/auth pull origin master
 	docker build -f /tmp/auth/Dockerfile.nonvoting -t $(katzenAuth) /tmp/auth
+	@touch $(flags)/$@
+
+build-meson:
+	git clone $(mesonPluginRepo) /tmp/Meson-plugin || true
+	cd /tmp/Meson-plugin && git pull && git checkout $(MESON_PLUGIN_BRANCH)
+	make -C /tmp/Meson-plugin build
 	@touch $(flags)/$@
 
 genconfig:
