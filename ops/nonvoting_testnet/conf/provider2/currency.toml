@@ -1,7 +1,0 @@
-Ticker = "rin"
-RPCUser = "rpcuser"
-RPCPass = "rpcpassword"
-RPCURL = "https://rinkeby.hashcloak.com"
-ChainId = 4
-LogDir = "/conf/service_logs"
-LogLevel = "DEBUG"

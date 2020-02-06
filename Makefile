@@ -4,53 +4,35 @@ BRANCH=$(TRAVIS_BRANCH)
 flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
+
 dockerRepo=hashcloak
-
-katzenServerRepo=https://github.com/katzenpost/server
-katzenServerTag=$(shell git ls-remote --heads $(katzenServerRepo) | grep master | cut -c1-7)
-katzenServer=$(dockerRepo)/katzenpost-server:$(katzenServerTag)
-
 katzenAuthRepo=https://github.com/katzenpost/authority
 katzenAuthTag=$(shell git ls-remote --heads https://github.com/katzenpost/authority  | grep master | cut -c1-7)
 katzenAuth=$(dockerRepo)/katzenpost-auth:$(katzenAuthTag)
-
-mesonServer=$(dockerRepo)/meson
-mesonClient=$(dockerRepo)/meson-client
 
 messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not pushing: "
 messagePull=echo "LOG: Success in pulling image: "
 imageNotFound=echo "LOG: Image not found... building: "
 
+mesonServer=$(dockerRepo)/meson:master
+
 clean:
-	rm -rf /tmp/server
 	rm -rf /tmp/authority
 	rm -rf $(flags)
 
-clean-data:
-	rm -rf ./ops/nonvoting_testnet/conf/provider?
-	rm -rf ./ops/nonvoting_testnet/conf/mix?
-	rm -rf ./ops/nonvoting_testnet/conf/auth
-	git checkout ./ops/nonvoting_testnet/conf
-	rm -r $(flags)/permits || true
-	$(MAKE) permits
-
-pull: pull-katzen-auth pull-katzen-server
+pull: pull-katzen-auth pull-meson
+	@touch $(flags)/$@
 
 pull-katzen-auth:
 	docker pull $(katzenAuth) && $(messagePull)$(katzenAuth) \
 		|| ($(imageNotFound)$(katzenAuth) && $(MAKE) build-katzen-nonvoting-authority)
+	@touch $(flags)/$@
 
-pull-katzen-server:
-	docker pull $(katzenServer) && $(messagePull)$(katzenServer) \
-		|| ($(imageNotFound)$(katzenServer) && $(MAKE) build-katzen-server)
+pull-meson:
+	docker pull $(mesonServer)
+	@touch $(flags)/$@
 
-push: push-katzen-server push-katzen-auth push-meson
-
-push-katzen-server:
-	docker push $(katzenServer) && $(messagePush)$(katzenServer) \
-		|| ($(imageNotFound)$(katzenServer) && \
-				$(MAKE) build-katzen-server && \
-				docker push $(katzenServer))
+push: push-katzen-auth
 
 push-katzen-auth:
 	docker push $(katzenAuth) && $(messagePush)$(katzenAuth) \
@@ -58,50 +40,33 @@ push-katzen-auth:
 				$(MAKE) build-katzen-nonvoting-authority && \
 				docker push $(katzenAuth))
 
-push-meson: build-meson
-	docker push '$(mesonServer):$(BRANCH)'
-
-build: build-katzen-server build-katzen-nonvoting-authority build-meson
-
-build-katzen-server:
-	git clone $(katzenServerRepo) /tmp/server || true
-	docker build -f /tmp/server/Dockerfile -t $(katzenServer) /tmp/server
-	@touch $(flags)/$@
+build: build-katzen-nonvoting-authority
 
 build-katzen-nonvoting-authority:
-	git clone $(katzenAuthRepo) /tmp/authority || true
-	docker build -f /tmp/authority/Dockerfile.nonvoting -t $(katzenAuth) /tmp/authority
+	 git clone $(katzenAuthRepo) /tmp/auth || git --git-dir=/tmp/auth/.git --work-tree=/tmp/auth pull origin master
+	docker build -f /tmp/auth/Dockerfile.nonvoting -t $(katzenAuth) /tmp/auth
 	@touch $(flags)/$@
 
-build-meson: pull-katzen-server
-	sed 's|%%KATZEN_SERVER%%|$(katzenServer)|g' ./plugin/Dockerfile > /tmp/meson.Dockerfile
-	docker build -f /tmp/meson.Dockerfile -t $(mesonServer):$(BRANCH) ./plugin
+genconfig:
+	go get github.com/hashcloak/genconfig
 	@touch $(flags)/$@
 
-up: permits pull build-meson up-nonvoting
-
-permits:
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/provider?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/mix?
-	sudo chmod -R 700 ops/nonvoting_testnet/conf/auth
-	@touch $(flags)/$@
-
-up-nonvoting:
-	KATZEN_SERVER=$(katzenServer) \
+containers: pull genconfig
 	KATZEN_AUTH=$(katzenAuth) \
-	MESON_IMAGE=$(mesonServer):$(BRANCH) \
-	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml up -d
+	MESON_IMAGE=$(mesonServer) \
+	bash ./ops/containers.sh
+	sleep 90
+	@touch $(flags)/$@
 
-down:
-	docker-compose -f ./ops/nonvoting_testnet/docker-compose.yml down
+tests: containers
+	bash ./ops/tests.sh
 
-test-client:
-	git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
-	docker run \
-		-v /tmp/Meson-client:/client \
-		-v /tmp/gopath-pkg:/go/pkg \
-		--network nonvoting_testnet_nonvoting_test_net \
-		-w /client \
-		golang:buster \
-		/bin/bash -c "GORACE=history_size=7 go test -race"
-	[ ${CI} ]; sudo chown ${USER} -R /tmp/gopath-pkg
+stop:
+	bash ./ops/stop.sh
+	rm -f $(flags)/containers
+
+logs-auth:
+	sudo tail -f /tmp/meson-current/nonvoting/authority.log
+
+logs-providers:
+	sudo tail -f /tmp/meson-current/provider-{0,1}/katzenpost.log

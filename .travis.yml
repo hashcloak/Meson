@@ -6,19 +6,12 @@ services:
 go:
   - "1.13"
 
-script:
-  - if [ -n "$(gofmt -l ./plugin)" ]; then echo "Go code is not formatted:"; gofmt -d ./plugin; exit 1; fi
-  - make up && sleep 30
-  - make test-client
+before_install:
+  - docker swarm init
 
-deploy:
-  - provider: script
-    script:
-      - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD && make push
-    on:
-      branch: master
+script:
+  - make tests
 
 cache:
   directories:
     - $GOPATH/pkg
-    - /tmp/gopath-pkg
