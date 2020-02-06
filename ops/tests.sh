@@ -49,7 +49,7 @@ generateClientToml true $publicIP $authorityPublicKey
 # Can be replaced to maaster once it is merged
 testsCommit=a8af29632080a7755d734825052f86ce5cb651a2
 git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client ||
-  git --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client pull origin master
+  git --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client pull origin
 cd /tmp/Meson-client
 git checkout $testsCommit
 
