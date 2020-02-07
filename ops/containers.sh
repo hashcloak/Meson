@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 set -e
+mesonImageTag="${MESON_IMAGE_TAG:-master}"
+mesonImage="${MESON_IMAGE:-hashcloak/meson:$MESON_IMAGE_TAG}"
+numberNodes=${NUMBER_NODES:-2}
+katzenAuth="${KATZEN_AUTH}"
 
 # $1 DisableDecoyTraffic
 # $2 Authority's public ipv4 address
@@ -24,9 +28,10 @@ function generateClientToml() {
     PublicKey = "$3"
 EOF
 }
+
 tempDir=$(mktemp -d /tmp/meson-conf.XXXX)
-ln -s -f $tempDir /tmp/meson-current
-numberNodes=${NUMBER_NODES:-2}
+rm -f /tmp/meson-current
+ln -s $tempDir /tmp/meson-current
 publicIP=$(ip route get 1 | head -1 | sed 's/.*src//' | cut -f2 -d' ')
 genconfig -o /tmp/meson-current -n $numberNodes -a $publicIP
 authorityPublicKey=$(cat /tmp/meson-current/nonvoting/identity.public.pem | grep -v "PUBLIC")
@@ -36,7 +41,7 @@ echo "Authority"
 docker service create --name authority -d \
   -p 30000:30000 \
   --mount type=bind,source=/tmp/meson-current/nonvoting,destination=/conf \
-  $KATZEN_AUTH
+  $katzenAuth
 
 for i in $(seq 0 1); do
   port=$(($i+1))
@@ -45,7 +50,7 @@ for i in $(seq 0 1); do
     -p 3000$port:3000$port \
     -p 4000$port:4000$port \
     --mount type=bind,source=/tmp/meson-current/provider-$i,destination=/conf \
-    $MESON_IMAGE &
+    $mesonImage &
 done
 
 for i in $(seq 0 $(($numberNodes-1))); do
@@ -54,5 +59,5 @@ for i in $(seq 0 $(($numberNodes-1))); do
   docker service create --name node-$i -d \
     -p 3000$port:3000$port \
     --mount type=bind,source=/tmp/meson-current/node-$i,destination=/conf \
-    $MESON_IMAGE &
+    $mesonImage &
 done
