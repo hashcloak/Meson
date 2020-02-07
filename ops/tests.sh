@@ -19,10 +19,7 @@ go run /tmp/Meson-client/integration/tests.go \
 
 # Commit that has the integration tests 
 # Can be replaced to master once it is merged
-testsCommit=${TEST_COMMIT:-a8af29632080a7755d734825052f86ce5cb651a2}
-git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client ||
-  git --git-dir=/tmp/Meson-client/.git --work-tree=/tmp/Meson-client pull origin
-cd /tmp/Meson-client
-git checkout $testsCommit
-
+testsCommit=${TEST_COMMIT:-1358077}
+git clone https://github.com/hashcloak/Meson-client /tmp/Meson-client || true
+cd /tmp/Meson-client && git fetch && git checkout $testsCommit
 runIntegrationTest gor provider-0 $ETHEREUM_PK
