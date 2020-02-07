@@ -1,6 +1,3 @@
-TRAVIS_BRANCH ?= $(shell git branch| grep \* | cut -d' ' -f2)
-BRANCH=$(TRAVIS_BRANCH)
-
 flags=.makeFlags
 VPATH=$(flags)
 $(shell mkdir -p $(flags))
@@ -14,7 +11,8 @@ messagePush=echo "LOG: Image already exists in docker.io/$(dockerRepo). Not push
 messagePull=echo "LOG: Success in pulling image: "
 imageNotFound=echo "LOG: Image not found... building: "
 
-mesonServer=$(dockerRepo)/meson:master
+MESON_IMAGE_TAG ?= master
+mesonServer=$(dockerRepo)/meson:$(MESON_IMAGE_TAG)
 
 clean:
 	rm -rf /tmp/authority
