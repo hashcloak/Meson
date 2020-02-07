@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -e
-mesonImage="${MESON_IMAGE:-hashcloak/meson:master}"
-katzenAuth="${KATZEN_AUTH:-hashcloak/katzenpost-auth:1c00188}"
+mesonImageTag="${MESON_IMAGE_TAG:-master}"
+mesonImage="${MESON_IMAGE:-hashcloak/meson:$MESON_IMAGE_TAG}"
 numberNodes=${NUMBER_NODES:-2}
+katzenAuth="${KATZEN_AUTH}"
 
 # $1 DisableDecoyTraffic
 # $2 Authority's public ipv4 address
