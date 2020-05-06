@@ -1,0 +1,30 @@
+# This is a basic workflow to help you get started with Actions
+
+name: mkdocs gh-pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install mkdocs
+      - uses: actions/checkout@v2
+      - name: Build site
+        run: mkdocs build
+      - name: Deploy
+        uses: hashcloak/gh-pages@v3
+        with:
+          github_token: ${{ secrets.ghpages }}
+          publish_dir: ./site
