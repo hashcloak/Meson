@@ -1,0 +1,13 @@
+language: python
+install:
+  sudo pip install mkdocs
+script:
+  - if [[ $TRAVIS_BRANCH == "master" ]]; then mkdocs build -d site; fi
+deploy:
+  provider: pages
+  github_token: $GITHUB_TOKEN
+  skip_cleanup: true
+  local_dir: ./site
+  on:
+    branch: master
+cache: pip
