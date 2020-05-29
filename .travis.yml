@@ -1,0 +1,7 @@
+deploy:
+  - provider: script
+    script: |
+      pip install mkdocs
+      mkdocs gh-deploy
+    on: 
+      all_branches: true
