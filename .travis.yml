@@ -2,7 +2,7 @@ language: python
 install:
   sudo pip install mkdocs
 script:
-  - [ $TRAVIS_BRANCH == "master" ] && mkdocs build -d site
+  - if [[ $TRAVIS_BRANCH == "master" ]]; then mkdocs build -d site; fi
 deploy:
   provider: pages
   github_token: $GITHUB_TOKEN
