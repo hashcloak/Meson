@@ -1,7 +1,13 @@
+language: python
+install:
+  sudo pip install mkdocs
+script:
+  - mkdocs build -d site
 deploy:
-  - provider: script
-    script: |
-      pip install mkdocs
-      mkdocs gh-deploy
-    on: 
-      all_branches: true
+  provider: pages
+  github_token: $GITHUB_TOKEN
+  skip_cleanup: true
+  local_dir: ./site
+  on:
+    all_branches: true
+cache: pip
