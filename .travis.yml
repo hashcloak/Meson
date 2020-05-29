@@ -9,5 +9,5 @@ deploy:
   skip_cleanup: true
   local_dir: ./site
   on:
-    all_branches: true
+    branch: master
 cache: pip
