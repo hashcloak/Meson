@@ -7,8 +7,10 @@ This is the documentation related to the Meson mixnet project. Here, you can fin
 
 Requirements:
 
-- `go` version 1.13
+- `go` version >= __1.13__
 - `docker swarm`. You will need to have [initialized](https://docs.docker.com/engine/reference/commandline/swarm_init) your docker swarm.
+- `python` version >= __3.5__
+- `make`
 
 ### How to Run a Provider Node
 
@@ -17,8 +19,8 @@ All of our infrastructure uses docker to run the mixnet nodes. You will first ne
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
-  -a 138.197.57.19 \ # Current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
   -name provider-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address
   -provider # Flag to indicate you only want a provider config
@@ -66,7 +68,6 @@ The Meson plugin uses an additional configuration file to be able to connect to 
 ```toml
 # currency.toml is the configuration of Meson
 Ticker = "gor" # This is the name of service provided by Meson
-ChainID = 5 # ChainID to distinguish between different chains
 RPCUser = "rpcuser" # HTTP login for the blockchain node.
 RPCPass = "rpcpassword" # HTTP password
 RPCURL = "https://goerli.hashcloak.com" # The RPC url of the node that will receive the transaction
@@ -74,7 +75,7 @@ LogDir = "/conf" # Location of the logs
 LogLevel = "DEBUG" # Log level of the Meson plugin.
 ```
 
-The `ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
+The `Ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
 
 __Note__ that to maximize the privacy of the mixnet users it is best if the RPC endpoint in the `currency.toml` file is a blockchain node that you control.
 
@@ -116,8 +117,8 @@ To run a mix node we have to run `genconfig` to generate the config file. The on
 
 ```bash
 genconfig \
-  -a 138.197.57.19 \ # Current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
   -name mix-node-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address
   -node # Flag to indicate you only want a mix node config
@@ -147,7 +148,7 @@ __Notice__ that the ports that docker exposes are the same as the provider node 
     tcp4 = ["1.1.1.1:30002"] # <- Here from 30001 to 300002
 ```
 
-After changing the port numbers you can run the docker service command with `-p 30002:30002`. Also be aware that your provider will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
+After changing the port numbers you can run the docker service command with `-p 30002:30002`. Also be aware that your provider or node will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
 
 
 ### How to Run an Nonvoting Authority
@@ -158,10 +159,10 @@ Only one nonvoting authority is needed per nonvoting mixnet. Once you have a val
 docker service create --name authority -d \
   -p 30000:30000 \
   --mount type=bind,source=$HOME/configs/nonvoting,destination=/conf \
-  hashcloak/katzenpost-auth:1c00188
+  hashcloak/authority:master
 ``` 
 
-Hashcloak is maintaining a [docker container](https://hub.docker.com/repository/docker/hashcloak/katzenpost-auth) of [katzenpost/authority](https://github.com/katzenpost/authority). Take note of the docker tag at the end since it might change if the latest commit changes in the `master` branch of the authority repository.
+Hashcloak is maintaining a [docker container](https://hub.docker.com/repository/docker/hashcloak/katzenpost-auth) of [katzenpost/authority](https://github.com/katzenpost/authority).
 
 #### Updating Authority Config
 
