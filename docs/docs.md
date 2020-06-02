@@ -253,6 +253,38 @@ If you are running a full mixnet or a single node this command might be useful f
 find ./configs -name "*.log" | xargs tail -f
 ```
 
+## Environment variables
+
+This is a list of environment variables that is mostly used in the `ops/` directory.
+
+- `BUILD`: Forces the build of the containers instead of pulling them from docker hub. Default: off. Enable with `BUILD=1`
+- `LOG`: Enables logging. Default off. Enable with `LOG=1`
+- `DOCKER_BUILDKIT`: Enables additional logs during the docker build steps. Enable with `DOCKER_BUILDKIT=1`.
+- `REPOS_AUTH_BRANCH`: The branch to use for the authority container. Can also be a commit hash. Default: `master`.
+- `REPOS_AUTH_CONTAINER`: The docker repository for the authority container. Default: `hashcloak/authority`.
+- `REPOS_AUTH_GITHASH`: The git commit to use for building authority.
+- `REPOS_AUTH_HASHTAG`: The docker tag to use for container. Default is the value of `REPOS_AUTH_GITHASH`.
+- `REPOS_AUTH_NAMEDTAG`: The docker tag of the authority container. Default is the name of the branch.
+- `REPOS_AUTH_REPOSITORY`: The repository from which to build the authority from. Default: `github.com/katzenpost/authority`
+- `REPOS_SERVER_BRANCH`: The branch to use for the server container. Can also be a commit hash. Default: `master`.
+- `REPOS_SERVER_CONTAINER`: The repository of the authority container. Default: `hashcloak/server`.
+- `REPOS_SERVER_GITHASH`: The git commit to use for building server.
+- `REPOS_SERVER_HASHTAG`: The docker tag to use for container. Default is the value of `REPOS_SERVER_GITHASH`.
+- `REPOS_SERVER_NAMEDTAG`: The docker tag of the server container. Default is the name of the branch.
+- `REPOS_SERVER_REPOSITORY`: The repository from which to build server from. Default: `github.com/katzenpost/server`
+- `REPOS_MESON_BRANCH`: The branch to use for the meson container. Can also be a commit hash. Default: The current branch of the repository.
+- `REPOS_MESON_CONTAINER`: The docker repository for the meson container. Default: `hashcloak/meson`.
+- `REPOS_MESON_GITHASH`: The git commit to use for building meson. Defaults to the latest commit of the current working branch.
+- `REPOS_MESON_HASHTAG`: The docker tag to use for meson container. Default is the value of `REPOS_MESON_GITHASH`.
+- `REPOS_MESON_NAMEDTAG`: The docker tag of the container meson. Default is the name of the branch.
+- `TEST_ATTEMPTS`: The amount of retries for the integration tests until a transaction is found. Default: `3`.
+- `TEST_CLIENTCOMMIT`: The commit to use for the integration tests. Default: `master`.
+- `TEST_NODES`: The amount of mix nodes to spawn. Default: `2`.
+- `TEST_PROVIDERS`: The amount of provider nodes to spawn. Default: `2`.
+- `TEST_PKS_BINANCE`: The private key to use for the binance tests.
+- `TEST_PKS_ETHEREUM`: The private key to use for the ethereum tests.
+- `WARPED`: This flag is turned on by default in any non `master` branch or when `WARPED=false` is used as an environment variable. This flag will also add the `warped_` suffix to all the container tags. For example: `hashcloak/server:warped_51881a5`. `WARPED` also builds the container with a warped build flag. This means that the epoch times for the mixnet are down from 20 minutes to 2 minutes.
+
 ## Waiting for Katzenpost Epoch
 
 Due to how katzenpost is designed, when you join the mixnet you will have to wait for a new epoch to publish your node descriptor. An epoch right now is 10 minutes. While you wait for a new epoch you will see this message appear in the log files of your node.
