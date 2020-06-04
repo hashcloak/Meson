@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        <link rel="canonical" href="https://meson.hashcloak.com/docs/">
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Docs - Meson</title>
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+        <script src="../js/jquery-1.10.2.min.js" defer></script>
+        <script src="../js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+        <script>hljs.initHighlightingOnLoad();</script> 
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+
+                <!-- Collapsed navigation -->
+                <div class="navbar-header">
+                    <!-- Expander button -->
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="..">Meson</a>
+                </div>
+
+                <!-- Expanded navigation -->
+                <div class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li >
+                                <a href="..">Home</a>
+                            </li>
+                            <li >
+                                <a href="../overview/">Overview</a>
+                            </li>
+                            <li class="active">
+                                <a href="./">Docs</a>
+                            </li>
+                            <li >
+                                <a href="../roadmap/">Roadmap</a>
+                            </li>
+                            <li >
+                                <a href="../contribute/">Contribute</a>
+                            </li>
+                            <li >
+                                <a href="../contact/">Contact</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li>
+                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li >
+                                <a rel="next" href="../overview/">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li >
+                                <a rel="prev" href="../roadmap/">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/hashcloak/Meson/edit/master/docs/docs.md"><i class="fa fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+        <li class="main active"><a href="#docs">Docs</a></li>
+            <li><a href="#running-meson">Running Meson</a></li>
+            <li><a href="#sending-transactions">Sending Transactions</a></li>
+            <li><a href="#log-files">Log files</a></li>
+            <li><a href="#environment-variables">Environment variables</a></li>
+            <li><a href="#waiting-for-katzenpost-epoch">Waiting for Katzenpost Epoch</a></li>
+            <li><a href="#other-blockchains">Other Blockchains</a></li>
+    </ul>
+</div></div>
+                <div class="col-md-9" role="main">
+
+<h1 id="docs">Docs</h1>
+<p>This is the documentation related to the Meson mixnet project. Here, you can find out how to deploy a provider, authority or mix node and learn how to use our client libraries.</p>
+<h2 id="running-meson">Running Meson</h2>
+<h5 id="warning-these-instructions-for-joining-or-running-a-mixnet-are-only-for-the-current-alpha-version-of-a-katzenpost-mixnet-the-alpha-version-is-not-ready-for-production-usage-and-relies-on-manual-configuration-of-the-pki"><strong>⚠️ WARNING ⚠️ These instructions for joining or running a mixnet are only for the current alpha version of a Katzenpost mixnet. The alpha version is not ready for production usage and relies on manual configuration of the PKI.</strong></h5>
+<p>Requirements:</p>
+<ul>
+<li><code>go</code> version &gt;= <strong>1.13</strong></li>
+<li><code>docker swarm</code>. You will need to have <a href="https://docs.docker.com/engine/reference/commandline/swarm_init">initialized</a> your docker swarm.</li>
+<li><code>python</code> version &gt;= <strong>3.5</strong></li>
+<li><code>make</code></li>
+</ul>
+<h3 id="how-to-run-a-provider-node">How to Run a Provider Node</h3>
+<p>All of our infrastructure uses docker to run the mixnet nodes. You will first need to generate a provider config and its PKI keys. The easiest way to do that is by using our <a href="https://github.com/hashcloak/genconfig/#genconfig">genconfig</a> script:</p>
+<pre><code class="bash">go get github.com/hashcloak/genconfig
+genconfig \
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
+  -name provider-name \ # Your provider name
+  -ipv4 1.1.1.1 \ # Your public ipv4 address
+  -provider # Flag to indicate you only want a provider config
+</code></pre>
+
+<p>This will make a directory called <code>output/provider-name</code> with a file called <code>identity.public.pem</code>. Send us your public key to <a href="info@hashcloak.com">info@hashcloak.com</a>. We will then get your node added to the mixnet (this is not a decentralized step, please look at the <a href="#running-meson">warning</a> at the top of the page). Once you give us your public key you can get your node running with:</p>
+<pre><code class="bash">docker service create \
+  --name meson -d \
+  -p 30001:30001 \ # Mixnet port
+  -p 40001:40001 \ # User registration port
+  --mount type=bind,source=`pwd`/output/provider-name,destination=/conf \
+  hashcloak/meson:master
+</code></pre>
+
+<p>It is important that the IPv4 address you use is reachable by the authority node. To look at the logs see <a href="#log-files">Logs</a>. Also be aware that your provider will have to wait for a <a href="#waiting-for-katzenpost-epoch">new epoch</a>.</p>
+<h4 id="currency-service-for-the-provider">Currency Service for the Provider</h4>
+<p>A service is the capability of a Katzenpost plugin. Each Katzenpost plugin has a capability that is advertised to the mixnet during each epoch. In <code>katzentpost.toml</code> of the provider node, there is a section called <code>CBORPluginsKaetzchen</code>. This is where the different services can be configured.</p>
+<pre><code class="toml"># katzenpost.toml 
+# This is not a complete configuration file for a katzenpost server. 
+# Please look at the output of the genconfig tool to see what a complete 
+# katzenpost.toml looks like
+[Provider]
+  [[Provider.CBORPluginKaetzchen]]
+    Capability = &quot;gor&quot; # The service advertised by the provider
+    Endpoint = &quot;+gor&quot; # The API endpoint path where clients connect to be forward to the plugin.
+    Command = &quot;/go/bin/Meson&quot; # The plugin executable path
+    MaxConcurrency = 1 # Amount of plugin programs to spawn
+    Disable = false # Disables the plugin if true
+    [Provider.CBORPluginKaetzchen.Config]
+      f = &quot;/conf/currency.toml&quot; # Configuration file for Meson
+      log_dir = &quot;/conf&quot; # Log directory.
+      log_level = &quot;DEBUG&quot; # Log level
+</code></pre>
+
+<p>The Meson plugin defined above is handling a serviced called <code>gor</code> which Meson sends to the Ethereum chain <code>Goerli</code>. This is what the <a href="#sending-transactions">wallet demo</a> application uses as the <code>-t</code> and <code>-s</code> flags.</p>
+<p>The Meson plugin uses an additional configuration file to be able to connect to the RPC endpoint of a blockchain node. This file is called <code>/conf/currency.toml</code> in the <code>Provider.CBORPluginKaetzchen.Config</code> section of <code>katzenpost.toml</code> and it has the following parameters:</p>
+<pre><code class="toml"># currency.toml is the configuration of Meson
+Ticker = &quot;gor&quot; # This is the name of service provided by Meson
+RPCUser = &quot;rpcuser&quot; # HTTP login for the blockchain node.
+RPCPass = &quot;rpcpassword&quot; # HTTP password
+RPCURL = &quot;https://goerli.hashcloak.com&quot; # The RPC url of the node that will receive the transaction
+LogDir = &quot;/conf&quot; # Location of the logs
+LogLevel = &quot;DEBUG&quot; # Log level of the Meson plugin.
+</code></pre>
+
+<p>The <code>Ticker</code> parameter has to match the <code>Capability</code> and <code>Endpoint</code> parameters of <code>Provider.CBORPluginKaetchen</code> in <code>katzenpost.toml</code>.</p>
+<p><strong>Note</strong> that to maximize the privacy of the mixnet users it is best if the RPC endpoint in the <code>currency.toml</code> file is a blockchain node that you control.</p>
+<h4 id="check-that-meson-is-running">Check that Meson is running</h4>
+<p>Due to how plugin processes are spawned from the main katzenpost server program, the Docker container does not have information on the exit status of the plugins inside of the container. This leads to a situation in which the container is running but the Meson plugin is not.</p>
+<p>One can check if this is the case by running the following command:</p>
+<pre><code>$ docker exec nonvoting_testnet_provider1_1 top # nonvoting_testnet_provider1_1 is the name of the container
+
+Mem: 13169904K used, 1050596K free, 581716K shrd, 969380K buff, 6457840K cached
+CPU:   2% usr   1% sys   0% nic  96% idle   0% io   0% irq   0% sirq
+Load average: 0.31 0.66 0.80 2/1636 111
+  PID  PPID USER     STAT   VSZ %VSZ CPU %CPU COMMAND
+    1     0 root     S     314m   2%   2   0% /go/bin/server -f /conf/katzenpost
+   29     1 root     S     111m   1%   6   0% /go/bin/memspool -data_store /conf
+   22     1 root     S     111m   1%   7   0% /go/bin/panda_server -log_dir /con
+   16     1 root     S     109m   1%   2   0% /go/bin/echo_server -log_level DEB
+   58     0 root     S     1572   0%   2   0% top
+   36     1 root     Z        0   0%   5   0% [Meson]
+</code></pre>
+
+<p>This shows Meson at the bottom with no cpu nor memory allocated to it. This is an indicator that Meson exited with and error and you can find the error in the currency log file:</p>
+<pre><code class="log">#currency.36.log
+INFO 001 currency server started
+ERRO 002 Failed to load config file '/conf/currency.toml: config: RPCUrl is not set
+ERRO 003 Exiting
+</code></pre>
+
+<p>In this case, the solution is self explanatory. We just need to add the <code>RPCurl</code> value to <code>currency.toml</code>.</p>
+<h3 id="how-to-run-a-mix-node">How to Run a Mix Node</h3>
+<p>To run a mix node we have to run <code>genconfig</code> to generate the config file. The only difference is changing the <code>-provider</code> flag with <code>-node</code>.</p>
+<pre><code class="bash">genconfig \
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
+  -name mix-node-name \ # Your provider name
+  -ipv4 1.1.1.1 \ # Your public ipv4 address
+  -node # Flag to indicate you only want a mix node config
+</code></pre>
+
+<p>This will make a directory called <code>output/mix-node-name</code> with a file called <code>identity.public.pem</code>. Send us your public key to <a href="info@hashcloak.com">info@hashcloak.com</a>. We will then help you to get added as a mix (please look at the <a href="#running-meson">warning</a> at the top of this page).</p>
+<pre><code class="bash">docker service create \
+  --name meson-mix -d \
+  -p 30001:30001 \
+  --mount type=bind,source=`pwd`/output/mix-node-name,destination=/conf \
+  hashcloak/meson:master
+</code></pre>
+
+<p><strong>Notice</strong> that the ports that docker exposes are the same as the provider node instructions from above. If the container is running on the same host then you will need to change the port number. To change the port value you need to edit the following file <code>output/mix-node-name/katzenpost.toml</code> and change the ports numbers under the <code>[Server]</code> section:</p>
+<pre><code class="toml"># output/mix-node-name/katzenpost.toml
+[Server]
+  Identifier = &quot;mix-node-name&quot;
+  Addresses = [&quot;0.0.0.0:30002&quot;] # &lt;- Here from 30001 to 300002
+  OnlyAdvertiseAltAddresses = true
+  DataDir = &quot;/conf&quot;
+  IsProvider = false
+  [Server.AltAddresses]
+    tcp4 = [&quot;1.1.1.1:30002&quot;] # &lt;- Here from 30001 to 300002
+</code></pre>
+
+<p>After changing the port numbers you can run the docker service command with <code>-p 30002:30002</code>. Also be aware that your provider or node will have to wait for a <a href="#waiting-for-katzenpost-epoch">new epoch</a>.</p>
+<h3 id="how-to-run-an-nonvoting-authority">How to Run an Nonvoting Authority</h3>
+<p>Only one nonvoting authority is needed per nonvoting mixnet. Once you have a valid <code>authority.toml</code> file you can use the following docker command to run a mixnet. Look at the output of <code>genconfig</code> or at <a href="https://github.com/katzenpost/docs/blob/master/handbook/nonvoting_pki.rst#configuring-the-non-voting-directory-authority">katznepost docs</a> for more information on how to create the configuration of the authority.</p>
+<pre><code>docker service create --name authority -d \
+  -p 30000:30000 \
+  --mount type=bind,source=$HOME/configs/nonvoting,destination=/conf \
+  hashcloak/authority:master
+</code></pre>
+
+<p>Hashcloak is maintaining a <a href="https://hub.docker.com/repository/docker/hashcloak/katzenpost-auth">docker container</a> of <a href="https://github.com/katzenpost/authority">katzenpost/authority</a>.</p>
+<h4 id="updating-authority-config">Updating Authority Config</h4>
+<p>When a node wants to join the non voting mixnet it needs to get added to the <code>authority.toml</code>:</p>
+<pre><code class="toml"># authority.toml
+...
+[[Mixes]]
+  Identifier = &quot;&quot;
+  IdentityKey = &quot;RVAjV/p1azndjGUjuyOUq2p5X46tva2DmXJhGo84DUk=&quot; # Mix public key
+
+[[Providers]]
+  Identifier = &quot;provider-name&quot; # The name of the newly added provider
+  IdentityKey = &quot;92gxXY/Y8BaCWoDMCFERWGxQBMensH9v/kVLLwBFFg8=&quot; # Provider public key
+...
+</code></pre>
+
+<p><strong>Note</strong> that the <code>Identifier</code> value for mixes needs to be an empty string because of <a href="https://github.com/katzenpost/authority/blob/master/nonvoting/server/config/config.go#L299-#L304">this</a>.</p>
+<p>Once the new keys are added to <code>authority.toml</code>, you need to restart your authority by running <code>docker service rm authority</code> and restarting the docker service of the authority.</p>
+<h2 id="sending-transactions">Sending Transactions</h2>
+<p>Currently, the way we send transactions is by using our wallet demo <a href="https://github.com/hashcloak/Meson-wallet-demo">application</a>.</p>
+<pre><code class="bash">git clone https://github.com/hascloak/Meson-wallet-demo
+cd Meson-wallet-demo
+go run ./cmd/wallet/main.go \
+  -t rin \ # rin is the ethereum chain identifier for the rinkeby testnet
+  -s rin \ # Meson service name
+  -pk 0x9e23c88a0ef6745f55d92eb63f063d2e267f07222bfa5cb9efb0cfc698198997 \ # Private key 
+  -c client.toml \ # Config file
+  -chain 4 \ # Chain id for rinkeby. only necessary when using a private key
+  -rpc https://rinkeby.hashcloak.com # An rpc endpoint to obtain the latest nonce count and gas price. Only necessary when using a private key.
+</code></pre>
+
+<p>Another way of sending a transaction with our wallet is by using a presigned raw transaction. Like this:</p>
+<pre><code class="bash">RAW_TXN=0xf8640284540be40083030d409400b1c66f34d680cb8bf82c64dcc1f39be5d6e77501802ca0c434f4d4b894b7cce2d880c250f7a67e4ef64cf0a921e3e4859219dff7b086fda0375a6195e221be77afda1d7c9e7d91bf39845065e9c56f7b5154e077a1ef8a77
+go run ./cmd/wallet/main.go \
+  -t gor \ # gor is the ethereum chain ticker for the goerli testnet
+  -s gor \ # Meson service name
+  -rt $RAW_TXN \ # Signed raw transaction blob
+  -chain 5 \ # ChainID that cross checks with Meson
+  -c client.toml \ # Config file
+</code></pre>
+
+<p>The contents of <code>client.toml</code> are:</p>
+<pre><code class="toml">#client.toml
+[Logging]
+  Disable = false # Enables logging
+  Level = &quot;DEBUG&quot; # Log level. Possible values are: ERROR, WARNING, NOTICE, INFO, DEBUG
+  File = &quot;&quot; # No file name means the logs are displayed in stdout
+
+[UpstreamProxy]
+  Type = &quot;none&quot; # Proxy to connect to before connecting to mixnet
+
+[Debug]
+  DisableDecoyTraffic = true # Disables the decoy traffic of the mixnet
+  CaseSensitiveUserIdentifiers = true # Checks for correct capitalization of provider identifiers
+  PollingInterval = 1 # Interval in seconds that will be used to poll the receive queue.
+
+[NonvotingAuthority]
+    Address = &quot;138.197.57.19:30000&quot; # The address of the authority
+    PublicKey = &quot;RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A=&quot; # Public key of the authority
+</code></pre>
+
+<p>After the transaction is successfully received by Meson at the egress provider node you will see this message in the logs: </p>
+<pre><code>reply: {&quot;Message&quot;:&quot;success&quot;,&quot;StatusCode&quot;:0,&quot;Version&quot;:0}
+</code></pre>
+
+<p>This doesn't mean that the transaction was accepted by the blockchain node that Meson is using. It just means that Meson successfully forwarded the transaction to the RPC endpoint. </p>
+<h2 id="log-files">Log files</h2>
+<p>Because of the way our docker services are being created, all of the log files are saved to the mounted docker volume, thus all of the log files will be located in the mount the directory of the docker host. If the docker volume is mounted <code>$HOME/configs/nonvoting</code> the logs of the authority will be saved in that directory. The same goes for all of the nodes.</p>
+<p>If you are running a full mixnet or a single node this command might be useful for you:</p>
+<pre><code>find ./configs -name &quot;*.log&quot; | xargs tail -f
+</code></pre>
+
+<h2 id="environment-variables">Environment variables</h2>
+<p>This is a list of environment variables that is mostly used in the <code>ops/</code> directory.</p>
+<ul>
+<li><code>BUILD</code>: Forces the build of the containers instead of pulling them from docker hub. Default: off. Enable with <code>BUILD=1</code></li>
+<li><code>LOG</code>: Enables logging. Default off. Enable with <code>LOG=1</code></li>
+<li><code>DOCKER_BUILDKIT</code>: Enables additional logs during the docker build steps. Enable with <code>DOCKER_BUILDKIT=1</code>.</li>
+<li><code>REPOS_AUTH_BRANCH</code>: The branch to use for the authority container. Can also be a commit hash. Default: <code>master</code>.</li>
+<li><code>REPOS_AUTH_CONTAINER</code>: The docker repository for the authority container. Default: <code>hashcloak/authority</code>.</li>
+<li><code>REPOS_AUTH_GITHASH</code>: The git commit to use for building authority.</li>
+<li><code>REPOS_AUTH_HASHTAG</code>: The docker tag to use for container. Default is the value of <code>REPOS_AUTH_GITHASH</code>.</li>
+<li><code>REPOS_AUTH_NAMEDTAG</code>: The docker tag of the authority container. Default is the name of the branch.</li>
+<li><code>REPOS_AUTH_REPOSITORY</code>: The repository from which to build the authority from. Default: <code>github.com/katzenpost/authority</code></li>
+<li><code>REPOS_SERVER_BRANCH</code>: The branch to use for the server container. Can also be a commit hash. Default: <code>master</code>.</li>
+<li><code>REPOS_SERVER_CONTAINER</code>: The repository of the authority container. Default: <code>hashcloak/server</code>.</li>
+<li><code>REPOS_SERVER_GITHASH</code>: The git commit to use for building server.</li>
+<li><code>REPOS_SERVER_HASHTAG</code>: The docker tag to use for container. Default is the value of <code>REPOS_SERVER_GITHASH</code>.</li>
+<li><code>REPOS_SERVER_NAMEDTAG</code>: The docker tag of the server container. Default is the name of the branch.</li>
+<li><code>REPOS_SERVER_REPOSITORY</code>: The repository from which to build server from. Default: <code>github.com/katzenpost/server</code></li>
+<li><code>REPOS_MESON_BRANCH</code>: The branch to use for the meson container. Can also be a commit hash. Default: The current branch of the repository.</li>
+<li><code>REPOS_MESON_CONTAINER</code>: The docker repository for the meson container. Default: <code>hashcloak/meson</code>.</li>
+<li><code>REPOS_MESON_GITHASH</code>: The git commit to use for building meson. Defaults to the latest commit of the current working branch.</li>
+<li><code>REPOS_MESON_HASHTAG</code>: The docker tag to use for meson container. Default is the value of <code>REPOS_MESON_GITHASH</code>.</li>
+<li><code>REPOS_MESON_NAMEDTAG</code>: The docker tag of the container meson. Default is the name of the branch.</li>
+<li><code>TEST_ATTEMPTS</code>: The amount of retries for the integration tests until a transaction is found. Default: <code>3</code>.</li>
+<li><code>TEST_CLIENTCOMMIT</code>: The commit to use for the integration tests. Default: <code>master</code>.</li>
+<li><code>TEST_NODES</code>: The amount of mix nodes to spawn. Default: <code>2</code>.</li>
+<li><code>TEST_PROVIDERS</code>: The amount of provider nodes to spawn. Default: <code>2</code>.</li>
+<li><code>TEST_PKS_BINANCE</code>: The private key to use for the binance tests.</li>
+<li><code>TEST_PKS_ETHEREUM</code>: The private key to use for the ethereum tests.</li>
+<li><code>WARPED</code>: This flag is turned on by default in any non <code>master</code> branch or when <code>WARPED=false</code> is used as an environment variable. This flag will also add the <code>warped_</code> suffix to all the container tags. For example: <code>hashcloak/server:warped_51881a5</code>. <code>WARPED</code> also builds the container with a warped build flag. This means that the epoch times for the mixnet are down from 20 minutes to 2 minutes.</li>
+</ul>
+<h2 id="waiting-for-katzenpost-epoch">Waiting for Katzenpost Epoch</h2>
+<p>Due to how katzenpost is designed, when you join the mixnet you will have to wait for a new epoch to publish your node descriptor. An epoch right now is 10 minutes. While you wait for a new epoch you will see this message appear in the log files of your node.</p>
+<pre><code>01:40:35.977 WARN pki: Authority rejected upload for epoch: 138107 (Conflict/Late)
+01:40:35.977 WARN pki: Failed to post to PKI: pki: post for epoch will never succeed
+</code></pre>
+
+<p>The above log occurs every time your node tries to post a new epoch description to the authority. In the authority's logs you will see this:</p>
+<pre><code>18:36:31.688 ERRO authority: Peer 10.0.0.2:57660: Rejected probably a conflict: state: Node oRh8boMS6VzJW57m5lMNqfK8EZ+LYfkfV0eJXKAJcJc=: Late descriptor upload for for epoch 138207
+</code></pre>
+
+<p>Once you your node has successfully published its descriptor to the authority you will get a message that starts with this:</p>
+<pre><code>01:51:37.821 DEBU pki/nonvoting/client: Document: &amp;{Epoch:138108...
+</code></pre>
+
+<h2 id="other-blockchains">Other Blockchains</h2>
+<p>We intend to add support for other chains but, for now, only Ethereum based transactions are supported. We are currently only running <code>Goerli</code> and <code>Rinkeby</code> testnets but you can run a provider with access to an RPC node of any Ethereum compatible chain such as <code>ETC</code> or <code>Mordor</code>. If you want help setting up a provider for another chain please get in contact with us at info@hashcloak.com!</p>
+<p>The steps needed to add a new Ethereum based chain are:</p>
+<ul>
+<li>Obtain access to an RPC endpoint of the new chain.</li>
+<li>Change the <code>Provider.CBORPluginKaetzchen</code> to use the new service ticker.</li>
+<li>Configure <code>currency.toml</code> with the new ticker.</li>
+</ul>
+<p>After updating those configuration files, running a provider node should follow the same steps as detailed <a href="#running-meson">above</a>.</p></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script>
+            var base_url = "..",
+                shortcuts = {"search": 83, "next": 78, "help": 191, "previous": 80};
+        </script>
+        <script src="../js/base.js" defer></script>
+        <script src="../search/main.js" defer></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    From here you can search these documents. Enter
+                    your search terms below.
+                </p>
+                <form role="form">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

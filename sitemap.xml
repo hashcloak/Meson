@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+     <loc>https://meson.hashcloak.com/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://meson.hashcloak.com/overview/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://meson.hashcloak.com/docs/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://meson.hashcloak.com/roadmap/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://meson.hashcloak.com/contribute/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    <url>
+     <loc>https://meson.hashcloak.com/contact/</loc>
+     <lastmod>2020-06-04</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+</urlset>
