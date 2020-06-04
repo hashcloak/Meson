@@ -7,8 +7,10 @@ This is the documentation related to the Meson mixnet project. Here, you can fin
 
 Requirements:
 
-- `go` version 1.13
+- `go` version >= __1.13__
 - `docker swarm`. You will need to have [initialized](https://docs.docker.com/engine/reference/commandline/swarm_init) your docker swarm.
+- `python` version >= __3.5__
+- `make`
 
 ### How to Run a Provider Node
 
@@ -17,8 +19,8 @@ All of our infrastructure uses docker to run the mixnet nodes. You will first ne
 ```bash
 go get github.com/hashcloak/genconfig
 genconfig \
-  -a 138.197.57.19 \ # Current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
   -name provider-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address
   -provider # Flag to indicate you only want a provider config
@@ -66,7 +68,6 @@ The Meson plugin uses an additional configuration file to be able to connect to 
 ```toml
 # currency.toml is the configuration of Meson
 Ticker = "gor" # This is the name of service provided by Meson
-ChainID = 5 # ChainID to distinguish between different chains
 RPCUser = "rpcuser" # HTTP login for the blockchain node.
 RPCPass = "rpcpassword" # HTTP password
 RPCURL = "https://goerli.hashcloak.com" # The RPC url of the node that will receive the transaction
@@ -74,7 +75,7 @@ LogDir = "/conf" # Location of the logs
 LogLevel = "DEBUG" # Log level of the Meson plugin.
 ```
 
-The `ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
+The `Ticker` parameter has to match the `Capability` and `Endpoint` parameters of `Provider.CBORPluginKaetchen` in `katzenpost.toml`.
 
 __Note__ that to maximize the privacy of the mixnet users it is best if the RPC endpoint in the `currency.toml` file is a blockchain node that you control.
 
@@ -116,8 +117,8 @@ To run a mix node we have to run `genconfig` to generate the config file. The on
 
 ```bash
 genconfig \
-  -a 138.197.57.19 \ # Current ip address of authority
-  -authID RJWGWCjof2GLLhekd6KsvN+LvHq9sxgcpra/J59/X8A= \ # Current public key of authority
+  -a 157.245.41.154 \ # Current ip address of authority
+  -authID qVhmF/rOHVbHwhHBP6oOOP7fE9oPg4IuEoxac+RaCHk= \ # Current public key of authority
   -name mix-node-name \ # Your provider name
   -ipv4 1.1.1.1 \ # Your public ipv4 address
   -node # Flag to indicate you only want a mix node config
@@ -147,7 +148,7 @@ __Notice__ that the ports that docker exposes are the same as the provider node 
     tcp4 = ["1.1.1.1:30002"] # <- Here from 30001 to 300002
 ```
 
-After changing the port numbers you can run the docker service command with `-p 30002:30002`. Also be aware that your provider will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
+After changing the port numbers you can run the docker service command with `-p 30002:30002`. Also be aware that your provider or node will have to wait for a [new epoch](#waiting-for-katzenpost-epoch).
 
 
 ### How to Run an Nonvoting Authority
@@ -158,10 +159,10 @@ Only one nonvoting authority is needed per nonvoting mixnet. Once you have a val
 docker service create --name authority -d \
   -p 30000:30000 \
   --mount type=bind,source=$HOME/configs/nonvoting,destination=/conf \
-  hashcloak/katzenpost-auth:1c00188
+  hashcloak/authority:master
 ``` 
 
-Hashcloak is maintaining a [docker container](https://hub.docker.com/repository/docker/hashcloak/katzenpost-auth) of [katzenpost/authority](https://github.com/katzenpost/authority). Take note of the docker tag at the end since it might change if the latest commit changes in the `master` branch of the authority repository.
+Hashcloak is maintaining a [docker container](https://hub.docker.com/repository/docker/hashcloak/katzenpost-auth) of [katzenpost/authority](https://github.com/katzenpost/authority).
 
 #### Updating Authority Config
 
@@ -252,6 +253,38 @@ If you are running a full mixnet or a single node this command might be useful f
 ```
 find ./configs -name "*.log" | xargs tail -f
 ```
+
+## Environment variables
+
+This is a list of environment variables that is mostly used in the `ops/` directory.
+
+- `BUILD`: Forces the build of the containers instead of pulling them from docker hub. Default: off. Enable with `BUILD=1`
+- `LOG`: Enables logging. Default off. Enable with `LOG=1`
+- `DOCKER_BUILDKIT`: Enables additional logs during the docker build steps. Enable with `DOCKER_BUILDKIT=1`.
+- `REPOS_AUTH_BRANCH`: The branch to use for the authority container. Can also be a commit hash. Default: `master`.
+- `REPOS_AUTH_CONTAINER`: The docker repository for the authority container. Default: `hashcloak/authority`.
+- `REPOS_AUTH_GITHASH`: The git commit to use for building authority.
+- `REPOS_AUTH_HASHTAG`: The docker tag to use for container. Default is the value of `REPOS_AUTH_GITHASH`.
+- `REPOS_AUTH_NAMEDTAG`: The docker tag of the authority container. Default is the name of the branch.
+- `REPOS_AUTH_REPOSITORY`: The repository from which to build the authority from. Default: `github.com/katzenpost/authority`
+- `REPOS_SERVER_BRANCH`: The branch to use for the server container. Can also be a commit hash. Default: `master`.
+- `REPOS_SERVER_CONTAINER`: The repository of the authority container. Default: `hashcloak/server`.
+- `REPOS_SERVER_GITHASH`: The git commit to use for building server.
+- `REPOS_SERVER_HASHTAG`: The docker tag to use for container. Default is the value of `REPOS_SERVER_GITHASH`.
+- `REPOS_SERVER_NAMEDTAG`: The docker tag of the server container. Default is the name of the branch.
+- `REPOS_SERVER_REPOSITORY`: The repository from which to build server from. Default: `github.com/katzenpost/server`
+- `REPOS_MESON_BRANCH`: The branch to use for the meson container. Can also be a commit hash. Default: The current branch of the repository.
+- `REPOS_MESON_CONTAINER`: The docker repository for the meson container. Default: `hashcloak/meson`.
+- `REPOS_MESON_GITHASH`: The git commit to use for building meson. Defaults to the latest commit of the current working branch.
+- `REPOS_MESON_HASHTAG`: The docker tag to use for meson container. Default is the value of `REPOS_MESON_GITHASH`.
+- `REPOS_MESON_NAMEDTAG`: The docker tag of the container meson. Default is the name of the branch.
+- `TEST_ATTEMPTS`: The amount of retries for the integration tests until a transaction is found. Default: `3`.
+- `TEST_CLIENTCOMMIT`: The commit to use for the integration tests. Default: `master`.
+- `TEST_NODES`: The amount of mix nodes to spawn. Default: `2`.
+- `TEST_PROVIDERS`: The amount of provider nodes to spawn. Default: `2`.
+- `TEST_PKS_BINANCE`: The private key to use for the binance tests.
+- `TEST_PKS_ETHEREUM`: The private key to use for the ethereum tests.
+- `WARPED`: This flag is turned on by default in any non `master` branch or when `WARPED=false` is used as an environment variable. This flag will also add the `warped_` suffix to all the container tags. For example: `hashcloak/server:warped_51881a5`. `WARPED` also builds the container with a warped build flag. This means that the epoch times for the mixnet are down from 20 minutes to 2 minutes.
 
 ## Waiting for Katzenpost Epoch
 
