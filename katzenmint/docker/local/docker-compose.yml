@@ -1,0 +1,159 @@
+version: "2"
+
+services:
+
+  provider1:
+    restart: unless-stopped
+    image: meson/server
+    volumes:
+      - ./conf/provider1:/conf
+      - ./scripts:/scripts
+    entrypoint: ash /scripts/entrypoint.sh
+    ports:
+      - "127.0.0.1:30001:30001"
+      - "127.0.0.1:40001:40001"
+    depends_on:
+      auth1:
+        condition: service_healthy
+      auth2:
+        condition: service_healthy
+      auth3:
+        condition: service_healthy
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.2
+
+  provider2:
+    restart: unless-stopped
+    image: meson/server
+    volumes:
+      - ./conf/provider2:/conf
+      - ./scripts:/scripts
+    entrypoint: ash /scripts/entrypoint.sh
+    ports:
+      - "127.0.0.1:30002:30002"
+      - "127.0.0.1:40002:40002"
+    depends_on:
+      auth1:
+        condition: service_healthy
+      auth2:
+        condition: service_healthy
+      auth3:
+        condition: service_healthy
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.3
+
+  mix1:
+    restart: unless-stopped
+    image: meson/server
+    volumes:
+      - ./conf/mix1:/conf
+      - ./scripts:/scripts
+    entrypoint: ash /scripts/entrypoint.sh
+    ports:
+      - "127.0.0.1:30004:30004"
+      - "127.0.0.1:40004:40004"
+    depends_on:
+      - auth1
+      - auth2
+      - auth3
+      - provider1
+      - provider2
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.4
+
+  mix2:
+    restart: unless-stopped
+    image: meson/server
+    volumes:
+      - ./conf/mix2:/conf
+      - ./scripts:/scripts
+    entrypoint: ash /scripts/entrypoint.sh
+    ports:
+      - "127.0.0.1:30005:30005"
+      - "127.0.0.1:40005:40005"
+    depends_on:
+      - auth1
+      - auth2
+      - auth3
+      - provider1
+      - provider2
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.5
+
+  mix3:
+    restart: unless-stopped
+    image: meson/server
+    volumes:
+      - ./conf/mix3:/conf
+      - ./scripts:/scripts
+    entrypoint: ash /scripts/entrypoint.sh
+    ports:
+      - "127.0.0.1:30006:30006"
+      - "127.0.0.1:40006:40006"
+    depends_on:
+      - auth1
+      - auth2
+      - auth3
+      - provider1
+      - provider2
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.6
+
+  auth1:
+    restart: unless-stopped
+    image: katzenmint/pki
+    volumes:
+      - ./conf/node1:/chain
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/block_results?height=1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "127.0.0.1:21483:26657"
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.7
+
+  auth2:
+    restart: unless-stopped
+    image: katzenmint/pki
+    volumes:
+      - ./conf/node2:/chain
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/block_results?height=1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "127.0.0.1:21484:26657"
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.8
+  auth3:
+    restart: unless-stopped
+    image: katzenmint/pki
+    volumes:
+      - ./conf/node3:/chain
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/block_results?height=1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    ports:
+      - "127.0.0.1:21485:26657"
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.9
+
+networks:
+  katzenmint_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.29.0.0/16

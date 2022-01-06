@@ -1,0 +1,28 @@
+---
+
+- hosts: sentrynet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: katzenmint
+  roles:
+    - katzenmint/start
+
+- hosts: mixnet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: mix
+  roles:
+    - mixes/start
+
+- hosts: providernet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: provider
+  roles:
+    - providers/start

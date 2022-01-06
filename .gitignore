@@ -6,3 +6,5 @@
 *keystore
 *.storage
 site
+
+.DS_Store

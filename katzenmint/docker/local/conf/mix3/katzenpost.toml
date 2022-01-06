@@ -1,0 +1,50 @@
+[Server]
+  Identifier = "mix3"
+  Addresses = ["0.0.0.0:30006"]
+  OnlyAdvertiseAltAddresses = true
+  DataDir = "/conf/data"
+  IsProvider = false
+  [Server.AltAddresses]
+    tcp4 = ["127.0.0.1:30006"]
+
+[Logging]
+  Disable = false
+  File = "katzenpost.log"
+  Level = "DEBUG"
+
+[PKI]
+  [PKI.Voting]
+    ChainID = "katzenmint-chain-71DRoz"
+    PrimaryAddress = "tcp://172.29.1.7:26657"
+    WitnessesAddresses = ["tcp://172.29.1.7:26657"]
+    DatabaseName = "data-db"
+    DatabaseDir = "/conf/data/kdata"
+    RPCAddress = "tcp://172.29.1.7:26657"
+    [PKI.Voting.TrustOptions]
+      Period = 600000000000
+      Height = 7
+      Hash = [183, 34, 46, 140, 172, 4, 32, 117, 188, 117, 187, 206, 166, 207, 1, 160, 185, 16, 79, 237, 244, 40, 67, 68, 142, 89, 6, 192, 191, 223, 58, 134]
+
+[Management]
+  Enable = false
+  Path = "/conf/data/data/management_sock"
+
+[Debug]
+  NumSphinxWorkers = 1
+  NumProviderWorkers = 1
+  NumKaetzchenWorkers = 3
+  SchedulerExternalMemoryQueue = false
+  SchedulerQueueSize = 0
+  SchedulerMaxBurst = 16
+  UnwrapDelay = 10
+  ProviderDelay = 500
+  KaetzchenDelay = 750
+  SchedulerSlack = 10
+  SendSlack = 50
+  DecoySlack = 15000
+  ConnectTimeout = 120000
+  HandshakeTimeout = 600000
+  ReauthInterval = 30000
+  SendDecoyTraffic = false
+  DisableRateLimit = true
+  GenerateOnly = false

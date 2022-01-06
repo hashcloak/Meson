@@ -1,0 +1,6 @@
+Ticker = "tbnb"
+RPCUser = "rpcuser"
+RPCPass = "rpcpassword"
+RPCURL = "https://tbinance.hashcloak.com"
+LogDir = "/conf/data"
+LogLevel = "DEBUG"

@@ -1,0 +1,43 @@
+---
+
+#Requires BINARY and CONFIGDIR variables set.
+#N=3 hosts by default.
+
+- hosts: sentrynet
+  user: root
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+    - service: katzenmint
+    - N: 3
+  roles:
+    - katzenmint/stop
+    - katzenmint/config
+    - katzenmint/unsafe_reset
+    - katzenmint/start
+
+- hosts: mixnet
+  user: root
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+    - service: mix
+    - N: 5
+  roles:
+    - mixes/stop
+    - mixes/config
+    - mixes/unsafe_reset
+    - mixes/start
+
+- hosts: providernet
+  user: root
+  any_errors_fatal: true
+  gather_facts: yes
+  vars:
+    - service: provider
+    - N: 7
+  roles:
+    - providers/stop
+    - providers/config
+    - providers/unsafe_reset
+    - providers/start

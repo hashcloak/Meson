@@ -1,0 +1,19 @@
+---
+
+- name: Copy binary
+  copy:
+    src: "{{BINARY}}"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Copy config
+  when: item <= N and ansible_hostname == 'cyclotron-mixnet-node' ~ item
+  copy:
+    src: "{{CONFIGDIR}}/mix{{item}}/"
+    dest: "/home/{{service}}/.{{service}}/"
+    owner: "{{service}}"
+    group: "{{service}}"
+  loop: [ 3, 4, 5 ]
+
+- name: Change user folder to less permissive
+  file: "path=/home/{{service}}/.{{service}} recurse=yes mode=0700"

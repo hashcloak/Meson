@@ -1,0 +1,102 @@
+[Server]
+  Identifier = "provider2"
+  Addresses = ["0.0.0.0:30002"]
+  OnlyAdvertiseAltAddresses = true
+  DataDir = "/conf/data"
+  IsProvider = true
+  [Server.AltAddresses]
+    tcp4 = ["127.0.0.1:30002"]
+
+[Logging]
+  Disable = false
+  File = "katzenpost.log"
+  Level = "DEBUG"
+
+[Provider]
+  EnableUserRegistrationHTTP = true
+  UserRegistrationHTTPAddresses = ["0.0.0.0:40002"]
+  AdvertiseUserRegistrationHTTPAddresses = ["http://127.0.0.1:40002"]
+  BinaryRecipients = false
+  CaseSensitiveRecipients = false
+  RecipientDelimiter = ""
+  [Provider.UserDB]
+    Backend = "bolt"
+    [Provider.UserDB.Bolt]
+      UserDB = "/conf/data/users.db"
+  [Provider.SpoolDB]
+    Backend = "bolt"
+    [Provider.SpoolDB.Bolt]
+      SpoolDB = "/conf/data/spool.db"
+
+  [[Provider.Kaetzchen]]
+    Capability = "loop"
+    Endpoint = "+loop"
+    Disable = false
+
+  [[Provider.CBORPluginKaetzchen]]
+    Capability = "echo"
+    Endpoint = "+echo"
+    Command = "/go/bin/echo_server"
+    MaxConcurrency = 1
+    Disable = false
+    [Provider.CBORPluginKaetzchen.Config]
+      log_dir = "/conf/data"
+      log_level = "DEBUG"
+
+  [[Provider.CBORPluginKaetzchen]]
+    Capability = "panda"
+    Endpoint = "+panda"
+    Command = "/go/bin/panda_server"
+    MaxConcurrency = 1
+    Disable = false
+    [Provider.CBORPluginKaetzchen.Config]
+      fileStore = "/conf/data/panda.storage"
+      log_dir = "/conf/data"
+      log_level = "DEBUG"
+
+  [[Provider.CBORPluginKaetzchen]]
+    Capability = "spool"
+    Endpoint = "+spool"
+    Command = "/go/bin/memspool"
+    MaxConcurrency = 1
+    Disable = false
+    [Provider.CBORPluginKaetzchen.Config]
+      data_store = "/conf/data/memspool.storage"
+      log_dir = "/conf/data"
+
+[PKI]
+  [PKI.Voting]
+    ChainID = "katzenmint-chain-71DRoz"
+    PrimaryAddress = "tcp://172.29.1.7:26657"
+    WitnessesAddresses = ["tcp://172.29.1.7:26657"]
+    DatabaseName = "data-db"
+    DatabaseDir = "/conf/data/kdata"
+    RPCAddress = "tcp://172.29.1.7:26657"
+    [PKI.Voting.TrustOptions]
+      Period = 600000000000
+      Height = 6
+      Hash = [111, 79, 24, 146, 56, 206, 242, 144, 21, 42, 77, 90, 132, 218, 83, 170, 171, 242, 45, 53, 44, 146, 96, 56, 92, 45, 63, 30, 156, 119, 73, 52]
+
+[Management]
+  Enable = true
+  Path = "/conf/data/management_sock"
+
+[Debug]
+  NumSphinxWorkers = 1
+  NumProviderWorkers = 1
+  NumKaetzchenWorkers = 3
+  SchedulerExternalMemoryQueue = false
+  SchedulerQueueSize = 0
+  SchedulerMaxBurst = 16
+  UnwrapDelay = 10
+  ProviderDelay = 500
+  KaetzchenDelay = 750
+  SchedulerSlack = 10
+  SendSlack = 50
+  DecoySlack = 15000
+  ConnectTimeout = 120000
+  HandshakeTimeout = 600000
+  ReauthInterval = 30000
+  SendDecoyTraffic = false
+  DisableRateLimit = true
+  GenerateOnly = false

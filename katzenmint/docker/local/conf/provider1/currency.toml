@@ -1,0 +1,6 @@
+Ticker = "gor"
+RPCUser = "rpcuser"
+RPCPass = "rpcpassword"
+RPCURL = "https://goerli.hashcloak.com"
+LogDir = "/conf/data"
+LogLevel = "DEBUG"

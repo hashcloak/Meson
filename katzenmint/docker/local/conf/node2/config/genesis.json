@@ -1,0 +1,53 @@
+{
+  "genesis_time": "2021-08-20T01:00:05.000000Z",
+  "chain_id": "katzenmint-chain-71DRoz",
+  "initial_height": "0",
+  "consensus_params": {
+    "block": {
+      "max_bytes": "22020096",
+      "max_gas": "-1",
+      "time_iota_ms": "1000"
+    },
+    "evidence": {
+      "max_age_num_blocks": "100000",
+      "max_age_duration": "172800000000000",
+      "max_bytes": "1048576"
+    },
+    "validator": {
+      "pub_key_types": [
+        "ed25519"
+      ]
+    },
+    "version": {}
+  },
+  "validators": [
+    {
+      "address": "9D9C2C4D5AD83BE30BEA768665B28FF9ADFA04EF",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "JNKMyQSKaponf5LyaEwTOV1ktRoPF7CGhviaAhk9xxE="
+      },
+      "power": "10",
+      "name": ""
+    },
+    {
+      "address": "276CDF86B6A18140B8875AEA430E480D9A9C88EF",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "cg3OTrElUFTimid4xm50x2D5RyXDTJcl99Z83nlwRoQ="
+      },
+      "power": "10",
+      "name": ""
+    },
+    {
+      "address": "36C46C93127C63490AB2BBD5BA5E82918C6A5413",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "HLjoKlJCcjkEzvwqpyuqDTnNIWWFAHUBIc2hR5UGyAA="
+      },
+      "power": "10",
+      "name": ""
+    }
+  ],
+  "app_hash": ""
+}
