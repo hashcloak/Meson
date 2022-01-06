@@ -26,6 +26,7 @@ jobs:
 
     - name: "Build"
       run: |
+        cd katzenmint
         make build
         mkdir dist
         mv katzenmint dist
