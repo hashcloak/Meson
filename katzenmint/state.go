@@ -20,7 +20,7 @@ import (
 )
 
 const genesisEpoch uint64 = 1
-const epochInterval int64 = 5
+const epochInterval int64 = 10
 
 var (
 	errDocInsufficientDescriptor = errors.New("insufficient descriptors uploaded")
@@ -155,11 +155,13 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 		if doc, err = state.generateDocument(); err == nil {
 			err = state.updateDocument(doc.raw, doc.doc, state.currentEpoch)
 			if err == nil {
-				state.currentEpoch++
 				state.epochStartHeight = state.blockHeight
 				// TODO: Prune related descriptors
 			}
 		}
+	}
+	if state.blockHeight == state.epochStartHeight+1 && state.blockHeight > 1 {
+		state.currentEpoch++
 	}
 	epochInfoValue := make([]byte, 16)
 	binary.PutUvarint(epochInfoValue[:8], state.currentEpoch)
@@ -188,7 +190,7 @@ func (state *KatzenmintState) newDocumentRequired() bool {
 func (s *KatzenmintState) generateDocument() (*document, error) {
 	// Cannot lock here
 
-	// // Load descriptors (providers and nodesDesc).
+	// Load descriptors (providers and nodesDesc).
 	var providersDesc, nodesDesc []*descriptor
 	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
 	end := make([]byte, len(begin))
@@ -295,6 +297,9 @@ func (state *KatzenmintState) documentForEpoch(epoch uint64, height int64) ([]by
 	// TODO: postpone the document for some blocks?
 	// var postponDeadline = 10
 
+	if epoch == 0 {
+		return nil, nil, ErrQueryDocumentUnknown
+	}
 	e := make([]byte, 8)
 	binary.PutUvarint(e, epoch)
 	key := storageKey(documentsBucket, e, epoch)

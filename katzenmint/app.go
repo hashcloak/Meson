@@ -2,7 +2,6 @@ package katzenmint
 
 import (
 	"crypto/ed25519"
-	"encoding/binary"
 	"fmt"
 
 	"github.com/hashcloak/katzenmint-pki/config"
@@ -40,10 +39,8 @@ func NewKatzenmintApplication(kConfig *config.Config, db dbm.DB, logger log.Logg
 }
 
 func (app *KatzenmintApplication) Info(req abcitypes.RequestInfo) abcitypes.ResponseInfo {
-	var epoch [8]byte
-	binary.PutUvarint(epoch[:], app.state.currentEpoch)
 	return abcitypes.ResponseInfo{
-		Data:             EncodeHex(epoch[:]),
+		Data:             fmt.Sprint(app.state.currentEpoch),
 		Version:          fmt.Sprintf("%s/%s/%s", protocolVersion, version.ABCIVersion, buildTime),
 		AppVersion:       appVersion,
 		LastBlockHeight:  app.state.blockHeight,
@@ -203,8 +200,10 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 		resQuery.Height = app.state.blockHeight - 1
 		doc, proof, err := app.state.documentForEpoch(kquery.Epoch, resQuery.Height)
 		if err != nil {
-			app.logger.Error("peer: failed to retrieve document for epoch", "epoch", kquery.Epoch, "current", app.state.currentEpoch, "error", err)
-			if err == ErrQueryNoDocument || err == ErrQueryDocumentNotReady {
+			if err == ErrQueryNoDocument {
+				app.logger.Error("warn: detected a skipped document", "miss", kquery.Epoch, "now", app.state.currentEpoch)
+				parseErrorResponse(err.(KatzenmintError), &resQuery)
+			} else if err == ErrQueryDocumentNotReady {
 				parseErrorResponse(err.(KatzenmintError), &resQuery)
 			} else {
 				parseErrorResponse(ErrQueryDocumentUnknown, &resQuery)

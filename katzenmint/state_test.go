@@ -278,6 +278,12 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 		t.Fatalf("The pki document should be generated automatically\n")
 	}
 
+	// one more height to proceed the epoch
+	_, err = state.Commit()
+	if err != nil {
+		t.Fatalf("Failed to commit: %v\n", err)
+	}
+
 	// test the document can be reloaded
 	newState := NewKatzenmintState(kConfig, db)
 	if newState.prevDocument == nil {
