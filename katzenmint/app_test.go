@@ -153,7 +153,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	require.Nil(err)
 	apphash := appinfo.Response.LastBlockAppHash
 	e := make([]byte, 8)
-	binary.PutUvarint(e, epoch)
+	binary.BigEndian.PutUint64(e, epoch)
 	key := storageKey(documentsBucket, e, epoch)
 	path := "/" + url.PathEscape(string(key))
 

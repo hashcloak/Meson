@@ -22,7 +22,7 @@ const (
 
 func storageKey(keyPrefix string, keyID []byte, epoch uint64) (key []byte) {
 	epochHex := make([]byte, 8)
-	binary.PutUvarint(epochHex, epoch)
+	binary.BigEndian.PutUint64(epochHex, epoch)
 	epochHex = []byte(EncodeHex(epochHex))
 	IDHex := []byte(EncodeHex(keyID))
 

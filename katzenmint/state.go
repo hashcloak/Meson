@@ -93,7 +93,7 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 
 	// Load previous document
 	e := make([]byte, 8)
-	binary.PutUvarint(e, state.currentEpoch-1)
+	binary.BigEndian.PutUint64(e, state.currentEpoch-1)
 	key := storageKey(documentsBucket, e, state.currentEpoch-1)
 	if val, err := state.Get(key); err == nil {
 		if doc, err := s11n.VerifyAndParseDocument(val); err == nil {
@@ -301,7 +301,7 @@ func (state *KatzenmintState) documentForEpoch(epoch uint64, height int64) ([]by
 		return nil, nil, ErrQueryDocumentUnknown
 	}
 	e := make([]byte, 8)
-	binary.PutUvarint(e, epoch)
+	binary.BigEndian.PutUint64(e, epoch)
 	key := storageKey(documentsBucket, e, epoch)
 	doc, proof, err := state.tree.GetVersionedWithProof(key, height)
 	if err != nil {
@@ -397,7 +397,7 @@ func (state *KatzenmintState) updateDocument(rawDoc []byte, doc *pki.Document, e
 	// Cannot lock here
 
 	e := make([]byte, 8)
-	binary.PutUvarint(e, epoch)
+	binary.BigEndian.PutUint64(e, epoch)
 	key := storageKey(documentsBucket, e, epoch)
 
 	//  Check for duplicates

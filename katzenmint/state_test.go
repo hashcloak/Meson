@@ -111,7 +111,7 @@ func TestUpdateDocument(t *testing.T) {
 
 	// test the data exists in database
 	e := make([]byte, 8)
-	binary.PutUvarint(e, testEpoch)
+	binary.BigEndian.PutUint64(e, testEpoch)
 	key := storageKey(documentsBucket, e, testEpoch)
 	gotRaw, err := state.Get(key)
 	if err != nil {
@@ -199,7 +199,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	state := NewKatzenmintState(kConfig, db)
 	epoch := state.currentEpoch
 	e := make([]byte, 8)
-	binary.PutUvarint(e, epoch)
+	binary.BigEndian.PutUint64(e, epoch)
 	key := storageKey(documentsBucket, e, epoch)
 
 	// create descriptorosts of providers
