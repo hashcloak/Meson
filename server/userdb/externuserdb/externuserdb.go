@@ -24,7 +24,8 @@ import (
 	"net/url"
 
 	"encoding/hex"
-	"github.com/hashcloak/Meson-server/userdb"
+
+	"github.com/hashcloak/Meson/server/userdb"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/ugorji/go/codec"
 )

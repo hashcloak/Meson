@@ -21,12 +21,12 @@ package glue
 import (
 	"time"
 
-	"github.com/hashcloak/Meson-server/config"
-	"github.com/hashcloak/Meson-server/internal/mixkey"
-	"github.com/hashcloak/Meson-server/internal/packet"
-	"github.com/hashcloak/Meson-server/internal/pkicache"
-	"github.com/hashcloak/Meson-server/spool"
-	"github.com/hashcloak/Meson-server/userdb"
+	"github.com/hashcloak/Meson/server/config"
+	"github.com/hashcloak/Meson/server/internal/mixkey"
+	"github.com/hashcloak/Meson/server/internal/packet"
+	"github.com/hashcloak/Meson/server/internal/pkicache"
+	"github.com/hashcloak/Meson/server/spool"
+	"github.com/hashcloak/Meson/server/userdb"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/log"

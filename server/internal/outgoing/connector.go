@@ -21,9 +21,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashcloak/Meson-server/internal/debug"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/internal/debug"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/sphinx/constants"
 	"github.com/katzenpost/core/worker"
 	"gopkg.in/op/go-logging.v1"
@@ -91,8 +91,8 @@ func (co *connector) DispatchPacket(pkt *packet.Packet) {
 
 func (co *connector) worker() {
 	const (
-		initialSpawnDelay = 15 * time.Second
-		resweepInterval   = 3 * time.Minute
+		initialSpawnDelay = 3 * time.Second
+		resweepInterval   = 4 * time.Second
 	)
 
 	timer := time.NewTimer(initialSpawnDelay)

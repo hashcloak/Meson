@@ -19,7 +19,7 @@
 package spool
 
 import (
-	"github.com/hashcloak/Meson-server/userdb"
+	"github.com/hashcloak/Meson/server/userdb"
 	"github.com/katzenpost/core/sphinx/constants"
 )
 

@@ -25,8 +25,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashcloak/Meson-server/config"
+	"github.com/hashcloak/Meson/server/config"
 	kpki "github.com/hashcloak/katzenmint-pki"
+	kconf "github.com/hashcloak/katzenmint-pki/config"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/stretchr/testify/assert"
@@ -154,7 +155,7 @@ func TestMain(m *testing.M) {
 	// start katzenmint node in the background to test against
 	db := dbm.NewMemDB()
 	logger := newDiscardLogger()
-	app := kpki.NewKatzenmintApplication(db, logger)
+	app := kpki.NewKatzenmintApplication(kconf.DefaultConfig(), db, logger)
 	node := rpctest.StartTendermint(app, rpctest.SuppressStdout)
 	abciClient = local.New(node)
 

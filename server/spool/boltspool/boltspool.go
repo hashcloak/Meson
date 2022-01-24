@@ -22,8 +22,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/hashcloak/Meson-server/spool"
-	"github.com/hashcloak/Meson-server/userdb"
+	"github.com/hashcloak/Meson/server/spool"
+	"github.com/hashcloak/Meson/server/userdb"
 	"github.com/katzenpost/core/constants"
 	"github.com/katzenpost/core/sphinx"
 	sConstants "github.com/katzenpost/core/sphinx/constants"

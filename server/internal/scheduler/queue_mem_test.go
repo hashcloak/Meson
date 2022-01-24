@@ -17,9 +17,9 @@
 package scheduler
 
 import (
-	"github.com/hashcloak/Meson-server/config"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/config"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/constants"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/katzenpost/core/crypto/eddsa"

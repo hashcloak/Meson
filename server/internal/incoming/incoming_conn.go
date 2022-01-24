@@ -24,9 +24,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	internalConstants "github.com/hashcloak/Meson-server/internal/constants"
-	"github.com/hashcloak/Meson-server/internal/debug"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	internalConstants "github.com/hashcloak/Meson/server/internal/constants"
+	"github.com/hashcloak/Meson/server/internal/debug"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/constants"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/monotime"

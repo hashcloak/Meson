@@ -21,8 +21,8 @@ import (
 	mRand "math/rand"
 	"time"
 
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/monotime"
 	"github.com/katzenpost/core/queue"

@@ -19,9 +19,9 @@ package kaetzchen
 import (
 	"bytes"
 
-	"github.com/hashcloak/Meson-server/config"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/userdb"
+	"github.com/hashcloak/Meson/server/config"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/userdb"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )

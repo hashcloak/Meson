@@ -29,10 +29,10 @@ import (
 
 	kpki "github.com/hashcloak/Meson-client/pkiclient"
 	"github.com/hashcloak/Meson-client/pkiclient/epochtime"
-	"github.com/hashcloak/Meson-server/internal/constants"
-	"github.com/hashcloak/Meson-server/internal/debug"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/pkicache"
+	"github.com/hashcloak/Meson/server/internal/constants"
+	"github.com/hashcloak/Meson/server/internal/debug"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/pkicache"
 	"github.com/katzenpost/core/crypto/ecdh"
 	cpki "github.com/katzenpost/core/pki"
 	sConstants "github.com/katzenpost/core/sphinx/constants"
@@ -43,11 +43,9 @@ import (
 )
 
 var (
-	errNotCached         = errors.New("pki: requested epoch document not in cache")
-	recheckInterval      = 1 * time.Minute
-	WarpedEpoch          = "false"
-	nextFetchTill        = epochtime.TestPeriod / 8
-	pkiEarlyConnectSlack = epochtime.TestPeriod / 6
+	errNotCached    = errors.New("pki: requested epoch document not in cache")
+	recheckInterval = 1 * time.Minute
+	WarpedEpoch     = "true"
 )
 
 type pki struct {
@@ -477,15 +475,17 @@ func (p *pki) entryForEpoch(epoch uint64) *pkicache.Entry {
 func (p *pki) documentsToFetch() []uint64 {
 
 	ret := make([]uint64, 0, constants.NumMixKeys+1)
-	now, _, till, err := p.Now()
+	now, _, _, err := p.Now()
 	if err != nil {
 		p.log.Debugf("Error fetching PKI epoch: %v", err)
 		return nil
 	}
 	start := now
-	if till < nextFetchTill {
-		start = now + 1
-	}
+	/*
+		if till < nextFetchTill {
+			start = now + 1
+		}
+	*/
 
 	p.RLock()
 	defer p.RUnlock()
@@ -505,18 +505,22 @@ func (p *pki) documentsForAuthentication() ([]*pkicache.Entry, *pkicache.Entry, 
 	//
 	// Note: The ordering is important and should not be changed without
 	// changes to pki.AuthenticateConnection().
-	now, _, till, err := p.Now()
+	now, _, till, _ := p.Now()
+	if _, ok := p.docs[now]; !ok {
+		now -= 1
+	}
 	epochs := make([]uint64, 0, constants.NumMixKeys+1)
 	start := now
-	if till < pkiEarlyConnectSlack {
-		// Allow connections to new nodes 30 mins in advance of an epoch
-		// transition.
-		start = now + 1
-	}
-	if err == nil {
-		for epoch := start; epoch > now-constants.NumMixKeys; epoch-- {
-			epochs = append(epochs, epoch)
+	/*
+		if elapsed < pkiJustCreated {
+			// Allow connections to new nodes 30 mins in advance of an epoch
+			// transition.
+			start = now - 1
 		}
+		if err == nil {
+	*/
+	for epoch := start; epoch > now-constants.NumMixKeys; epoch-- {
+		epochs = append(epochs, epoch)
 	}
 
 	// Return the list of cache entries.
@@ -537,7 +541,7 @@ func (p *pki) documentsForAuthentication() ([]*pkicache.Entry, *pkicache.Entry, 
 }
 
 func (p *pki) AuthenticateConnection(c *wire.PeerCredentials, isOutgoing bool) (desc *cpki.MixDescriptor, canSend, isValid bool) {
-	const earlySendSlack = 2 * time.Minute
+	const earlySendSlack = 3 * time.Second
 
 	dirStr := "Incoming"
 	if isOutgoing {
@@ -778,6 +782,6 @@ func init() {
 	prometheus.MustRegister(failedFetchPKIDocs)
 
 	if WarpedEpoch == "true" {
-		recheckInterval = 5 * time.Second
+		recheckInterval = 3 * time.Second
 	}
 }

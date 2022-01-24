@@ -25,8 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/hashcloak/Meson-server/internal/constants"
-	"github.com/hashcloak/Meson-server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/constants"
+	"github.com/hashcloak/Meson/server/internal/glue"
 	"github.com/katzenpost/core/worker"
 	"gopkg.in/op/go-logging.v1"
 )

@@ -26,8 +26,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/hashcloak/Meson-server/internal/constants"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/internal/constants"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/monotime"
 	cpki "github.com/katzenpost/core/pki"
@@ -123,8 +123,8 @@ func (c *outgoingConn) dispatchPacket(pkt *packet.Packet) {
 func (c *outgoingConn) worker() {
 
 	const (
-		retryIncrement = 15 * time.Second
-		maxRetryDelay  = 120 * time.Second
+		retryIncrement = 2 * time.Second
+		maxRetryDelay  = 5 * time.Second
 	)
 
 	defer func() {

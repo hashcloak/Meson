@@ -24,8 +24,8 @@ import (
 	"runtime"
 	"syscall"
 
-	server "github.com/hashcloak/Meson-server"
-	"github.com/hashcloak/Meson-server/config"
+	server "github.com/hashcloak/Meson/server"
+	"github.com/hashcloak/Meson/server/config"
 )
 
 func main() {

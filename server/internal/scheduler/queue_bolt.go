@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/monotime"
 	"github.com/katzenpost/core/sphinx/commands"
 	bolt "go.etcd.io/bbolt"

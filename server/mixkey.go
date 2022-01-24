@@ -22,9 +22,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/hashcloak/Meson-server/internal/constants"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/mixkey"
+	"github.com/hashcloak/Meson/server/internal/constants"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/mixkey"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"gopkg.in/op/go-logging.v1"
 )

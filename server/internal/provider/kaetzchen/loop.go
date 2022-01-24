@@ -17,8 +17,8 @@
 package kaetzchen
 
 import (
-	"github.com/hashcloak/Meson-server/config"
-	"github.com/hashcloak/Meson-server/internal/glue"
+	"github.com/hashcloak/Meson/server/config"
+	"github.com/hashcloak/Meson/server/internal/glue"
 	"gopkg.in/op/go-logging.v1"
 )
 

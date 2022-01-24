@@ -24,9 +24,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hashcloak/Meson-server/cborplugin"
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/internal/packet"
+	"github.com/hashcloak/Meson/server/cborplugin"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/internal/packet"
 	"github.com/katzenpost/core/monotime"
 	sConstants "github.com/katzenpost/core/sphinx/constants"
 	"github.com/katzenpost/core/worker"

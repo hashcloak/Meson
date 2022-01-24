@@ -20,9 +20,9 @@ package sqldb
 import (
 	"fmt"
 
-	"github.com/hashcloak/Meson-server/internal/glue"
-	"github.com/hashcloak/Meson-server/spool"
-	"github.com/hashcloak/Meson-server/userdb"
+	"github.com/hashcloak/Meson/server/internal/glue"
+	"github.com/hashcloak/Meson/server/spool"
+	"github.com/hashcloak/Meson/server/userdb"
 	"gopkg.in/op/go-logging.v1"
 )
 
