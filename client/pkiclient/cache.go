@@ -53,9 +53,9 @@ type Cache struct {
 	docs map[uint64]*list.Element
 	lru  list.List
 
-	timer     *time.Timer
-	memEpoch  uint64
-	memHeight uint64
+	lastSyncTime time.Time
+	memEpoch     uint64
+	memHeight    uint64
 
 	fetchQueue chan *fetchOp
 }
@@ -83,18 +83,14 @@ func (c *Cache) Halt() {
 
 // GetEpoch returns the epoch information of PKI.
 func (c *Cache) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
-	select {
-	case <-c.timer.C:
-		epoch, ellapsedHeight, err = c.impl.GetEpoch(ctx)
-		if err == nil {
-			c.memEpoch = epoch
-			c.memHeight = ellapsedHeight
-			c.timer.Reset(epochRetrieveInterval)
-		} else {
-			c.timer.Reset(0)
-		}
-	default:
+	if time.Now().Before(c.lastSyncTime.Add(epochRetrieveInterval)) {
 		return c.memEpoch, c.memHeight, nil
+	}
+	epoch, ellapsedHeight, err = c.impl.GetEpoch(ctx)
+	if err == nil {
+		c.memEpoch = epoch
+		c.memHeight = ellapsedHeight
+		c.lastSyncTime = time.Now()
 	}
 	return
 }
@@ -163,8 +159,6 @@ func (c *Cache) insertLRU(newEntry *cacheEntry) {
 }
 
 func (c *Cache) worker() {
-	c.timer = time.NewTimer(0)
-	defer c.timer.Stop()
 	for {
 		var op *fetchOp
 		select {
@@ -201,6 +195,7 @@ func NewCacheClient(impl Client) *Cache {
 	c.impl = impl
 	c.docs = make(map[uint64]*list.Element)
 	c.fetchQueue = make(chan *fetchOp, fetchBacklog)
+	c.lastSyncTime = time.Time{}
 
 	c.Go(c.worker)
 	return c

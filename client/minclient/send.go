@@ -49,11 +49,10 @@ func (c *Client) ComposeSphinxPacket(recipient, provider string, surbID *[sConst
 
 	for {
 		unixTime := c.pki.skewedUnixTime()
-		epoch, _, budget, err := epochtime.Now(c.cfg.PKIClient)
+		epoch, _, _, err := epochtime.Now(c.cfg.PKIClient)
 		if err != nil {
 			return nil, nil, 0, err
 		}
-		start := time.Now()
 
 		// Select the forward path.
 		now := time.Unix(unixTime, 0)
@@ -73,7 +72,11 @@ func (c *Client) ComposeSphinxPacket(recipient, provider string, surbID *[sConst
 
 		// If the path selection process ends up straddling an epoch
 		// transition, then redo the path selection.
-		if time.Since(start) > budget {
+		postEpoch, _, _, err := epochtime.Now(c.cfg.PKIClient)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		if epoch != postEpoch {
 			continue
 		}
 
