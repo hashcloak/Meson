@@ -19,10 +19,13 @@ WORKDIR /go/server
 # Build the binary
 COPY . .
 RUN cd cmd/meson-server && go build -ldflags "$ldflags"
-RUN cd /go ; git clone https://github.com/katzenpost/katzenpost ; cd katzenpost/memspool/server/cmd/memspool ;  go build -ldflags "$ldflags"
-RUN cd /go ; cd katzenpost/reunion ; cd servers/reunion_katzenpost_server ; go build -ldflags "$ldflags"
-RUN cd /go ; cd katzenpost/panda/server/cmd/panda_server ; go build -ldflags "$ldflags"
-RUN cd /go ; cd katzenpost/server_plugins/cbor_plugins/echo-go ; go build -o echo_server -ldflags "$ldflags"
+RUN cd /go ; git clone https://github.com/katzenpost/memspool.git
+RUN cd /go ; cd memspool/server/cmd/memspool ;  go build -ldflags "$ldflags"
+# RUN cd /go ; cd katzenpost/reunion ; cd servers/reunion_katzenpost_server ; go build -ldflags "$ldflags"
+RUN cd /go ; git clone https://github.com/katzenpost/panda.git
+RUN cd /go ; cd panda/server/cmd/panda_server ; go build -ldflags "$ldflags"
+RUN cd /go ; git clone https://github.com/katzenpost/server_plugins.git
+RUN cd /go ; cd server_plugins/cbor_plugins/echo-go ; go build -o echo_server -ldflags "$ldflags"
 RUN cd /go ; git clone https://github.com/hashcloak/Meson-plugin ; cd Meson-plugin ; go build -o Meson -ldflags "$ldflags" cmd/main.go
 RUN cd /go ; git clone https://github.com/hashcloak/genconfig ; cd genconfig ; git pull origin add-cilint ; go build -o updateconfig -ldflags "$ldflags" update/main.go
 
@@ -33,10 +36,10 @@ RUN apk update && \
     update-ca-certificates
 
 COPY --from=builder /go/server/cmd/meson-server/meson-server /go/bin/server
-COPY --from=builder /go/katzenpost/memspool/server/cmd/memspool/memspool /go/bin/memspool
-COPY --from=builder /go/katzenpost/reunion/servers/reunion_katzenpost_server/reunion_katzenpost_server /go/bin/reunion_katzenpost_server
-COPY --from=builder /go/katzenpost/panda/server/cmd/panda_server/panda_server /go/bin/panda_server
-COPY --from=builder /go/katzenpost/server_plugins/cbor_plugins/echo-go/echo_server /go/bin/echo_server
+COPY --from=builder /go/memspool/server/cmd/memspool/memspool /go/bin/memspool
+# COPY --from=builder /go/katzenpost/reunion/servers/reunion_katzenpost_server/reunion_katzenpost_server /go/bin/reunion_katzenpost_server
+COPY --from=builder /go/panda/server/cmd/panda_server/panda_server /go/bin/panda_server
+COPY --from=builder /go/server_plugins/cbor_plugins/echo-go/echo_server /go/bin/echo_server
 COPY --from=builder /go/Meson-plugin/Meson /go/bin/Meson
 COPY --from=builder /go/genconfig/updateconfig /go/bin/updateconfig
 
