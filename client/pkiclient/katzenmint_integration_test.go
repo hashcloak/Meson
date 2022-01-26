@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	kpki "github.com/hashcloak/katzenmint-pki"
-	"github.com/hashcloak/katzenmint-pki/config"
-	"github.com/hashcloak/katzenmint-pki/testutil"
+	kpki "github.com/hashcloak/Meson/katzenmint"
+	kconf "github.com/hashcloak/Meson/katzenmint/config"
+	"github.com/hashcloak/Meson/katzenmint/testutil"
 	katlog "github.com/katzenpost/core/log"
 
 	"github.com/stretchr/testify/require"
@@ -147,7 +147,7 @@ func TestMain(m *testing.M) {
 	}
 
 	// start katzenmint node in the background to test against
-	kcfg := config.DefaultConfig()
+	kcfg := kconf.DefaultConfig()
 	db := dbm.NewMemDB()
 	logger := newDiscardLogger()
 	app := kpki.NewKatzenmintApplication(kcfg, db, logger)

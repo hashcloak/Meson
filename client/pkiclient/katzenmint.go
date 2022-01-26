@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	"github.com/cosmos/iavl"
-	kpki "github.com/hashcloak/katzenmint-pki"
-	"github.com/hashcloak/katzenmint-pki/s11n"
+	kpki "github.com/hashcloak/Meson/katzenmint"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/log"
 	cpki "github.com/katzenpost/core/pki"
@@ -23,6 +23,10 @@ import (
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	dbm "github.com/tendermint/tm-db"
 	"gopkg.in/op/go-logging.v1"
+)
+
+var (
+	protocolVersion = "development"
 )
 
 type PKIClientConfig struct {
@@ -49,7 +53,7 @@ type PKIClient struct {
 func (p *PKIClient) query(ctx context.Context, epoch uint64, command kpki.Command) (*ctypes.ResultABCIQuery, error) {
 	// Form the abci query
 	query := kpki.Query{
-		Version: kpki.ProtocolVersion,
+		Version: protocolVersion,
 		Epoch:   epoch,
 		Command: command,
 		Payload: "",

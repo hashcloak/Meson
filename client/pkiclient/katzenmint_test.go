@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	kpki "github.com/hashcloak/katzenmint-pki"
-	"github.com/hashcloak/katzenmint-pki/s11n"
-	"github.com/hashcloak/katzenmint-pki/testutil"
+	kpki "github.com/hashcloak/Meson/katzenmint"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
+	"github.com/hashcloak/Meson/katzenmint/testutil"
 
 	katlog "github.com/katzenpost/core/log"
 
@@ -115,7 +115,7 @@ func TestMockPKIClientGetDocument(t *testing.T) {
 	}
 
 	query := kpki.Query{
-		Version: kpki.ProtocolVersion,
+		Version: protocolVersion,
 		Epoch:   epoch,
 		Command: kpki.GetConsensus,
 		Payload: "",

@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v0.4.1
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/cosmos/iavl v0.15.3
-	github.com/hashcloak/katzenmint-pki v0.0.0-20220116114902-61f41bc1abac
+	github.com/hashcloak/Meson/katzenmint v0.0.0-20220126032309-09948fca6713
 	github.com/katzenpost/client v0.0.3
 	github.com/katzenpost/core v0.0.12
 	github.com/katzenpost/noise v0.0.2 // indirect

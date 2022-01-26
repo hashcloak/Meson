@@ -1,5 +1,5 @@
 # Meson-client
-[![Go](https://github.com/hashcloak/Meson-client/actions/workflows/go.yml/badge.svg)](https://github.com/hashcloak/Meson-client/actions/workflows/go.yml)
+[![Go](https://github.com/hashcloak/Meson/client/actions/workflows/go.yml/badge.svg)](https://github.com/hashcloak/Meson/client/actions/workflows/go.yml)
 
 A simple client for use with the Meson mixnet software
 
