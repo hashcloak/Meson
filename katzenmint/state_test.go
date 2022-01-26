@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashcloak/katzenmint-pki/config"
-	"github.com/hashcloak/katzenmint-pki/s11n"
-	"github.com/hashcloak/katzenmint-pki/testutil"
+	"github.com/hashcloak/Meson/katzenmint/config"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
+	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/pki"

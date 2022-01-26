@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/iavl"
-	"github.com/hashcloak/katzenmint-pki/testutil"
+	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/pki"

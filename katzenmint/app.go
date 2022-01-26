@@ -4,8 +4,8 @@ import (
 	"crypto/ed25519"
 	"fmt"
 
-	"github.com/hashcloak/katzenmint-pki/config"
-	"github.com/hashcloak/katzenmint-pki/s11n"
+	"github.com/hashcloak/Meson/katzenmint/config"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/cert"
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"

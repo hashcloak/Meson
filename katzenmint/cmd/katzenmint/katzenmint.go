@@ -13,8 +13,8 @@ import (
 	"strings"
 	"syscall"
 
-	katzenmint "github.com/hashcloak/katzenmint-pki"
-	kcfg "github.com/hashcloak/katzenmint-pki/config"
+	katzenmint "github.com/hashcloak/Meson/katzenmint"
+	kcfg "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -35,7 +35,7 @@ var (
 
 func readConfig(configFile string) (config *cfg.Config, err error) {
 	config = cfg.DefaultConfig()
-	config.RootDir = filepath.Dir(filepath.Dir(configFile))
+	config.SetRoot(filepath.Dir(filepath.Dir(configFile)))
 	viper.SetConfigFile(configFile)
 	if err = viper.ReadInConfig(); err != nil {
 		err = fmt.Errorf("viper failed to read config file: %w", err)

@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/cosmos/iavl"
-	"github.com/hashcloak/katzenmint-pki/config"
-	"github.com/hashcloak/katzenmint-pki/s11n"
+	"github.com/hashcloak/Meson/katzenmint/config"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	katvoting "github.com/katzenpost/authority/voting/server/config"
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"

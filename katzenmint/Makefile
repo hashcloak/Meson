@@ -4,11 +4,11 @@ VERSION:=$(shell git describe --tags 2>/dev/null)
 BUILDTIME=$(shell date +"%d %b %Y")
 LD_FLAGS=
 ifneq ($(VERSION), )
-LD_FLAGS:= -X "github.com/hashcloak/katzenmint-pki.protocolVersion=$(VERSION)"
+LD_FLAGS:= -X "github.com/hashcloak/Meson/katzenmint.protocolVersion=$(VERSION)"
 endif
 
 ifneq ($(BUILDTIME), )
-LD_FLAGS:= $(LD_FLAGS) -X "github.com/hashcloak/katzenmint-pki.buildTime=${BUILDTIME}"
+LD_FLAGS:= $(LD_FLAGS) -X "github.com/hashcloak/Meson/katzenmint.buildTime=${BUILDTIME}"
 endif
 
 .PHONY: default

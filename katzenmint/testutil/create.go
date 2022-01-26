@@ -3,7 +3,7 @@ package testutil
 import (
 	"fmt"
 
-	"github.com/hashcloak/katzenmint-pki/s11n"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
