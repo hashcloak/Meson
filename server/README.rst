@@ -2,11 +2,11 @@
 
 Katzenpost Mix Server
 =====================
-.. image:: https://github.com/hashcloak/Meson-server/actions/workflows/go.yml/badge.svg
-  :target: https://github.com/hashcloak/Meson-server/actions/workflows/go.yml
+.. image:: https://github.com/hashcloak/Meson/server/actions/workflows/go.yml/badge.svg
+  :target: https://github.com/hashcloak/Meson/server/actions/workflows/go.yml
 
-.. image:: https://godoc.org/github.com/hashcloak/Meson-server?status.svg
-  :target: https://godoc.org/github.com/hashcloak/Meson-server
+.. image:: https://godoc.org/github.com/hashcloak/Meson/server?status.svg
+  :target: https://godoc.org/github.com/hashcloak/Meson/server
   
 
 Building

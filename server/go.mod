@@ -9,8 +9,8 @@ require (
 	github.com/BurntSushi/toml v0.4.1
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
-	github.com/hashcloak/Meson-client v0.0.0-20220116135733-98d38f26665c
-	github.com/hashcloak/katzenmint-pki v0.0.0-20220116114902-61f41bc1abac
+	github.com/hashcloak/Meson/client v0.0.0-20220126032844-c38ed0d1f4c2
+	github.com/hashcloak/Meson/katzenmint v0.0.0-20220126032309-09948fca6713
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/katzenpost/authority v0.0.14
 	github.com/katzenpost/core v0.0.12

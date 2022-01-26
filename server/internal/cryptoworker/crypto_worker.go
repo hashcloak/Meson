@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hashcloak/Meson-client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
 	"github.com/hashcloak/Meson/server/internal/constants"
 	"github.com/hashcloak/Meson/server/internal/glue"
 	"github.com/hashcloak/Meson/server/internal/mixkey"

@@ -25,9 +25,9 @@ import (
 	"testing"
 	"time"
 
+	kpki "github.com/hashcloak/Meson/katzenmint"
+	kconf "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/server/config"
-	kpki "github.com/hashcloak/katzenmint-pki"
-	kconf "github.com/hashcloak/katzenmint-pki/config"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/stretchr/testify/assert"

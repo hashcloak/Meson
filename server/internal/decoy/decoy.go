@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"git.schwanenlied.me/yawning/avl.git"
-	"github.com/hashcloak/Meson-client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
 	internalConstants "github.com/hashcloak/Meson/server/internal/constants"
 	"github.com/hashcloak/Meson/server/internal/glue"
 	"github.com/hashcloak/Meson/server/internal/packet"

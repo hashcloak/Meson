@@ -8,7 +8,7 @@ $this: download go binaries for hashcloak/Meson-server
 Usage: $this [-b] bindir [version]
   -b sets bindir or installation directory, default "~/opt/meson"
    [version] is a version number from
-   https://github.com/hashcloak/Meson-server/releases
+   https://github.com/hashcloak/Meson/server/releases
    If version is missing, then an attempt to find the latest will be found.
 EOF
   exit 2

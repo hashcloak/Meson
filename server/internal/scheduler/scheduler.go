@@ -21,7 +21,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/hashcloak/Meson-client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
 	"github.com/hashcloak/Meson/server/internal/constants"
 	"github.com/hashcloak/Meson/server/internal/debug"
 	"github.com/hashcloak/Meson/server/internal/glue"

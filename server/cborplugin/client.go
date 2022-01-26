@@ -64,7 +64,7 @@ type Parameters map[string]string
 // ServicePlugin is the interface that we expose for external
 // plugins to implement. This is similar to the internal Kaetzchen
 // interface defined in:
-// github.com/hashcloak/Meson-server/internal/provider/kaetzchen/kaetzchen.go
+// github.com/hashcloak/Meson/server/internal/provider/kaetzchen/kaetzchen.go
 type ServicePlugin interface {
 	// OnRequest is the method that is called when the Provider receives
 	// a request designed for a particular agent. The caller will handle
