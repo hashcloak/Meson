@@ -109,6 +109,10 @@ func (m *mixKeys) Prune() bool {
 		m.log.Debugf("Error fetching PKI epoch")
 		return false
 	}
+	if epoch == 0 {
+		m.log.Debug("before genesis epoch")
+		return false
+	}
 	didPrune := false
 
 	m.Lock()

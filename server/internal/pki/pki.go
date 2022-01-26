@@ -312,7 +312,7 @@ func (p *pki) pruneFailures() {
 	for epoch := range p.failedFetches {
 		// Be more aggressive about pruning failures than pruning documents,
 		// the worst that can happen is that we query the PKI unneccecarily.
-		if epoch < now-(constants.NumMixKeys-1) || epoch > now+1 {
+		if epoch+(constants.NumMixKeys-1) < now || epoch > now+1 {
 			delete(p.failedFetches, epoch)
 		}
 	}
@@ -327,7 +327,7 @@ func (p *pki) pruneDocuments() {
 	p.Lock()
 	defer p.Unlock()
 	for epoch := range p.docs {
-		if epoch < now-(constants.NumMixKeys-1) {
+		if epoch+(constants.NumMixKeys-1) < now {
 			p.log.Debugf("Discarding PKI for epoch: %v", epoch)
 			delete(p.docs, epoch)
 			delete(p.rawDocs, epoch)
@@ -340,13 +340,14 @@ func (p *pki) pruneDocuments() {
 }
 
 func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
-	publishDeadline := epochtime.TestPeriod / 2
+	publishDeadline := epochtime.TestPeriod / 10
 
-	epoch, _, till, err := p.Now()
+	now, _, till, err := p.Now()
 	if err != nil {
 		p.log.Debugf("Error fetching PKI epoch: %v", err)
 		return err
 	}
+	epoch := now + 1
 	doPublishEpoch := uint64(0)
 	switch p.lastPublishedEpoch {
 	case 0:
@@ -474,23 +475,24 @@ func (p *pki) entryForEpoch(epoch uint64) *pkicache.Entry {
 
 func (p *pki) documentsToFetch() []uint64 {
 
-	ret := make([]uint64, 0, constants.NumMixKeys+1)
-	now, _, _, err := p.Now()
+	start, _, _, err := p.Now()
+	if start == 0 {
+		err = fmt.Errorf("before genesis epoch")
+	}
 	if err != nil {
 		p.log.Debugf("Error fetching PKI epoch: %v", err)
 		return nil
 	}
-	start := now
-	/*
-		if till < nextFetchTill {
-			start = now + 1
-		}
-	*/
+	iterate := uint64(constants.NumMixKeys)
+	if iterate > start {
+		iterate = start
+	}
+	ret := make([]uint64, 0, iterate)
 
 	p.RLock()
 	defer p.RUnlock()
 
-	for epoch := start; epoch > now-constants.NumMixKeys; epoch-- {
+	for epoch := start; epoch > start-iterate; epoch-- {
 		if _, ok := p.docs[epoch]; !ok {
 			ret = append(ret, epoch)
 		}
@@ -506,11 +508,11 @@ func (p *pki) documentsForAuthentication() ([]*pkicache.Entry, *pkicache.Entry, 
 	// Note: The ordering is important and should not be changed without
 	// changes to pki.AuthenticateConnection().
 	now, _, till, _ := p.Now()
-	if _, ok := p.docs[now]; !ok {
-		now -= 1
+	iterate := uint64(constants.NumMixKeys)
+	if iterate > now {
+		iterate = now
 	}
-	epochs := make([]uint64, 0, constants.NumMixKeys+1)
-	start := now
+	epochs := make([]uint64, 0, iterate)
 	/*
 		if elapsed < pkiJustCreated {
 			// Allow connections to new nodes 30 mins in advance of an epoch
@@ -519,7 +521,7 @@ func (p *pki) documentsForAuthentication() ([]*pkicache.Entry, *pkicache.Entry, 
 		}
 		if err == nil {
 	*/
-	for epoch := start; epoch > now-constants.NumMixKeys; epoch-- {
+	for epoch := now; epoch > now-iterate; epoch-- {
 		epochs = append(epochs, epoch)
 	}
 
