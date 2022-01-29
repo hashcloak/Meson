@@ -14,11 +14,12 @@ RUN apk update && \
     update-ca-certificates
 
 # Set the working directory for the container
-WORKDIR /go/server
+WORKDIR /go
 
 # Build the binary
-COPY . .
-RUN cd cmd/meson-server && go build -ldflags "$ldflags"
+RUN cd /go ; git clone https://github.com/hashcloak/Meson.git
+RUN cd Meson ; git pull origin monorepo ;
+RUN cd /go/Meson/server/cmd/meson-server && go build -ldflags "$ldflags"
 RUN cd /go ; git clone https://github.com/katzenpost/memspool.git
 RUN cd /go ; cd memspool/server/cmd/memspool ;  go build -ldflags "$ldflags"
 # RUN cd /go ; cd katzenpost/reunion ; cd servers/reunion_katzenpost_server ; go build -ldflags "$ldflags"
@@ -35,7 +36,7 @@ RUN apk update && \
     apk add --no-cache ca-certificates tzdata && \
     update-ca-certificates
 
-COPY --from=builder /go/server/cmd/meson-server/meson-server /go/bin/server
+COPY --from=builder /go/Meson/server/cmd/meson-server/meson-server /go/bin/server
 COPY --from=builder /go/memspool/server/cmd/memspool/memspool /go/bin/memspool
 # COPY --from=builder /go/katzenpost/reunion/servers/reunion_katzenpost_server/reunion_katzenpost_server /go/bin/reunion_katzenpost_server
 COPY --from=builder /go/panda/server/cmd/panda_server/panda_server /go/bin/panda_server
