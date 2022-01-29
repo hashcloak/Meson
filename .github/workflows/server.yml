@@ -21,10 +21,12 @@ jobs:
     
     - name: "Test server"
       run: |
+        cd server
         make
 
     - name: "Build server"
       run: |
+        cd server
         make build
         mkdir dist
         mv meson-server dist
