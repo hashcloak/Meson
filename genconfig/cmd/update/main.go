@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	sConfig "github.com/hashcloak/Meson-server/config"
+	sConfig "github.com/hashcloak/Meson/server/config"
 	"github.com/tendermint/tendermint/light"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
 )

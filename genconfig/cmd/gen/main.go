@@ -29,7 +29,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	currencyConf "github.com/hashcloak/Meson-plugin/pkg/config"
-	sConfig "github.com/hashcloak/Meson-server/config"
+	sConfig "github.com/hashcloak/Meson/server/config"
 	aConfig "github.com/katzenpost/authority/nonvoting/server/config"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/katzenpost/core/crypto/eddsa"
