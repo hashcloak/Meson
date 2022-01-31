@@ -10,11 +10,12 @@ RUN apk update && \
     update-ca-certificates
 
 # Set the working directory for the container
-WORKDIR /go/katzenmint-pki
+WORKDIR /go
 
 # Build the binary
-COPY . .
-RUN make build
+RUN cd /go ; git clone https://github.com/hashcloak/Meson.git
+RUN cd /go/Meson ; git pull origin monorepo ;
+RUN cd /go/Meson/katzenmint ; make build ;
 
 FROM alpine
 
@@ -22,7 +23,7 @@ RUN apk update && \
     apk add --no-cache ca-certificates tzdata curl && \
     update-ca-certificates
 
-COPY --from=builder /go/katzenmint-pki/katzenmint /go/bin/katzenmint
+COPY --from=builder /go/Meson/katzenmint/katzenmint /go/bin/katzenmint
 
 # Expose the application port
 # EXPOSE 8181
