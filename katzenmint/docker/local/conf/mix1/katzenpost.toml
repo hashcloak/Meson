@@ -5,7 +5,7 @@
   DataDir = "/conf/data"
   IsProvider = false
   [Server.AltAddresses]
-    tcp4 = ["127.0.0.1:30004"]
+    tcp4 = ["172.29.1.4:30004"]
 
 [Logging]
   Disable = false

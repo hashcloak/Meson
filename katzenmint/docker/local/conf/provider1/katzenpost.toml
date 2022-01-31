@@ -5,7 +5,7 @@
   DataDir = "/conf/data"
   IsProvider = true
   [Server.AltAddresses]
-    tcp4 = ["127.0.0.1:30001"]
+    tcp4 = ["172.29.1.2:30001"]
 
 [Logging]
   Disable = false
@@ -15,7 +15,7 @@
 [Provider]
   EnableUserRegistrationHTTP = true
   UserRegistrationHTTPAddresses = ["0.0.0.0:40001"]
-  AdvertiseUserRegistrationHTTPAddresses = ["http://127.0.0.1:40001"]
+  AdvertiseUserRegistrationHTTPAddresses = ["http://172.29.1.2:40001"]
   BinaryRecipients = false
   CaseSensitiveRecipients = false
   RecipientDelimiter = ""
