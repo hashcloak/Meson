@@ -5,7 +5,7 @@
   DataDir = "/conf/data"
   IsProvider = true
   [Server.AltAddresses]
-    tcp4 = ["172.29.1.3:30002"]
+    tcp4 = ["127.0.0.1:30002", "172.29.1.3:30002"]
 
 [Logging]
   Disable = false
@@ -15,7 +15,7 @@
 [Provider]
   EnableUserRegistrationHTTP = true
   UserRegistrationHTTPAddresses = ["0.0.0.0:40002"]
-  AdvertiseUserRegistrationHTTPAddresses = ["http://172.29.1.3:40002"]
+  AdvertiseUserRegistrationHTTPAddresses = ["http://127.0.0.1:40002", "http://172.29.1.3:30002"]
   BinaryRecipients = false
   CaseSensitiveRecipients = false
   RecipientDelimiter = ""
@@ -74,8 +74,8 @@
     RPCAddress = "tcp://172.29.1.7:26657"
     [PKI.Voting.TrustOptions]
       Period = 600000000000
-      Height = 6
-      Hash = [111, 79, 24, 146, 56, 206, 242, 144, 21, 42, 77, 90, 132, 218, 83, 170, 171, 242, 45, 53, 44, 146, 96, 56, 92, 45, 63, 30, 156, 119, 73, 52]
+      Height = 7
+      Hash = [183, 34, 130, 109, 99, 28, 53, 125, 89, 0, 233, 255, 9, 7, 13, 181, 111, 153, 130, 49, 157, 146, 232, 51, 244, 43, 67, 234, 132, 209, 177, 230]
 
 [Management]
   Enable = true
