@@ -22,7 +22,7 @@
   PrimaryAddress = "tcp://127.0.0.1:20017"
   WitnessesAddresses = ["127.0.0.1:20017"]
   DatabaseName = "ping"
-  DatabaseDir = "/temp/meson/ping/db"
+  DatabaseDir = "/tmp/meson/ping/db"
   RPCAddress = "tcp://127.0.0.1:20017"
   [Katzenmint.TrustOptions]
     Period = 600000000000
