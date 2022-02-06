@@ -20,7 +20,7 @@ variable "instance_size" {
 
 variable "kservers" {
   description = "Desired katzenmint instance count"
-  default     = 3
+  default     = 4
 }
 
 variable "mservers" {
@@ -36,6 +36,6 @@ variable "pservers" {
 variable "tags" {
   description = "Tags for droplet"
   type = list
-  default = ["sentrynet", "sentrynet", "sentrynet", "mixnet", "mixnet", "mixnet", "providernet", "providernet"]
+  default = ["sentrynet", "sentrynet", "sentrynet", "sentrynet", "mixnet", "mixnet", "mixnet", "providernet", "providernet"]
 }
 

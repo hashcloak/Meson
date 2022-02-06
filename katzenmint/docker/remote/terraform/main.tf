@@ -29,7 +29,7 @@ variable "INSTANCE_SIZE" {
 
 variable "KSERVERS" {
   description = "Number of katzenint nodes in testnet"
-  default = "3"
+  default = "4"
 }
 
 variable "MSERVERS" {

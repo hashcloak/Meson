@@ -9,7 +9,7 @@
   gather_facts: yes
   vars:
     - service: katzenmint
-    - N: 3
+    - N: 4
   roles:
     - katzenmint/stop
     - katzenmint/config
@@ -22,7 +22,7 @@
   gather_facts: yes
   vars:
     - service: mix
-    - N: 5
+    - N: 6
   roles:
     - mixes/stop
     - mixes/config
@@ -35,7 +35,7 @@
   gather_facts: yes
   vars:
     - service: provider
-    - N: 7
+    - N: 8
   roles:
     - providers/stop
     - providers/config

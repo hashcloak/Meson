@@ -19,7 +19,7 @@
     dest: "/home/{{service}}/.{{service}}/"
     owner: "{{service}}"
     group: "{{service}}"
-  loop: [ 6, 7 ]
+  loop: [ 7, 8 ]
 
 - name: Change user folder to less permissive
   file: "path=/home/{{service}}/.{{service}} recurse=yes mode=0700"
