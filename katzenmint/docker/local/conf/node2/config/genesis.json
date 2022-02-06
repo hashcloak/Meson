@@ -27,7 +27,7 @@
         "type": "tendermint/PubKeyEd25519",
         "value": "JNKMyQSKaponf5LyaEwTOV1ktRoPF7CGhviaAhk9xxE="
       },
-      "power": "10",
+      "power": "1",
       "name": ""
     },
     {
@@ -36,7 +36,7 @@
         "type": "tendermint/PubKeyEd25519",
         "value": "cg3OTrElUFTimid4xm50x2D5RyXDTJcl99Z83nlwRoQ="
       },
-      "power": "10",
+      "power": "1",
       "name": ""
     },
     {
@@ -45,8 +45,17 @@
         "type": "tendermint/PubKeyEd25519",
         "value": "HLjoKlJCcjkEzvwqpyuqDTnNIWWFAHUBIc2hR5UGyAA="
       },
-      "power": "10",
+      "power": "1",
       "name": ""
+    },
+    {
+      "address": "28384B52A53E190902B18FD8D5C40BF05018A52D",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "E+nnXAbHiKgH9YQzsxZA5o3G+KdeW9eOmm+oo5j5uYw="
+      },
+      "power": "1",
+      "name": "node3"
     }
   ],
   "app_hash": ""
