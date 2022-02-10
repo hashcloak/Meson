@@ -64,6 +64,17 @@
       data_store = "/conf/data/memspool.storage"
       log_dir = "/conf/data"
 
+  [[Provider.CBORPluginKaetzchen]]
+    Capability = "gor"
+    Endpoint = "+gor"
+    Command = "/go/bin/Meson"
+    MaxConcurrency = 1
+    Disable = false
+    [Provider.CBORPluginKaetzchen.Config]
+      f = "/conf/provider-0/currency.toml"
+      log_dir = "/conf/provider-0"
+      log_level = "DEBUG"
+
 [PKI]
   [PKI.Voting]
     ChainID = "katzenmint-chain-71DRoz"
