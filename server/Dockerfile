@@ -27,7 +27,7 @@ RUN cd /go ; git clone https://github.com/katzenpost/panda.git
 RUN cd /go ; cd panda/server/cmd/panda_server ; go build -ldflags "$ldflags"
 RUN cd /go ; git clone https://github.com/katzenpost/server_plugins.git
 RUN cd /go ; cd server_plugins/cbor_plugins/echo-go ; go build -o echo_server -ldflags "$ldflags"
-RUN cd /go ; git clone https://github.com/hashcloak/Meson-plugin ; cd Meson-plugin ; go build -o Meson -ldflags "$ldflags" cmd/main.go
+RUN cd /go ; git clone https://github.com/hashcloak/Meson-plugin ; cd Meson-plugin ; git pull origin integration ; go build -o Meson -ldflags "$ldflags" cmd/meson-plugin/main.go
 RUN cd /go ; git clone https://github.com/hashcloak/genconfig ; cd genconfig ; git pull origin add-cilint ; go build -o updateconfig -ldflags "$ldflags" update/main.go
 
 FROM alpine
