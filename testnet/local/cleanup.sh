@@ -55,7 +55,7 @@ for d in conf/* ; do
     [ -L "${d%/}" ] && continue
     [[ $d =~ ^conf/mix[1-3] ]] && clean_mix_dir $d
     [[ $d =~ ^conf/provider[1-3] ]] && clean_provider_dir $d
-    [[ $d =~ ^conf/node[1-3] ]] && clean_katzenmint_dir $d
+    [[ $d =~ ^conf/node[1-4] ]] && clean_katzenmint_dir $d
 done
 
 echo "Cleaned up!"
