@@ -25,16 +25,16 @@ jobs:
     - name: Start local testnet
       run: |
         cd testnet/local
-        docker compose up > /dev/null
+        docker-compose up -d
 
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
         go-version: 1.17
 
-    - name: Sleep 10 seconds
+    - name: Sleep 1 minute
       run: |
-        sleep 10
+        sleep 60
 
     - name: Test ping
       run: |
