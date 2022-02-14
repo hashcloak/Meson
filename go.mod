@@ -62,7 +62,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/katzenpost/chacha20 v0.0.0-20190910113340-7ce890d6a556 // indirect
 	github.com/katzenpost/noise v0.0.2 // indirect
-	github.com/katzenpost/server v0.0.12 // indirect
+	github.com/katzenpost/server v0.0.12
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
