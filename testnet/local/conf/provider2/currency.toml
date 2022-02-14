@@ -1,6 +1,6 @@
 Ticker = "tbnb"
 RPCUser = "rpcuser"
 RPCPass = "rpcpassword"
-RPCURL = "https://tbinance.hashcloak.com"
+RPCURL = "https://data-seed-prebsc-1-s1.binance.org:8545"
 LogDir = "/conf/data"
 LogLevel = "DEBUG"
