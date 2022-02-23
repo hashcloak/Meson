@@ -1,7 +1,0 @@
-TendermintConfigPath="/chain/config/config.toml"
-DBPath="/chain/kdata"
-Layers=1
-MinNodesPerLayer=1
-
-[Parameters]
-  Mu=0.1
