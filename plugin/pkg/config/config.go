@@ -22,7 +22,7 @@ import (
 	"io/ioutil"
 
 	"github.com/BurntSushi/toml"
-	"github.com/hashcloak/Meson-plugin/pkg/chain"
+	"github.com/hashcloak/Meson/plugin/pkg/chain"
 )
 
 // Config is the configuration for this currency transaction proxy service.

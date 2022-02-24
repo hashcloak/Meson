@@ -32,7 +32,7 @@ def main():
     )
 
     # The attempts are needed until the stability of the mixnet gets improved.
-    # This issue is a step in that direction: https://github.com/hashcloak/Meson-plugin/issues/29
+    # This issue is a step in that direction: https://github.com/hashcloak/Meson/plugin/issues/29
     attempts = CONFIG["TEST"]["ATTEMPTS"]
     while True:
         log("Attempt {}: {}".format(attempts, cmd))

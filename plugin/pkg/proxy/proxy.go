@@ -27,9 +27,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/hashcloak/Meson-plugin/pkg/chain"
-	"github.com/hashcloak/Meson-plugin/pkg/common"
-	"github.com/hashcloak/Meson-plugin/pkg/config"
+	"github.com/hashcloak/Meson/plugin/pkg/chain"
+	"github.com/hashcloak/Meson/plugin/pkg/common"
+	"github.com/hashcloak/Meson/plugin/pkg/config"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"
 )

@@ -27,8 +27,8 @@ import (
 	"path"
 	"syscall"
 
-	"github.com/hashcloak/Meson-plugin/pkg/config"
-	"github.com/hashcloak/Meson-plugin/pkg/proxy"
+	"github.com/hashcloak/Meson/plugin/pkg/config"
+	"github.com/hashcloak/Meson/plugin/pkg/proxy"
 	"github.com/katzenpost/server/cborplugin"
 	"github.com/ugorji/go/codec"
 	"gopkg.in/op/go-logging.v1"

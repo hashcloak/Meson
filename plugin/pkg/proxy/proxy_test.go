@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/hashcloak/Meson-plugin/pkg/common"
-	"github.com/hashcloak/Meson-plugin/pkg/config"
+	"github.com/hashcloak/Meson/plugin/pkg/common"
+	"github.com/hashcloak/Meson/plugin/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 
