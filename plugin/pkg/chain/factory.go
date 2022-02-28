@@ -19,10 +19,14 @@ func GetChain(ticker string) (IChain, error) {
 		return &ETHChain{ticker: "RIN", chainID: 4}, nil
 	case "KOT":
 		return &ETHChain{ticker: "KOT", chainID: 6}, nil
-	case "TBNB":
+	case "TBC":
 		return &CosmosChain{ticker: "TBNB", chainID: 0}, nil
-	case "BNB":
+	case "BC":
 		return &CosmosChain{ticker: "BNB", chainID: 1}, nil
+	case "TBSC":
+		return &ETHChain{ticker: "TBNB", chainID: 97}, nil
+	case "BSC":
+		return &ETHChain{ticker: "BNB", chainID: 56}, nil
 	default:
 		return nil, fmt.Errorf("Unsupported chain")
 	}

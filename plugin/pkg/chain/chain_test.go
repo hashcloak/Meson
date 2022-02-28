@@ -62,21 +62,21 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 }
 
 func TestCosmosChainURLEmpty(t *testing.T) {
-	chainInterface, _ := GetChain("TBNB")
+	chainInterface, _ := GetChain("TBC")
 	_, err := chainInterface.NewRequest("", "")
 	if err == nil {
 		t.Fatalf("Should return an error when passed empty URL")
 	}
 }
 func TestCosmosChainBody(t *testing.T) {
-	chainInterface, _ := GetChain("TBNB")
+	chainInterface, _ := GetChain("TBC")
 	postRequest, _ := chainInterface.NewRequest("URL", "")
 	if len(postRequest.Body) > 0 {
 		t.Fatalf("Body should be empty for cosmos request")
 	}
 }
 func TestCosmosChainURLAppend(t *testing.T) {
-	chainInterface, _ := GetChain("TBNB")
+	chainInterface, _ := GetChain("TBC")
 	inputTxn := "EXPECTED_TXN"
 	inputURL := "URL"
 	expectedResult := inputURL + broadcastTxAsync + inputTxn
@@ -86,7 +86,7 @@ func TestCosmosChainURLAppend(t *testing.T) {
 	}
 }
 func TestCosmosChainURL(t *testing.T) {
-	chainInterface, _ := GetChain("TBNB")
+	chainInterface, _ := GetChain("TBC")
 	expectedURL := "EXPECTED_URL"
 	postRequest, _ := chainInterface.NewRequest(expectedURL, "")
 	if postRequest.URL != expectedURL+broadcastTxAsync {
