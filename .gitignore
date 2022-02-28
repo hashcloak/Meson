@@ -20,6 +20,7 @@ site
 
 # katzenmint
 chain
+!plugin/pkg/chain
 testdb
 *.db
 *_db
