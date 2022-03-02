@@ -29,13 +29,22 @@ import (
 
 	"github.com/BurntSushi/toml"
 	currencyConf "github.com/hashcloak/Meson-plugin/pkg/config"
+	kConfig "github.com/hashcloak/Meson/katzenmint/config"
 	sConfig "github.com/hashcloak/Meson/server/config"
-	aConfig "github.com/katzenpost/authority/nonvoting/server/config"
 	"github.com/katzenpost/core/crypto/ecdh"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	"github.com/tendermint/tendermint/light"
 	rpchttp "github.com/tendermint/tendermint/rpc/client/http"
+
+	cfg "github.com/tendermint/tendermint/config"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	tmrand "github.com/tendermint/tendermint/libs/rand"
+	"github.com/tendermint/tendermint/p2p"
+	"github.com/tendermint/tendermint/privval"
+	"github.com/tendermint/tendermint/types"
+	tmtime "github.com/tendermint/tendermint/types/time"
 )
 
 const (
@@ -43,6 +52,10 @@ const (
 	nrNodes              = 6
 	nrProviders          = 2
 	minimumNodesPerLayer = 2
+	nValidators          = 4
+	dirPerm              = 0700
+	initialHeight        = 0
+	keyType              = types.ABCIPubKeyTypeEd25519
 )
 
 var currencyList = []*currencyConf.Config{
@@ -73,7 +86,6 @@ type katzenpost struct {
 	authAddress string
 	currency    int
 
-	authConfig      *aConfig.Config
 	authIdentity    *eddsa.PrivateKey
 	authPubIdentity string
 
@@ -83,10 +95,9 @@ type katzenpost struct {
 	providerIdx int
 
 	recipients       map[string]*ecdh.PublicKey
-	voting           bool
 	nrProviders      int
 	nrNodes          int
-	vRPCURL          string
+	nValidators      int
 	trustOptions     light.TrustOptions
 	chainID          string
 	onlyMixNode      bool
@@ -191,7 +202,7 @@ func (s *katzenpost) genProviderConfig(name string) (cfg *sConfig.Config, err er
 	cfg.Provider.CBORPluginKaetzchen = append(cfg.Provider.CBORPluginKaetzchen, &mesonPlugin)
 
 	// generate currency.toml
-	_ = os.Mkdir(filepath.Join(s.outputDir, identifier(cfg)), 0700)
+	_ = os.Mkdir(filepath.Join(s.outputDir, identifier(cfg)), dirPerm)
 	fileName := filepath.Join(
 		s.outputDir, identifier(cfg), "currency.toml",
 	)
@@ -220,44 +231,35 @@ func (s *katzenpost) genMixNodeConfig(name string) (cfg *sConfig.Config, err err
 	}
 
 	cfg = new(sConfig.Config)
-
-	if s.voting {
-		cfg.PKI = &sConfig.PKI{
-			Voting: &sConfig.Voting{
-				ChainID:            s.chainID,
-				TrustOptions:       s.trustOptions,
-				PrimaryAddress:     s.vRPCURL,
-				WitnessesAddresses: []string{s.vRPCURL},
-				DatabaseName:       fmt.Sprintf("%s-db", name),
-				DatabaseDir:        filepath.Join(s.outputDir, name),
-				RPCAddress:         s.vRPCURL,
-			},
-		}
-	} else {
-		cfg.PKI = new(sConfig.PKI)
-		cfg.PKI.Nonvoting = new(sConfig.Nonvoting)
-		cfg.PKI.Nonvoting.Address = fmt.Sprintf(s.authAddress+":%d", basePort)
-		idKey := []byte(s.authPubIdentity)
-		if s.authIdentity != nil {
-			idKey, err = s.authIdentity.PublicKey().MarshalText()
-			if err != nil {
-				return nil, err
-			}
-		}
-		cfg.PKI.Nonvoting.PublicKey = string(idKey)
+	// PKI section
+	cfg.PKI = &sConfig.PKI{
+		Voting: &sConfig.Voting{
+			ChainID:            s.chainID,
+			TrustOptions:       s.trustOptions,
+			PrimaryAddress:     s.authAddress,
+			WitnessesAddresses: []string{s.authAddress},
+			DatabaseName:       fmt.Sprintf("%s-db", name),
+			DatabaseDir:        filepath.Join(s.outputDir, name),
+			RPCAddress:         s.authAddress,
+		},
 	}
 	// Server section.
 	cfg.Server = new(sConfig.Server)
 	cfg.Server.Identifier = name
-	cfg.Server.Addresses = []string{fmt.Sprintf("0.0.0.0:%d", s.lastPort)}
+	cfg.Server.Addresses = []string{
+		fmt.Sprintf("0.0.0.0:%d", s.lastPort),
+		// fmt.Sprintf(s.publicIPAddress+":%d", s.lastPort)
+	}
 	cfg.Server.AltAddresses = map[string][]string{
-		"tcp4": []string{fmt.Sprintf(s.publicIPAddress+":%d", s.lastPort)},
+		"tcp4": {
+			fmt.Sprintf(s.publicIPAddress+":%d", s.lastPort),
+		},
 	}
 	cfg.Server.OnlyAdvertiseAltAddresses = true
 	cfg.Server.DataDir = filepath.Join(s.baseDir, name)
 	cfg.Server.IsProvider = false
 
-	_ = os.Mkdir(cfg.Server.DataDir, 0700)
+	_ = os.Mkdir(cfg.Server.DataDir, dirPerm)
 
 	// Debug section.
 	cfg.Debug = new(sConfig.Debug)
@@ -282,7 +284,7 @@ func (s *katzenpost) genMixNodeConfig(name string) (cfg *sConfig.Config, err err
 	return cfg, cfg.FixupAndValidate()
 }
 
-func (s *katzenpost) genNodeConfig(isProvider bool, isVoting bool) error {
+func (s *katzenpost) genNodeConfig(isProvider bool) error {
 
 	var err error
 	var cfg *sConfig.Config
@@ -298,7 +300,7 @@ func (s *katzenpost) genNodeConfig(isProvider bool, isVoting bool) error {
 		name = s.nameOfSingleNode
 	}
 
-	_ = os.Mkdir(filepath.Join(s.outputDir, name), 0700)
+	_ = os.Mkdir(filepath.Join(s.outputDir, name), dirPerm)
 
 	if isProvider {
 		cfg, err = s.genProviderConfig(name)
@@ -319,89 +321,8 @@ func (s *katzenpost) genNodeConfig(isProvider bool, isVoting bool) error {
 	return nil
 }
 
-func (s *katzenpost) genAuthConfig() error {
-	authLogFile := s.baseDir + "/" + "authority.log"
-	cfg := new(aConfig.Config)
-
-	// Authority section.
-	cfg.Authority = new(aConfig.Authority)
-	cfg.Authority.Addresses = []string{fmt.Sprintf("0.0.0.0:%d", basePort)}
-	cfg.Authority.DataDir = filepath.Join(s.baseDir)
-
-	// Logging section.
-	cfg.Logging = new(aConfig.Logging)
-	cfg.Logging.File = authLogFile
-	cfg.Logging.Level = "DEBUG"
-
-	name := "nonvoting"
-	_ = os.Mkdir(filepath.Join(s.outputDir, name), 0700)
-	// Generate keys
-	priv := filepath.Join(s.outputDir, name, "identity.private.pem")
-	public := filepath.Join(s.outputDir, name, "identity.public.pem")
-	idKey, err := eddsa.Load(priv, public, rand.Reader)
-	s.authIdentity = idKey
-	s.authPubIdentity = idKey.PublicKey().String()
-	if err != nil {
-		return err
-	}
-
-	// Debug section.
-	cfg.Debug = new(aConfig.Debug)
-	cfg.Debug.MinNodesPerLayer = minimumNodesPerLayer
-	if cfg.Debug.MinNodesPerLayer > s.nrNodes {
-		return fmt.Errorf("Not enough nodes to fill up each layer")
-	}
-	cfg.Debug.Layers = s.nrNodes / cfg.Debug.MinNodesPerLayer
-	if err := cfg.FixupAndValidate(); err != nil {
-		return err
-	}
-	s.authConfig = cfg
-	return nil
-}
-
-func (s *katzenpost) generateWhitelist() ([]*aConfig.Node, []*aConfig.Node, error) {
-	mixes := []*aConfig.Node{}
-	providers := []*aConfig.Node{}
-	for _, nodeCfg := range s.nodeConfigs {
-		if nodeCfg.Server.IsProvider {
-			provider := &aConfig.Node{
-				Identifier:  nodeCfg.Server.Identifier,
-				IdentityKey: s.spk(nodeCfg),
-			}
-			providers = append(providers, provider)
-			continue
-		}
-		mix := &aConfig.Node{
-			IdentityKey: s.spk(nodeCfg),
-		}
-		mixes = append(mixes, mix)
-	}
-
-	return providers, mixes, nil
-
-}
-
-func (s *katzenpost) generateNonVotingMixnetConfigs() {
-	if err := s.genAuthConfig(); err != nil {
-		log.Fatalf("Failed to generate authority config: %v", err)
-	}
-
-	s.generateNodesOfMixnet()
-	// The node lists.
-	if providers, mixes, err := s.generateWhitelist(); err == nil {
-		s.authConfig.Mixes = mixes
-		s.authConfig.Providers = providers
-	} else {
-		log.Fatalf("Failed to generateWhitelist with %s", err)
-	}
-
-	if err := saveCfg(s.outputDir, s.authConfig); err != nil {
-		log.Fatalf("Failed to saveCfg of authority with %s", err)
-	}
-}
-
 func (s *katzenpost) fetchKatzenmintInfo() error {
-	c, err := rpchttp.New(s.vRPCURL, "/websocket")
+	c, err := rpchttp.New(s.authAddress, "/websocket")
 	if err != nil {
 		return err
 	}
@@ -431,43 +352,182 @@ func (s *katzenpost) fetchKatzenmintInfo() error {
 }
 
 func (s *katzenpost) generateVotingMixnetConfigs() {
-	if err := s.fetchKatzenmintInfo(); err != nil {
-		log.Fatalf("fetchKatzenmintInfo failed: %s", err)
+	if s.authAddress != "" {
+		if err := s.fetchKatzenmintInfo(); err != nil {
+			log.Fatalf("fetchKatzenmintInfo failed: %s", err)
+		}
 	}
 
 	s.generateNodesOfMixnet()
-	// TODO: update katzenmint config?
 }
 
 func (s *katzenpost) generateNodesOfMixnet() {
+	// Generate the katzenmint configs.
+	if s.authAddress == "" {
+		for i := 0; i < s.nValidators; i++ {
+			if err := s.genValidatorConfig(i); err != nil {
+				log.Fatalf("Failed to generate katzenmint config: %v", err)
+			}
+		}
+	}
+
 	// Generate the provider configs.
 	for i := 0; i < s.nrProviders; i++ {
-		if err := s.genNodeConfig(true, s.voting); err != nil {
+		if err := s.genNodeConfig(true); err != nil {
 			log.Fatalf("Failed to generate provider config: %v", err)
 		}
 	}
 
 	// Generate the node configs.
 	for i := 0; i < s.nrNodes; i++ {
-		if err := s.genNodeConfig(false, s.voting); err != nil {
+		if err := s.genNodeConfig(false); err != nil {
 			log.Fatalf("Failed to generate node config: %v", err)
 		}
 	}
+}
+
+func (s *katzenpost) genValidatorConfig(index int) error {
+	tmConfig := cfg.DefaultConfig()
+
+	genVals := make([]types.GenesisValidator, s.nValidators)
+	for i := 0; i < s.nValidators; i++ {
+		nodeDirName := fmt.Sprintf("auth-%d", i)
+		nodeDir := filepath.Join(s.outputDir, nodeDirName)
+		tmConfig.SetRoot(nodeDir)
+
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), dirPerm)
+		if err != nil {
+			_ = os.RemoveAll(nodeDir)
+			return err
+		}
+		err = os.MkdirAll(filepath.Join(nodeDir, "data"), dirPerm)
+		if err != nil {
+			_ = os.RemoveAll(nodeDir)
+			return err
+		}
+
+		if err := initFilesWithConfig(tmConfig); err != nil {
+			return err
+		}
+
+		pvKeyFile := filepath.Join(nodeDir, tmConfig.BaseConfig.PrivValidatorKey)
+		pvStateFile := filepath.Join(nodeDir, tmConfig.BaseConfig.PrivValidatorState)
+		pv := privval.LoadFilePV(pvKeyFile, pvStateFile)
+
+		pubKey, err := pv.GetPubKey()
+		if err != nil {
+			return fmt.Errorf("can't get pubkey: %w", err)
+		}
+		genVals[i] = types.GenesisValidator{
+			Address: pubKey.Address(),
+			PubKey:  pubKey,
+			Power:   1,
+			Name:    nodeDirName,
+		}
+	}
+
+	// Generate genesis doc from generated validators
+	chainID := "chain-" + tmrand.Str(6)
+	genDoc := &types.GenesisDoc{
+		ChainID:         chainID,
+		GenesisTime:     tmtime.Now(),
+		InitialHeight:   initialHeight,
+		Validators:      genVals,
+		ConsensusParams: types.DefaultConsensusParams(),
+	}
+
+	// Write genesis file.
+	for i := 0; i < nValidators; i++ {
+		nodeDirName := fmt.Sprintf("auth-%d", i)
+		nodeDir := filepath.Join(s.outputDir, nodeDirName)
+		if err := genDoc.SaveAs(filepath.Join(nodeDir, tmConfig.BaseConfig.Genesis)); err != nil {
+			_ = os.RemoveAll(nodeDir)
+			return err
+		}
+	}
+
+	// Overwrite default config.
+	for i := 0; i < nValidators; i++ {
+		nodeDirName := fmt.Sprintf("auth-%d", i)
+		nodeDir := filepath.Join(s.outputDir, nodeDirName)
+		tmConfig.SetRoot(nodeDir)
+		tmConfig.P2P.AllowDuplicateIP = true
+		tmConfig.Moniker = nodeDirName
+		cfgPath := filepath.Join(nodeDir, "config", "config.toml")
+		cfg.WriteConfigFile(cfgPath, tmConfig)
+
+		katConfig := kConfig.DefaultConfig()
+		katConfig.DBPath = filepath.Join(nodeDir, "kdata")
+		katConfig.TendermintConfigPath = cfgPath
+		kConfig.SaveFile(filepath.Join(s.outputDir, nodeDirName, "katzenmint.toml"), katConfig)
+	}
+
+	log.Printf("initialized katzenmint of %v", index)
+	s.chainID = chainID
+	s.trustOptions = light.TrustOptions{
+		Period: 1,
+		Height: 1,
+		Hash:   make([]byte, tmhash.Size),
+	}
+	s.authAddress = tmConfig.RPC.ListenAddress
+	return nil
+}
+
+func initFilesWithConfig(config *cfg.Config) error {
+	// private validator
+	privValKeyFile := config.PrivValidatorKeyFile()
+	privValStateFile := config.PrivValidatorStateFile()
+	var pv *privval.FilePV
+	if !tmos.FileExists(privValKeyFile) {
+		pv = privval.GenFilePV(privValKeyFile, privValStateFile)
+		pv.Save()
+	}
+
+	nodeKeyFile := config.NodeKeyFile()
+	if !tmos.FileExists(nodeKeyFile) {
+		if _, err := p2p.LoadOrGenNodeKey(nodeKeyFile); err != nil {
+			return err
+		}
+	}
+
+	// genesis file
+	genFile := config.GenesisFile()
+	if !tmos.FileExists(genFile) {
+		genDoc := types.GenesisDoc{
+			ChainID:         fmt.Sprintf("test-chain-%v", tmrand.Str(6)),
+			GenesisTime:     tmtime.Now(),
+			ConsensusParams: types.DefaultConsensusParams(),
+		}
+		pubKey, err := pv.GetPubKey()
+		if err != nil {
+			return fmt.Errorf("can't get pubkey: %w", err)
+		}
+		genDoc.Validators = []types.GenesisValidator{{
+			Address: pubKey.Address(),
+			PubKey:  pubKey,
+			Power:   10,
+		}}
+
+		if err := genDoc.SaveAs(genFile); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func main() {
 	var err error
 	nrNodes := flag.Int("n", nrNodes, "Number of mixes.")
 	nrProviders := flag.Int("p", nrProviders, "Number of providers.")
-	voting := flag.Bool("v", false, "Generate voting configuration.")
-	vRPCURL := flag.String("vrpc", "", "Voting RPC URL of katzenmint.")
+	nValidators := flag.Int("v", nValidators, "Number of katzenmint validators.")
+	authAddress := flag.String("a", "", "Katzenmint JSONRPC URI (when set this value, application will fetch PKI info from remote server).")
 	goBinDir := flag.String("g", "/go/bin", "Path to golang bin.")
 	baseDir := flag.String("b", "/conf", "Path to for DataDir in the config files.")
 	outputDir := flag.String("o", "./output", "Output path of the generate config files.")
-	authAddress := flag.String("a", "127.0.0.1", "Non-voting authority public ip address.")
 	mixNodeConfig := flag.Bool("node", false, "Only generate a mix node config.")
 	providerNodeConfig := flag.Bool("provider", false, "Only generate a provider node config.")
-	publicIPAddress := flag.String("ipv4", "", "The public ipv4 address of the single node.")
+	publicIPAddress := flag.String("ipv4", "127.0.0.1", "The public ipv4 address of the single node.")
 	name := flag.String("name", "", "The name of the node.")
 	authPubIdentity := flag.String("authID", "", "Authority public ID.")
 	flag.Parse()
@@ -484,17 +544,16 @@ func main() {
 	s.outputDir = outDir
 	s.goBinDir = *goBinDir
 	s.baseDir = *baseDir
-	err = os.Mkdir(s.outputDir, 0700)
+	err = os.Mkdir(s.outputDir, dirPerm)
 	if err != nil && err.(*os.PathError).Err.Error() != "file exists" {
 		fmt.Fprintf(os.Stderr, "Failed to create output directory: %v\n", err)
 		os.Exit(-1)
 	}
 
 	s.authAddress = *authAddress
-	s.voting = *voting
 	s.nrProviders = *nrProviders
 	s.nrNodes = *nrNodes
-	s.vRPCURL = *vRPCURL
+	s.nValidators = *nValidators
 	s.onlyMixNode = *mixNodeConfig
 	s.onlyProviderNode = *providerNodeConfig
 	s.publicIPAddress = *publicIPAddress
@@ -514,24 +573,20 @@ func main() {
 			fmt.Fprintf(os.Stderr, "Need to provide an authority identity\n")
 			os.Exit(-1)
 		}
-		if s.publicIPAddress == "" {
-			fmt.Fprintf(os.Stderr, "Ip address not provided to provide a name with the -name flag\n")
+		if s.authAddress == "" {
+			fmt.Fprintf(os.Stderr, "Need to provide an katzenmint server\n")
 			os.Exit(-1)
 		}
-		err = s.genNodeConfig(s.onlyProviderNode, *voting)
+		if err := s.fetchKatzenmintInfo(); err != nil {
+			log.Fatalf("fetchKatzenmintInfo failed: %s", err)
+		}
+		err = s.genNodeConfig(s.onlyProviderNode)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			os.Exit(-1)
 		}
 	} else {
-		if s.publicIPAddress == "" {
-			s.publicIPAddress = s.authAddress
-		}
-		if *voting {
-			s.generateVotingMixnetConfigs()
-		} else {
-			s.generateNonVotingMixnetConfigs()
-		}
+		s.generateVotingMixnetConfigs()
 	}
 
 	for _, v := range s.nodeConfigs {
@@ -546,8 +601,6 @@ func configName(cfg interface{}) string {
 	switch cfg.(type) {
 	case *sConfig.Config:
 		return "katzenpost.toml"
-	case *aConfig.Config:
-		return "authority.toml"
 	default:
 		log.Fatalf("identifier() passed unexpected type")
 		return ""
@@ -558,8 +611,6 @@ func identifier(cfg interface{}) string {
 	switch cfg.(type) {
 	case *sConfig.Config:
 		return cfg.(*sConfig.Config).Server.Identifier
-	case *aConfig.Config:
-		return "nonvoting"
 	default:
 		log.Fatalf("identifier() passed unexpected type")
 		return ""
@@ -567,7 +618,7 @@ func identifier(cfg interface{}) string {
 }
 
 func saveCfg(outputDir string, cfg interface{}) error {
-	_ = os.Mkdir(filepath.Join(outputDir, identifier(cfg)), 0700)
+	_ = os.Mkdir(filepath.Join(outputDir, identifier(cfg)), dirPerm)
 
 	fileName := filepath.Join(
 		outputDir, identifier(cfg), configName(cfg),
