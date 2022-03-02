@@ -10,7 +10,7 @@ CONFIG = {
             "SUBDIRECTORY": "katzenmint",
             "BRANCH": "monorepo",
             "GITHASH": "",
-            "NAMEDTAG": "",
+            "NAMEDTAG": "latest",
             "HASHTAG": "",
         },
         "SERVER" : {
@@ -19,7 +19,7 @@ CONFIG = {
             "SUBDIRECTORY": "server",
             "BRANCH": "monorepo",
             "GITHASH": "",
-            "NAMEDTAG": "",
+            "NAMEDTAG": "latest",
             "HASHTAG": "",
         },
     },
@@ -103,7 +103,8 @@ def setup_config() -> dict:
     for key, repo in CONFIG["REPOS"].items():
         hashValue = localHash
         repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
-        repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
         repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]
+        if len(repo["NAMEDTAG"]) == 0:
+            repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
 
     return CONFIG

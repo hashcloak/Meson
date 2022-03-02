@@ -101,7 +101,7 @@ def main():
 
             dockerFile = path.join(repoPath, "Dockerfile")
             build_container(repo["CONTAINER"], repo["HASHTAG"], dockerFile, repoPath)
-            # retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
+            retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
 
 if __name__ == "__main__":
     main()
