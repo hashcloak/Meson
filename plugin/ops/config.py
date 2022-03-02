@@ -5,24 +5,19 @@ from subprocess import check_output
 CONFIG = {
     "REPOS": {
         "AUTH": {
-            "CONTAINER": "hashcloak/authority",
-            "REPOSITORY": "https://github.com/katzenpost/authority",
-            "BRANCH": "master",
+            "CONTAINER": "katzenmint/pki",
+            "REPOSITORY": "https://github.com/hashcloak/Meson",
+            "SUBDIRECTORY": "katzenmint",
+            "BRANCH": "monorepo",
             "GITHASH": "",
             "NAMEDTAG": "",
             "HASHTAG": "",
         },
         "SERVER" : {
-            "CONTAINER": "hashcloak/server",
-            "REPOSITORY": "https://github.com/katzenpost/server",
-            "BRANCH": "master",
-            "GITHASH": "",
-            "NAMEDTAG": "",
-            "HASHTAG": "",
-        },
-        "MESON": {
-            "CONTAINER": "hashcloak/meson",
-            "BRANCH": "",
+            "CONTAINER": "meson/server",
+            "REPOSITORY": "https://github.com/hashcloak/Meson",
+            "SUBDIRECTORY": "server",
+            "BRANCH": "monorepo",
             "GITHASH": "",
             "NAMEDTAG": "",
             "HASHTAG": "",
@@ -39,7 +34,8 @@ CONFIG = {
         "ATTEMPTS": 3,
     },
     "LOG": "",
-    "WARPED": "true",
+    "WARPED": True,
+    "WITHOUTCACHE": True,
     "BUILD": "",
 }
 
@@ -103,18 +99,9 @@ def setup_config() -> dict:
         set_nested_value(CONFIG, value, envVar.split("_"))
 
     localBranch, localHash = get_local_repo_info()
-    if CONFIG["REPOS"]["MESON"]["BRANCH"] == "":
-        CONFIG["REPOS"]["MESON"]["BRANCH"] = localBranch
-
-    executingInMasterPluginRepo = CONFIG["REPOS"]["MESON"]["BRANCH"] == "master" and getenv("TRAVIS_REPO_SLUG") == "hashcloak/Meson-plugin"
-    if CONFIG["WARPED"] == "false" or executingInMasterPluginRepo:
-        CONFIG["WARPED"] = ""
 
     for key, repo in CONFIG["REPOS"].items():
         hashValue = localHash
-        if key != "MESON":
-            hashValue = get_remote_git_hash(repo["REPOSITORY"], repo["BRANCH"])
-
         repo["GITHASH"] = repo["GITHASH"] if repo["GITHASH"] else hashValue
         repo["NAMEDTAG"] = "warped_"+repo["BRANCH"] if CONFIG["WARPED"] else repo["BRANCH"]
         repo["HASHTAG"] = "warped_"+repo["GITHASH"] if CONFIG["WARPED"] else repo["GITHASH"]

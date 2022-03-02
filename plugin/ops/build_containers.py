@@ -1,4 +1,4 @@
-from os import path, curdir
+from os import path, curdir, getcwd
 from subprocess import run
 from tempfile import gettempdir
 import urllib.request
@@ -35,15 +35,20 @@ def compare_remote_containers(containerOne: str, containerTwo: str) -> bool:
 
 def build_container(container: str, tag: str, dockerFile: str, path: str) -> None:
     log("Building {}:{}".format(container, tag))
+    dockerTag = "{}:{}".format(container, tag)
     args = [
         "docker",
         "build",
         "-t",
-        "{}:{}".format(container, tag),
+        dockerTag,
         "-f",
         dockerFile,
         path,
     ]
+    if CONFIG["WITHOUTCACHE"]:
+        args.extend([
+            "--no-cache"
+        ])
     if CONFIG["WARPED"]:
         args.extend([
             "--build-arg",
@@ -83,6 +88,7 @@ def main():
             "==" if areEqual else "!=",
             repo["NAMEDTAG"],
         ))
+        # print()
 
         if areEqual and not CONFIG["BUILD"]:
             log("Pulling container: {}:{}".format(repo["CONTAINER"], repo["NAMEDTAG"]))
@@ -91,18 +97,11 @@ def main():
             except:
                 log("Failed in pulling containers from registry. Check that you are pulling the right tagss or check that the containers exist in the registry", True)
         else:
-            if "meson" in repo["CONTAINER"]:
-                repoPath = curdir
-            else:
-                repoPath = path.join(gettempdir(), repo["CONTAINER"].split("/")[-1])
-                checkout_repo(repoPath, repo["REPOSITORY"], repo["GITHASH"])
+            repoPath = path.join(path.dirname(path.dirname(path.dirname(path.realpath(__file__)))), repo["SUBDIRECTORY"])
 
             dockerFile = path.join(repoPath, "Dockerfile")
-            if "authority" in repo["CONTAINER"]:
-                dockerFile = path.join(repoPath, "Dockerfile.nonvoting")
-
             build_container(repo["CONTAINER"], repo["HASHTAG"], dockerFile, repoPath)
-            retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
+            # retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
 
 if __name__ == "__main__":
     main()

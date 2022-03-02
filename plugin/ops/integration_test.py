@@ -10,25 +10,14 @@ from utils import checkout_repo, log
 CONFIG = setup_config()
 
 def main():
-    if not getenv("TEST_PKS_ETHEREUM"):
-        log("Ethereum private key not set. Set with TEST_PKS_ETHEREUM environment variables", True, True)
-        exit(1)
-
-    repoPath = path.join(gettempdir(), "meson-client")
-    confDir = path.join(gettempdir(), "meson-testnet")
-    checkout_repo(
-        repoPath,
-        "https://github.com/hashcloak/Meson-client",
-        CONFIG["TEST"]["CLIENTCOMMIT"]
-    )
+    repoPath = path.dirname(path.dirname(path.dirname(path.realpath(__file__))))
+    confDir = path.dirname(path.dirname(path.dirname(path.realpath(__file__))))
 
     warpedBuildFlags='-ldflags "-X github.com/katzenpost/core/epochtime.WarpedEpoch=true -X github.com/katzenpost/server/internal/pki.WarpedEpoch=true"'
-    cmd = "go run {warped} {testGo} -c {client} -k {currency} -pk {pk}".format(
+    cmd = "go run {warped} {testGo} -c {client} -s ping".format(
         warped=warpedBuildFlags if CONFIG["WARPED"] else "",
-        testGo=path.join(repoPath, "integration", "tests.go"),
-        client=path.join(confDir, "client.toml"),
-        currency=path.join(confDir, "provider-0", "currency.toml"),
-        pk=CONFIG["TEST"]["PKS"]["ETHEREUM"]
+        testGo=path.join(repoPath, "ping", "main.go"),
+        client=path.join(confDir, "ping", "client.toml"),
     )
 
     # The attempts are needed until the stability of the mixnet gets improved.
@@ -43,6 +32,7 @@ def main():
             log(line, output.returncode == 1)
 
         if output.returncode == 0:
+            log(line, output.returncode)
             exit(0)
 
         attempts -= 1
