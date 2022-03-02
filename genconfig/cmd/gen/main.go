@@ -459,7 +459,7 @@ func (s *katzenpost) genValidatorConfig(index int) error {
 		katConfig := kConfig.DefaultConfig()
 		katConfig.DBPath = filepath.Join(nodeDir, "kdata")
 		katConfig.TendermintConfigPath = cfgPath
-		kConfig.SaveFile(filepath.Join(s.outputDir, nodeDirName, "katzenmint.toml"), katConfig)
+		kConfig.WriteConfigFile(filepath.Join(s.outputDir, nodeDirName, "katzenmint.toml"), katConfig)
 	}
 
 	log.Printf("initialized katzenmint of %v", index)

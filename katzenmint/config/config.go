@@ -139,8 +139,8 @@ func LoadFile(f string) (*Config, error) {
 	return Load(b)
 }
 
-// SaveFile saves the config to the provided file
-func SaveFile(f string, config *Config) error {
+// WriteConfigFile saves the config to the provided file
+func WriteConfigFile(f string, config *Config) error {
 	file, err := os.Create(f)
 	if err != nil {
 		return err

@@ -202,7 +202,7 @@ func main() {
 			os.Exit(2)
 		}
 		kConfig.Membership = true
-		err = kcfg.SaveFile(configFile, kConfig)
+		err = kcfg.WriteConfigFile(configFile, kConfig)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error saving config: %v\n", err)
 		}
