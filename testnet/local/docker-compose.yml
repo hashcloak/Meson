@@ -190,6 +190,14 @@ services:
       katzenmint_net:
         ipv4_address: 172.29.1.128
 
+  grafana:
+    image: grafana/grafana:8.4.3
+    ports:
+      - 3000:3000
+    networks:
+      katzenmint_net:
+        ipv4_address: 172.29.1.129
+
 networks:
   katzenmint_net:
     ipam:
