@@ -1,7 +1,7 @@
 GOPATH=$(shell go env GOPATH)
 GOTAGS="badgerdb"
 VERSION:=$(shell git describe --tags 2>/dev/null)
-BUILDTIME=$(shell date +"%d %b %Y")
+BUILDTIME=$(shell date +"%d-%b-%Y")
 LD_FLAGS=
 ifneq ($(VERSION), )
 LD_FLAGS:= -X "github.com/hashcloak/Meson/katzenmint.protocolVersion=$(VERSION)"
