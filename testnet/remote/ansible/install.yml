@@ -26,3 +26,12 @@
     - service: provider
   roles:
     - providers/install
+
+- hosts: monitor
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: monitor
+  roles:
+    - monitor/install
