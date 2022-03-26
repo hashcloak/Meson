@@ -12,3 +12,8 @@
     name:
       - prometheus
       - grafana
+
+- name: Copy prometheus config
+  template:
+    src: prometheus.yaml.j2
+    dest: /etc/prometheus/prometheus.yml
