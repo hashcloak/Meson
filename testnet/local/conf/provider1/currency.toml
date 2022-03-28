@@ -1,6 +1,6 @@
 Ticker = "gor"
-RPCUser = "rpcuser"
-RPCPass = "rpcpassword"
+RPCUser = ""
+RPCPass = ""
 RPCURL = "https://goerli-light.eth.linkpool.io"
 LogDir = "/conf/data"
 LogLevel = "DEBUG"

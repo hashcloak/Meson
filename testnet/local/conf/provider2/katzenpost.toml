@@ -65,8 +65,8 @@
       log_dir = "/conf/data"
 
   [[Provider.CBORPluginKaetzchen]]
-    Capability = "gor"
-    Endpoint = "+gor"
+    Capability = "meson"
+    Endpoint = "+tbsc"
     Command = "/go/bin/Meson"
     MaxConcurrency = 1
     Disable = false
@@ -86,7 +86,7 @@
     [PKI.Voting.TrustOptions]
       Period = 600000000000
       Height = 7
-      Hash = [183, 34, 130, 109, 99, 28, 53, 125, 89, 0, 233, 255, 9, 7, 13, 181, 111, 153, 130, 49, 157, 146, 232, 51, 244, 43, 67, 234, 132, 209, 177, 230]
+      Hash = [18, 1, 130, 107, 119, 234, 140, 66, 200, 120, 78, 201, 147, 187, 6, 156, 160, 140, 178, 215, 210, 146, 110, 189, 211, 185, 101, 194, 212, 223, 77, 81]
 
 [Management]
   Enable = true
