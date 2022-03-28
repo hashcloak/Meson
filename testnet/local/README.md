@@ -85,6 +85,8 @@ $ docker-compose up
 ```
 
 # TBD
-Add wallet demo
-Add catshadow
-Add more examples
+- [ ] Add wallet demo
+
+- [ ] Add catshadow
+
+- [ ] Add more examples
