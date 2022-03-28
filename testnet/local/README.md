@@ -1,20 +1,20 @@
 # Docker
-This docker-compose configuration is meant to be used in combination with the [Meson server](https://github.com/hashcloak/Meson-server/tree/develop) and [Katzenmint PKI](https://github.com/hashcloak/katzenmint-pki/tree/develop) repositories. It is meant for testing client and server mix network components as part of the core Meson developer work flow. It should be obvious that this docker-compose situation is not meant for production use.
+This docker-compose configuration is meant to be used in combination with the [Meson server](https://github.com/hashcloak/Meson/tree/monorepo/server) and [Katzenmint PKI](https://github.com/hashcloak/Meson/tree/monorepo/katzenmint) repositories. It is meant for testing client and server mix network components as part of the core Meson developer work flow. It should be obvious that this docker-compose situation is not meant for production use.
 
 1. clone meson server and build docker image of meson server
 ```BASH
-$ git clone https://github.com/hashcloak/Meson-server.git
-$ cd Meson-server
+$ git clone https://github.com/hashcloak/Meson.git
+$ cd Meson/server
 $ docker build --no-cache -t meson/server .
 ```
 
-2. build docker image for katzenmint-pki
+2. build docker image for katzenmint
 ```BASH
-$ cd katzenmint-pki
+$ cd Meson/katzenmint
 $ docker build --no-cache -t katzenmint/pki .
 ```
 
-3. start three katzenmint pki nodes / three mix nodes / two providers.
+3. start four katzenmint pki nodes / three mix nodes / two providers.
 ```BASH
 $ docker-compose up
 ```
@@ -29,17 +29,20 @@ $ curl http://127.0.0.1:21484/net_info
 
 # node3
 $ curl http://127.0.0.1:21485/net_info
+
+# node4
+$ curl http://127.0.0.1:21486/net_info
 ```
 
 # Examples
 
 ## Ping
-[Ping](https://github.com/sc0Vu/mixnet-examples/tree/master/ping) is a mixnet tool for testing and debugging. After start local mixnets, you can test with ping tool.
+[Ping](https://github.com/hashcloak/Meson/tree/monorepo/ping) is a mixnet tool for testing and debugging. After start local mixnets, you can test with ping tool.
 
 1. clone
 ```BASH
-$ git clone https://github.com/sc0Vu/mixnet-examples.git
-$ cd mixnet-examples/ping
+$ git clone https://github.com/hashcloak/Meson.git
+$ cd Meson/ping
 ```
 
 2. update `katzenpost.toml
@@ -48,7 +51,7 @@ $ vim katzenpost.toml
 ```
 
 ```TOML
-# update Katzenmint settings, or you can simply use genconfig/updateconfig to update, see: https://github.com/hashcloak/genconfig/tree/add-cilint/update
+# update Katzenmint settings, or you can simply use genconfig/updateconfig to update, see: https://github.com/hashcloak/Meson/tree/monorepo/genconfig
 
 [Katzenmint]
     ChainID = "test-chain-QvpdAC"
@@ -66,7 +69,7 @@ $ vim katzenpost.toml
 
 3. ping
 ```BASH
-$ go run main.go -n 1 -s echo -c ./katzenmint.toml
+$ go run main.go -s echo -c ./katzenmint.toml
 ```
 
 # Clean up chain/mix/provider data and restart
@@ -82,6 +85,6 @@ $ docker-compose up
 ```
 
 # TBD
-Add meson.
-Add catshadow.
-Add more examples.
+Add wallet demo
+Add catshadow
+Add more examples
