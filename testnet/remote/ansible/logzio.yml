@@ -1,0 +1,33 @@
+---
+
+#Note: You need to add LOGZIO_TOKEN variable with your API key. Like tihs: ansible-playbook -e LOGZIO_TOKEN=ABCXYZ123456
+
+- hosts: sentrynet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: katzenmint
+    - JOURNALBEAT_BINARY: "{{lookup('env', 'GOPATH')}}/bin/journalbeat"
+  roles:
+    - katzenmint/logzio
+
+- hosts: mixnet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: mix
+    - JOURNALBEAT_BINARY: "{{lookup('env', 'GOPATH')}}/bin/journalbeat"
+  roles:
+    - mixes/logzio
+
+- hosts: providernet
+  user: root
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+    - service: provider
+    - JOURNALBEAT_BINARY: "{{lookup('env', 'GOPATH')}}/bin/journalbeat"
+  roles:
+    - providers/logzio

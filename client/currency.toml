@@ -1,0 +1,6 @@
+Ticker = "gor"
+RPCUser = "Test001"
+RPCPass = "1234"
+RPCURL = "http://localhost:8545"
+LogDir = "/tmp/meson/ggsmeda"
+LogLevel = "DEBUG"

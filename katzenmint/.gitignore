@@ -1,13 +1,9 @@
-*Meson
-.makeFlags
-*.log
-*.db
-*geth
-*keystore
-*.storage
-site
-
-.DS_Store
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
 # Test binary, built with `go test -c`
 *.test
@@ -20,11 +16,12 @@ site
 
 # katzenmint
 chain
-!plugin/pkg/chain
 testdb
 *.db
 *_db
 data/
 
 # docker genesis documents
-testnet/conf/node*/config/genesis.json
+docker/conf/node*/config/genesis.json
+
+requests

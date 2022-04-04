@@ -1,0 +1,6 @@
+Ticker = "tbsc"
+RPCUser = ""
+RPCPass = ""
+RPCURL = "https://data-seed-prebsc-1-s1.binance.org:8545"
+LogDir = "/conf/data"
+LogLevel = "DEBUG"

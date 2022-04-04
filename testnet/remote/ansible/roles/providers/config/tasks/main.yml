@@ -1,0 +1,25 @@
+---
+
+- name: Copy meson server binary
+  copy:
+    src: "{{BINARYDIR}}/meson-server"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Copy echo server binary
+  copy:
+    src: "{{BINARYDIR}}/echo_server"
+    dest: /usr/bin
+    mode: 0755
+
+- name: Copy config
+  when: item <= N and ansible_hostname == 'cyclotron-providernet-node' ~ item
+  copy:
+    src: "{{CONFIGDIR}}/provider{{item}}/"
+    dest: "/home/{{service}}/.{{service}}/"
+    owner: "{{service}}"
+    group: "{{service}}"
+  loop: [ 7, 8 ]
+
+- name: Change user folder to less permissive
+  file: "path=/home/{{service}}/.{{service}} recurse=yes mode=0700"

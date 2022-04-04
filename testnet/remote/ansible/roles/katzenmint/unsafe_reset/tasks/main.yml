@@ -1,0 +1,3 @@
+- command: "bash /home/{{service}}/.{{service}}/cleanup.sh"
+  become_user: "{{service}}"
+  become: yes

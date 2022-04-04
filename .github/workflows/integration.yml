@@ -1,0 +1,43 @@
+name: Integration
+
+on: ["push", "pull_request"]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Docker
+      uses: docker-practice/actions-setup-docker@master
+    
+    - name: Build Server Container
+      run: |
+        cd server
+        make build-docker
+
+    - name: Build Katzenmint Container
+      run: |
+        cd katzenmint
+        make build-docker
+
+    # - name: Start local testnet
+    #   run: |
+    #     cd testnet/local
+    #     docker-compose up -d
+
+    # - name: Set up Go
+    #   uses: actions/setup-go@v2
+    #   with:
+    #     go-version: 1.17
+
+    # - name: Sleep 1 minute
+    #   run: |
+    #     sleep 60
+
+    # - name: Test ping
+    #   run: |
+    #     cd ping
+    #     sed -i 's/:20017/:21483/g' client.example.toml > client.toml
+    #     go run main.go -s echo

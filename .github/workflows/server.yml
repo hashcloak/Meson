@@ -1,0 +1,46 @@
+name: Server
+
+on: ["push", "pull_request"]
+
+jobs:
+
+  build_and_test:
+    name: "Run tests and build artifacts"
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "macOS-latest"]
+        go: ["1.17.x"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/setup-go@v1
+      name: "Install Golang"
+      with:
+        go-version: ${{ matrix.go }}
+    
+    - uses: actions/checkout@v2
+    
+    - name: "Test server"
+      run: |
+        cd server
+        make
+
+    - name: "Build server"
+      run: |
+        cd server
+        make build
+        mkdir dist
+        mv meson-server dist
+
+    - if: runner.os == 'macOS'
+      name: "Setup server filename"
+      run: echo "ZIPNAME=meson_server_darwin" >> $GITHUB_ENV
+
+    - if: runner.os == 'Linux'
+      name: "Setup server filename"
+      run: echo "ZIPNAME=meson_server_linux" >> $GITHUB_ENV
+
+    - name: Archive server
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.ZIPNAME }}
+        path: server/dist
