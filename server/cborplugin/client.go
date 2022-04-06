@@ -28,6 +28,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -182,6 +183,9 @@ func (c *Client) launch(command string, args []string) error {
 	stdoutScanner := bufio.NewScanner(stdout)
 	stdoutScanner.Scan()
 	c.socketPath = stdoutScanner.Text()
+	if len(c.socketPath) == 0 {
+		return fmt.Errorf("did not get socket path")
+	}
 	c.log.Debugf("plugin socket path:'%s'\n", c.socketPath)
 	c.setupHTTPClient(c.socketPath)
 

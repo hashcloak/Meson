@@ -171,7 +171,7 @@ func main() {
 	if err != nil {
 		log.Errorf("Failed to load proxy config: %v\n", err)
 		log.Error("Exiting")
-		panic(err)
+		os.Exit(-1)
 	}
 	_requestHandler := func(response http.ResponseWriter, request *http.Request) {
 		requestHandler(currency, response, request)
@@ -183,7 +183,9 @@ func main() {
 	socketFile := fmt.Sprintf("/tmp/%d.currency.socket", os.Getpid())
 	unixListener, err := net.Listen("unix", socketFile)
 	if err != nil {
-		panic(err)
+		log.Errorf("Failed to start server: %v\n", err)
+		log.Error("Exiting")
+		os.Exit(-1)
 	}
 	http.HandleFunc("/request", _requestHandler)
 	http.HandleFunc("/parameters", _parametersHandler)
