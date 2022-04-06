@@ -34,14 +34,16 @@ func TestProxy(t *testing.T) {
 	logDir, err := ioutil.TempDir("", "example")
 	assert.NoError(err)
 	defer os.RemoveAll(logDir) // clean up
+	ticker := "eth"
 	content := []byte(fmt.Sprintf(`
-Ticker = "ETH"
-RPCUser = "somerpcusername"
-RPCPass = "somepassword"
-RPCURL = "localhost:8545"
 LogDir = "%s"
 LogLevel = "DEBUG"
-`, logDir))
+
+[Rpc.%s]
+  Url = "localhost:8545"
+  User = "somerpcusername"
+  Pass = "somepassword"
+`, logDir, ticker))
 	tmpfn := filepath.Join(logDir, "currency.toml")
 	err = ioutil.WriteFile(tmpfn, content, 0666)
 	assert.NoError(err)
@@ -52,7 +54,7 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob)
+	currencyRequest := common.NewRequest(ticker, hexBlob)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true
@@ -68,12 +70,14 @@ func TestProxyWithoutAuth(t *testing.T) {
 	logDir, err := ioutil.TempDir("", "example")
 	assert.NoError(err)
 	defer os.RemoveAll(logDir) // clean up
+	ticker := "eth"
 	content := []byte(fmt.Sprintf(`
-Ticker = "ETH"
-RPCURL = "localhost:8545"
 LogDir = "%s"
 LogLevel = "DEBUG"
-`, logDir))
+
+[Rpc.%s]
+  Url = "localhost:8545"
+`, logDir, ticker))
 	tmpfn := filepath.Join(logDir, "currency.toml")
 	err = ioutil.WriteFile(tmpfn, content, 0666)
 	assert.NoError(err)
@@ -84,7 +88,7 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(cfg.Ticker, hexBlob)
+	currencyRequest := common.NewRequest(ticker, hexBlob)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true

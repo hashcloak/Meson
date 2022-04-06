@@ -34,7 +34,6 @@ var (
 	ErrInvalidCurrencyRequest = errors.New("kaetzchen/meson: invalid request")
 	errInvalidJson            = errors.New("meson: bad json")
 	errWrongVersion           = errors.New("meson: request version mismatch")
-	errWrongTicker            = errors.New("meson: request ticker mismatch")
 )
 
 type CurrencyRequest struct {
@@ -51,7 +50,7 @@ func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
 	}
 }
 
-func RequestFromJson(expectedTicker string, rawRequest []byte) (*CurrencyRequest, error) {
+func RequestFromJson(rawRequest []byte) (*CurrencyRequest, error) {
 	// Parse out the request payload.
 	req := CurrencyRequest{}
 	dec := codec.NewDecoderBytes(bytes.TrimRight(rawRequest, "\x00"), &jsonHandle)
@@ -62,9 +61,6 @@ func RequestFromJson(expectedTicker string, rawRequest []byte) (*CurrencyRequest
 	// Sanity check the request.
 	if req.Version != CurrencyVersion {
 		return nil, errWrongVersion
-	}
-	if req.Ticker != expectedTicker {
-		return nil, errWrongTicker
 	}
 	return &req, nil
 }

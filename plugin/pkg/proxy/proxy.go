@@ -39,6 +39,7 @@ var (
 	logFormat  = logging.MustStringFormatter(
 		"%{level:.4s} %{id:03x} %{message}",
 	)
+	errWrongTicker = errors.New("meson: request ticker mismatch")
 )
 
 func stringToLogLevel(level string) (logging.Level, error) {
@@ -75,10 +76,7 @@ type Currency struct {
 
 	params map[string]string
 
-	ticker  string
-	rpcUser string
-	rpcPass string
-	rpcURL  string
+	rpc map[string]config.RPCMetadata
 }
 
 type RPCError struct {
@@ -104,10 +102,13 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 	k.log.Debugf("Handling request %d", id)
 
 	// Send request to HTTP RPC.
-	req, err := common.RequestFromJson(k.ticker, payload)
+	req, err := common.RequestFromJson(payload)
 	if err != nil {
-		k.log.Debug("Failed to send currency transaction request: (%v)", err)
+		k.log.Debug("Failed to decode currency transaction request: (%v)", err)
 		return common.RespondFailure(err), nil
+	}
+	if _, ok := k.rpc[req.Ticker]; !ok {
+		return nil, errWrongTicker
 	}
 
 	hash, err := k.sendTransaction(req.Ticker, req.Tx)
@@ -131,8 +132,9 @@ func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) 
 	if err != nil {
 		return "", err
 	}
+	rpc := k.rpc[ticker]
 	// Create a new appropriately marshalled request
-	postRequest, err := c.NewRequest(k.rpcURL, txHex)
+	postRequest, err := c.NewRequest(rpc.Url, txHex)
 	if err != nil {
 		return "", err
 	}
@@ -146,8 +148,8 @@ func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) 
 	}
 	httpReq.Close = true
 	httpReq.Header.Set("Content-Type", "application/json")
-	if k.rpcUser != "" && k.rpcPass != "" {
-		httpReq.SetBasicAuth(k.rpcUser, k.rpcPass)
+	if rpc.User != "" && rpc.Pass != "" {
+		httpReq.SetBasicAuth(rpc.User, rpc.Pass)
 	}
 
 	// send http request
@@ -178,11 +180,8 @@ func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) 
 // New : Returns a pointer to a newly instantiated Currency struct
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
-		ticker:  cfg.Ticker,
-		rpcUser: cfg.RPCUser,
-		rpcPass: cfg.RPCPass,
-		rpcURL:  cfg.RPCURL,
-		params:  make(map[string]string),
+		rpc:    cfg.Rpc,
+		params: make(map[string]string),
 	}
 	currency.jsonHandle.Canonical = true
 	currency.jsonHandle.ErrorIfNoField = true

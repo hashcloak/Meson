@@ -25,12 +25,13 @@ import (
 	"github.com/hashcloak/Meson/plugin/pkg/chain"
 )
 
+type RPCMetadata struct {
+	Url, User, Pass string
+}
+
 // Config is the configuration for this currency transaction proxy service.
 type Config struct {
-	Ticker   string
-	RPCUser  string
-	RPCPass  string
-	RPCURL   string
+	Rpc      map[string]RPCMetadata
 	LogDir   string
 	LogLevel string
 }
@@ -38,15 +39,17 @@ type Config struct {
 // Validate returns nil if the config is valid
 // and otherwise an error is returned.
 func (cfg *Config) Validate() error {
-	if cfg.Ticker == "" {
-		return errors.New("config: Ticker is not set")
+	if len(cfg.Rpc) == 0 {
+		return errors.New("config: No ticker being set")
 	}
-	_, err := chain.GetChain(cfg.Ticker)
-	if err != nil {
-		return err
-	}
-	if cfg.RPCURL == "" {
-		return errors.New("config: RPCURL is not set")
+	for ticker, rpc := range cfg.Rpc {
+		_, err := chain.GetChain(ticker)
+		if err != nil {
+			return err
+		}
+		if rpc.Url == "" {
+			return errors.New("config: Missing rpc url of ticker")
+		}
 	}
 	return nil
 }
@@ -65,7 +68,6 @@ func Load(b []byte) (*Config, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
-
 	return cfg, nil
 }
 
