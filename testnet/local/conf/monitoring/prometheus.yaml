@@ -7,10 +7,16 @@ rule_files:
   # - "second.rules"
 
 scrape_configs:
-  #- job_name: prometheus
-  #  static_configs:
-  #    - targets: ['localhost:9090']
   - job_name: meson-server
     static_configs:
+      - targets: [mix1:6543]
+      - targets: [mix2:6543]
+      - targets: [mix3:6543]
       - targets: [provider1:6543]
       - targets: [provider2:6543]
+  - job_name: katzenmint
+    static_configs:
+      - targets: [auth1:26660]
+      - targets: [auth2:26660]
+      - targets: [auth3:26660]
+      - targets: [auth4:26660]
