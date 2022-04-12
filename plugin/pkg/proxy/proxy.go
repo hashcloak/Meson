@@ -39,7 +39,6 @@ var (
 	logFormat  = logging.MustStringFormatter(
 		"%{level:.4s} %{id:03x} %{message}",
 	)
-	errWrongTicker = errors.New("meson: request ticker mismatch")
 )
 
 func stringToLogLevel(level string) (logging.Level, error) {
@@ -108,7 +107,7 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 		return common.RespondFailure(err), nil
 	}
 	if _, ok := k.rpc[req.Ticker]; !ok {
-		return nil, errWrongTicker
+		return nil, common.ErrWrongTicker
 	}
 
 	hash, err := k.sendTransaction(req.Ticker, req.Tx)
@@ -180,7 +179,7 @@ func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) 
 // New : Returns a pointer to a newly instantiated Currency struct
 func New(cfg *config.Config) (*Currency, error) {
 	currency := &Currency{
-		rpc:    cfg.Rpc,
+		rpc:    cfg.RPC,
 		params: make(map[string]string),
 	}
 	currency.jsonHandle.Canonical = true

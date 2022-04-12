@@ -31,7 +31,7 @@ type RPCMetadata struct {
 
 // Config is the configuration for this currency transaction proxy service.
 type Config struct {
-	Rpc      map[string]RPCMetadata
+	RPC      map[string]RPCMetadata
 	LogDir   string
 	LogLevel string
 }
@@ -39,10 +39,10 @@ type Config struct {
 // Validate returns nil if the config is valid
 // and otherwise an error is returned.
 func (cfg *Config) Validate() error {
-	if len(cfg.Rpc) == 0 {
+	if len(cfg.RPC) == 0 {
 		return errors.New("config: No ticker being set")
 	}
-	for ticker, rpc := range cfg.Rpc {
+	for ticker, rpc := range cfg.RPC {
 		_, err := chain.GetChain(ticker)
 		if err != nil {
 			return err

@@ -34,6 +34,7 @@ var (
 	ErrInvalidCurrencyRequest = errors.New("kaetzchen/meson: invalid request")
 	errInvalidJson            = errors.New("meson: bad json")
 	errWrongVersion           = errors.New("meson: request version mismatch")
+	ErrWrongTicker            = errors.New("meson: request ticker mismatch")
 )
 
 type CurrencyRequest struct {
