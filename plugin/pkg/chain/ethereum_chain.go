@@ -19,7 +19,7 @@ type ethRequest struct {
 	// Which method you want to call
 	METHOD string `json:"method"`
 	// Params for the method you want to call
-	Params []string `json:"params"`
+	Params interface{} `json:"params"`
 }
 
 // ETHChain is a struct for identifier blockchains and their forks
@@ -62,20 +62,18 @@ func (ec *ETHChain) WrapQueryRequest(rpcURL string, req *common.QueryRequest) ([
 	if err != nil {
 		return nil, err
 	}
-	param, err := json.Marshal(map[string]interface{}{
-		"from":  req.From,
+	param := map[string]interface{}{
 		"to":    req.To,
-		"value": req.Value,
-		"data":  req.Data,
-	})
-	if err != nil {
-		return nil, err
+		"value": fmt.Sprintf("0x%x", req.Value),
+	}
+	if req.Data != "" {
+		param["data"] = req.Data
 	}
 	gasEstimateRequest, err := json.Marshal(ethRequest{
 		ID:      ec.chainID,
 		JSONRPC: "2.0",
 		METHOD:  "eth_estimateGas",
-		Params:  []string{string(param)},
+		Params:  []interface{}{param},
 	})
 	if err != nil {
 		return nil, err

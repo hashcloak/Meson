@@ -53,16 +53,20 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 	txn := `"TXN"`
 	req := common.PostRequest{TxHex: txn}
 	postRequest, _ := chainInterface.WrapPostRequest("URL", &req)
-	var expectedValue ethRequest
-	err := json.Unmarshal(postRequest[0].Body, &expectedValue)
+	var gotValue ethRequest
+	err := json.Unmarshal(postRequest[0].Body, &gotValue)
 	if err != nil {
 		t.Fatalf("err unmarshal: %v\n", err)
 	}
-	if len(expectedValue.Params) != 1 {
-		t.Fatalf("Length expected to be %d, got %d", 1, len(expectedValue.Params))
+	gotParams, ok := gotValue.Params.([]interface{})
+	if ok != true {
+		t.Fatalf("err unmarshal Param")
 	}
-	if expectedValue.Params[0] != txn {
-		t.Fatalf("Expected %s, got %s", txn, expectedValue.Params[0])
+	if len(gotParams) != 1 {
+		t.Fatalf("Length expected to be %d, got %d", 1, len(gotParams))
+	}
+	if gotParams[0].(string) != txn {
+		t.Fatalf("Expected %s, got %s", txn, gotParams[0].(string))
 	}
 }
 
