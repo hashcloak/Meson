@@ -23,31 +23,30 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-const (
-	CurrencyVersion    = 0
-	CurrencyCapability = "currency"
-	CurrencyTicker     = "ticker"
-)
+const CurrencyVersion = 0
 
 var (
 	jsonHandle                codec.JsonHandle
 	ErrInvalidCurrencyRequest = errors.New("kaetzchen/meson: invalid request")
 	errInvalidJson            = errors.New("meson: bad json")
 	errWrongVersion           = errors.New("meson: request version mismatch")
+	errWrongCommand           = errors.New("meson: request command mismatch")
 	ErrWrongTicker            = errors.New("meson: request ticker mismatch")
 )
 
 type CurrencyRequest struct {
 	Version int
-	Tx      string
+	Command uint8
 	Ticker  string
+	Payload []byte
 }
 
-func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
+func NewRequest(command uint8, ticker string, payload []byte) *CurrencyRequest {
 	return &CurrencyRequest{
 		Version: CurrencyVersion,
+		Command: command,
 		Ticker:  ticker,
-		Tx:      hexBlob,
+		Payload: payload,
 	}
 }
 
@@ -62,6 +61,9 @@ func RequestFromJson(rawRequest []byte) (*CurrencyRequest, error) {
 	// Sanity check the request.
 	if req.Version != CurrencyVersion {
 		return nil, errWrongVersion
+	}
+	if req.Command >= TotalCommands {
+		return nil, errWrongCommand
 	}
 	return &req, nil
 }

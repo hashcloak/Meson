@@ -27,7 +27,8 @@ import (
 func NewRequest(ticker, txHex *C.char) *C.char {
 	myTicker := C.GoString(ticker)
 	myTx := C.GoString(txHex)
-	request := common.NewRequest(myTicker, myTx)
+	myPayload := (&common.PostRequest{TxHex: myTx}).ToRaw()
+	request := common.NewRequest(common.PostCommand, myTicker, myPayload)
 	myJson := request.ToJson()
 	return C.CString(string(myJson))
 }
