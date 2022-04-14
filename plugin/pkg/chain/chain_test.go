@@ -32,7 +32,7 @@ func TestEthereumChainURLEmptyValue(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Should return an error")
 	}
-	expectedErrorValue := "Non existent RPC URL for Ethereum chain"
+	expectedErrorValue := "non existent RPC URL for Ethereum chain"
 	if err.Error() != expectedErrorValue {
 		t.Fatalf("Not the right error value.\nExpected: %s\nGot: %s", expectedErrorValue, err.Error())
 	}

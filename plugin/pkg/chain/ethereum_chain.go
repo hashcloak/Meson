@@ -3,6 +3,8 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/hashcloak/Meson/plugin/pkg/common"
 )
 
 // An ethereum request abstraction.
@@ -26,18 +28,61 @@ type ETHChain struct {
 	ticker  string
 }
 
-// NewRequest takes an RPC URL and a hexadecimal transaction.
-// Returns PostRequest for ethereum nodes
-func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
+func (ec *ETHChain) WrapPostRequest(rpcURL string, req *common.PostRequest) ([]HttpData, error) {
 	if len(rpcURL) == 0 {
-		return PostRequest{}, fmt.Errorf("Non existent RPC URL for Ethereum chain")
+		return []HttpData{}, fmt.Errorf("non existent RPC URL for Ethereum chain")
 	}
-	er := ethRequest{
+	marshalledRequest, err := json.Marshal(ethRequest{
 		ID:      ec.chainID,
 		JSONRPC: "2.0",
 		METHOD:  "eth_sendRawTransaction",
-		Params:  []string{txHex},
+		Params:  []string{req.TxHex},
+	})
+	return []HttpData{{URL: rpcURL, Body: marshalledRequest}}, err
+}
+
+func (ec *ETHChain) WrapQueryRequest(rpcURL string, req *common.QueryRequest) ([]HttpData, error) {
+	if len(rpcURL) == 0 {
+		return []HttpData{}, fmt.Errorf("non existent RPC URL for Ethereum chain")
 	}
-	marshalledRequest, err := json.Marshal(er)
-	return PostRequest{URL: rpcURL, Body: marshalledRequest}, err
+	nonceRequest, err := json.Marshal(ethRequest{
+		ID:      ec.chainID,
+		JSONRPC: "2.0",
+		METHOD:  "eth_getTransactionCount",
+		Params:  []string{req.From, "pending"},
+	})
+	if err != nil {
+		return nil, err
+	}
+	gasPriceRequest, err := json.Marshal(ethRequest{
+		ID:      ec.chainID,
+		JSONRPC: "2.0",
+		METHOD:  "eth_gasPrice",
+	})
+	if err != nil {
+		return nil, err
+	}
+	param, err := json.Marshal(map[string]interface{}{
+		"from":  req.From,
+		"to":    req.To,
+		"value": req.Value,
+		"data":  req.Data,
+	})
+	if err != nil {
+		return nil, err
+	}
+	gasEstimateRequest, err := json.Marshal(ethRequest{
+		ID:      ec.chainID,
+		JSONRPC: "2.0",
+		METHOD:  "eth_estimateGas",
+		Params:  []string{string(param)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return []HttpData{
+		{URL: rpcURL, Body: nonceRequest},
+		{URL: rpcURL, Body: gasPriceRequest},
+		{URL: rpcURL, Body: gasEstimateRequest},
+	}, nil
 }

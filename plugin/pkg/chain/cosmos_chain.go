@@ -2,6 +2,8 @@ package chain
 
 import (
 	"fmt"
+
+	"github.com/hashcloak/Meson/plugin/pkg/common"
 )
 
 // CosmosChain is a struct for identifier blockchains and their forks
@@ -10,12 +12,15 @@ type CosmosChain struct {
 	chainID int
 }
 
-// NewRequest takes an RPC URL and a hexadecimal transaction.
-// Returns PostRequest for cosmos nodes
-func (ec *CosmosChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
+func (ec *CosmosChain) WrapPostRequest(rpcURL string, req *common.PostRequest) ([]HttpData, error) {
 	if len(rpcURL) == 0 {
-		return PostRequest{}, fmt.Errorf("No URL value for cosmos api")
+		return []HttpData{}, fmt.Errorf("no URL value for cosmos api")
 	}
-	URL := fmt.Sprintf("%s/broadcast_tx_async?tx=0x%s", rpcURL, txHex)
-	return PostRequest{URL: URL}, nil
+	URL := fmt.Sprintf("%s/broadcast_tx_async?tx=0x%s", rpcURL, req.TxHex)
+	return []HttpData{{URL: URL}}, nil
+}
+
+func (ec *CosmosChain) WrapQueryRequest(rpcURL string, req *common.QueryRequest) ([]HttpData, error) {
+	// TODO
+	return []HttpData{}, nil
 }

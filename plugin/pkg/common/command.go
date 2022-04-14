@@ -16,10 +16,10 @@ type PostRequest struct {
 	TxHex string
 }
 type QueryRequest struct {
-	From  []byte
-	To    []byte
+	From  string
+	To    string
 	Value *big.Int
-	Data  []byte
+	Data  string
 }
 
 func PostRequestFromRaw(raw []byte) (*PostRequest, error) {
