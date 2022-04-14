@@ -54,7 +54,8 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(ticker, hexBlob)
+	payload := (&common.PostRequest{TxHex: hexBlob}).ToRaw()
+	currencyRequest := common.NewRequest(common.PostCommand, ticker, payload)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true
@@ -88,7 +89,8 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	currencyRequest := common.NewRequest(ticker, hexBlob)
+	payload := (&common.PostRequest{TxHex: hexBlob}).ToRaw()
+	currencyRequest := common.NewRequest(common.PostCommand, ticker, payload)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true

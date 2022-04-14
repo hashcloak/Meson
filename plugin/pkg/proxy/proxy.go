@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/hashcloak/Meson/plugin/pkg/chain"
 	"github.com/hashcloak/Meson/plugin/pkg/common"
@@ -100,22 +101,53 @@ func (k *Currency) GetParameters() map[string]string {
 func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, error) {
 	k.log.Debugf("Handling request %d", id)
 
-	// Send request to HTTP RPC.
+	// Decode request
 	req, err := common.RequestFromJson(payload)
 	if err != nil {
 		k.log.Debug("Failed to decode currency transaction request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
-	if _, ok := k.rpc[req.Ticker]; !ok {
+
+	// Get supported chain
+	rpc, ok := k.rpc[req.Ticker]
+	if !ok {
 		return nil, common.ErrWrongTicker
 	}
+	c, err := chain.GetChain(req.Ticker)
+	if err != nil {
+		return nil, err
+	}
 
-	hash, err := k.sendTransaction(req.Ticker, req.Tx)
+	// Process each command into transactions
+	var sendData []chain.HttpData
+	switch req.Command {
+	case common.PostCommand:
+		postReq, err := common.PostRequestFromRaw(req.Payload)
+		if err != nil {
+			return nil, err
+		}
+		sendData, err = c.WrapPostRequest(rpc.Url, postReq)
+		if err != nil {
+			return nil, err
+		}
+	case common.QueryCommand:
+		queryReq, err := common.QueryRequestFromRaw(req.Payload)
+		if err != nil {
+			return nil, err
+		}
+		sendData, err = c.WrapQueryRequest(rpc.Url, queryReq)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Send the transactions
+	result, err := k.sendTransaction(rpc, sendData)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
-	return common.RespondSuccess("Tx hash: " + hash), nil
+	return common.RespondSuccess(strings.Join(result, "\n")), nil
 }
 
 // Halt : Stops the plugin
@@ -123,57 +155,47 @@ func (k *Currency) Halt() {
 
 }
 
-func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) {
+func (k *Currency) sendTransaction(rpc config.RPCMetadata, sendData []chain.HttpData) ([]string, error) {
 	k.log.Debug("sendTransaction")
+	var result []string
 
-	// Get supported chain
-	c, err := chain.GetChain(ticker)
-	if err != nil {
-		return "", err
-	}
-	rpc := k.rpc[ticker]
-	// Create a new appropriately marshalled request
-	postRequest, err := c.NewRequest(rpc.Url, txHex)
-	if err != nil {
-		return "", err
-	}
+	for _, postRequest := range sendData {
+		bodyReader := bytes.NewReader(postRequest.Body)
+		httpReq, err := http.NewRequest("POST", postRequest.URL, bodyReader)
+		if err != nil {
+			return nil, err
+		}
+		httpReq.Close = true
+		httpReq.Header.Set("Content-Type", "application/json")
+		if rpc.User != "" && rpc.Pass != "" {
+			httpReq.SetBasicAuth(rpc.User, rpc.Pass)
+		}
 
-	bodyReader := bytes.NewReader(postRequest.Body)
-
-	// create an http request
-	httpReq, err := http.NewRequest("POST", postRequest.URL, bodyReader)
-	if err != nil {
-		return "", err
+		// send http request
+		client := http.Client{}
+		httpResponse, err := client.Do(httpReq)
+		if err != nil {
+			return nil, err
+		}
+		if httpResponse.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("currency RPC error status: %s", httpResponse.Status)
+		}
+		resp := RPCResponse{}
+		bodyBytes, err := ioutil.ReadAll(httpResponse.Body)
+		if err != nil {
+			return nil, err
+		}
+		dec := codec.NewDecoderBytes(bodyBytes, &jsonHandle)
+		err = dec.Decode(&resp)
+		if err != nil {
+			return nil, err
+		}
+		if resp.Error != nil {
+			return nil, errors.New(resp.Error.Message)
+		}
+		result = append(result, resp.Result)
 	}
-	httpReq.Close = true
-	httpReq.Header.Set("Content-Type", "application/json")
-	if rpc.User != "" && rpc.Pass != "" {
-		httpReq.SetBasicAuth(rpc.User, rpc.Pass)
-	}
-
-	// send http request
-	client := http.Client{}
-	httpResponse, err := client.Do(httpReq)
-	if err != nil {
-		return "", err
-	}
-	if httpResponse.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("currency RPC error status: %s", httpResponse.Status)
-	}
-	resp := RPCResponse{}
-	bodyBytes, err := ioutil.ReadAll(httpResponse.Body)
-	if err != nil {
-		return "", err
-	}
-	dec := codec.NewDecoderBytes(bodyBytes, &jsonHandle)
-	err = dec.Decode(&resp)
-	if err != nil {
-		return "", err
-	}
-	if resp.Error != nil {
-		return "", errors.New(resp.Error.Message)
-	}
-	return resp.Result, nil
+	return result, nil
 }
 
 // New : Returns a pointer to a newly instantiated Currency struct
