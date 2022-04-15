@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/hashcloak/Meson/plugin/pkg/common"
+	"github.com/hashcloak/Meson/plugin/pkg/command"
 )
 
 const (
@@ -27,8 +27,8 @@ func TestChainFactoryErrorEmpty(t *testing.T) {
 
 func TestEthereumChainURLEmptyValue(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
-	req := common.PostRequest{TxHex: ""}
-	_, err := chainInterface.WrapPostRequest("", &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	_, err := chainInterface.WrapRequest("", command.PostTransaction, req)
 	if err == nil {
 		t.Fatalf("Should return an error")
 	}
@@ -41,8 +41,8 @@ func TestEthereumChainURLEmptyValue(t *testing.T) {
 func TestEthereumChainURLValue(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
 	expectedURL := "EXPECTED_URL"
-	req := common.PostRequest{TxHex: ""}
-	postRequest, _ := chainInterface.WrapPostRequest(expectedURL, &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	postRequest, _ := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
 	if postRequest[0].URL != expectedURL {
 		t.Fatalf("Expected %s, got %s", expectedURL, postRequest[0].URL)
 	}
@@ -51,8 +51,8 @@ func TestEthereumChainURLValue(t *testing.T) {
 func TestEthereumChainTxnInBody(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
 	txn := `"TXN"`
-	req := common.PostRequest{TxHex: txn}
-	postRequest, _ := chainInterface.WrapPostRequest("URL", &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: txn})
+	postRequest, _ := chainInterface.WrapRequest("URL", command.PostTransaction, req)
 	var gotValue ethRequest
 	err := json.Unmarshal(postRequest[0].Body, &gotValue)
 	if err != nil {
@@ -72,16 +72,16 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 
 func TestCosmosChainURLEmpty(t *testing.T) {
 	chainInterface, _ := GetChain("TBC")
-	req := common.PostRequest{TxHex: ""}
-	_, err := chainInterface.WrapPostRequest("", &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	_, err := chainInterface.WrapRequest("", command.PostTransaction, req)
 	if err == nil {
 		t.Fatalf("Should return an error when passed empty URL")
 	}
 }
 func TestCosmosChainBody(t *testing.T) {
 	chainInterface, _ := GetChain("TBC")
-	req := common.PostRequest{TxHex: ""}
-	postRequest, _ := chainInterface.WrapPostRequest("URL", &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	postRequest, _ := chainInterface.WrapRequest("URL", command.PostTransaction, req)
 	if len(postRequest[0].Body) > 0 {
 		t.Fatalf("Body should be empty for cosmos request")
 	}
@@ -91,8 +91,8 @@ func TestCosmosChainURLAppend(t *testing.T) {
 	inputTxn := "EXPECTED_TXN"
 	inputURL := "URL"
 	expectedResult := inputURL + broadcastTxAsync + inputTxn
-	req := common.PostRequest{TxHex: inputTxn}
-	postRequest, _ := chainInterface.WrapPostRequest(inputURL, &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: inputTxn})
+	postRequest, _ := chainInterface.WrapRequest(inputURL, command.PostTransaction, req)
 	if postRequest[0].URL != expectedResult {
 		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest[0].URL)
 	}
@@ -100,8 +100,8 @@ func TestCosmosChainURLAppend(t *testing.T) {
 func TestCosmosChainURL(t *testing.T) {
 	chainInterface, _ := GetChain("TBC")
 	expectedURL := "EXPECTED_URL"
-	req := common.PostRequest{TxHex: ""}
-	postRequest, _ := chainInterface.WrapPostRequest(expectedURL, &req)
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	postRequest, _ := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
 	if postRequest[0].URL != expectedURL+broadcastTxAsync {
 		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest[0].URL)
 	}

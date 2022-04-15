@@ -17,12 +17,14 @@
 package proxy
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/hashcloak/Meson/plugin/pkg/command"
 	"github.com/hashcloak/Meson/plugin/pkg/common"
 	"github.com/hashcloak/Meson/plugin/pkg/config"
 	"github.com/stretchr/testify/assert"
@@ -54,8 +56,8 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	payload := (&common.PostRequest{TxHex: hexBlob}).ToRaw()
-	currencyRequest := common.NewRequest(common.PostCommand, ticker, payload)
+	payload, _ := json.Marshal(command.PostTransactionRequest{TxHex: hexBlob})
+	currencyRequest := common.NewRequest(command.PostTransaction, ticker, payload)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true
@@ -89,8 +91,8 @@ LogLevel = "DEBUG"
 	assert.NoError(err)
 
 	hexBlob := "deadbeef"
-	payload := (&common.PostRequest{TxHex: hexBlob}).ToRaw()
-	currencyRequest := common.NewRequest(common.PostCommand, ticker, payload)
+	payload, _ := json.Marshal(command.PostTransactionRequest{TxHex: hexBlob})
+	currencyRequest := common.NewRequest(command.PostTransaction, ticker, payload)
 	ethRequest := currencyRequest.ToJson()
 	id := uint64(123)
 	hasSURB := true

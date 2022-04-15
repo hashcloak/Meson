@@ -26,7 +26,6 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"strings"
 
 	"github.com/hashcloak/Meson/plugin/pkg/chain"
 	"github.com/hashcloak/Meson/plugin/pkg/common"
@@ -118,36 +117,26 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 		return nil, err
 	}
 
-	// Process each command into transactions
-	var sendData []chain.HttpData
-	switch req.Command {
-	case common.PostCommand:
-		postReq, err := common.PostRequestFromRaw(req.Payload)
-		if err != nil {
-			return nil, err
-		}
-		sendData, err = c.WrapPostRequest(rpc.Url, postReq)
-		if err != nil {
-			return nil, err
-		}
-	case common.QueryCommand:
-		queryReq, err := common.QueryRequestFromRaw(req.Payload)
-		if err != nil {
-			return nil, err
-		}
-		sendData, err = c.WrapQueryRequest(rpc.Url, queryReq)
-		if err != nil {
-			return nil, err
-		}
+	// Wrap command into transactions
+	sendData, err := c.WrapRequest(rpc.Url, req.Command, req.Payload)
+	if err != nil {
+		return nil, err
 	}
 
 	// Send the transactions
-	result, err := k.sendTransaction(rpc, sendData)
+	response, err := k.sendTransaction(rpc, sendData)
 	if err != nil {
 		k.log.Debug("Failed to send currency transaction request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
-	return common.RespondSuccess(strings.Join(result, "\n")), nil
+
+	// Unwrap responses
+	result, err := c.UnwrapResponse(req.Command, response)
+	if err != nil {
+		return nil, err
+	}
+
+	return common.RespondSuccess(string(result)), nil
 }
 
 // Halt : Stops the plugin
@@ -159,9 +148,9 @@ func (k *Currency) sendTransaction(rpc config.RPCMetadata, sendData []chain.Http
 	k.log.Debug("sendTransaction")
 	var result []string
 
-	for _, postRequest := range sendData {
-		bodyReader := bytes.NewReader(postRequest.Body)
-		httpReq, err := http.NewRequest("POST", postRequest.URL, bodyReader)
+	for _, send := range sendData {
+		bodyReader := bytes.NewReader(send.Body)
+		httpReq, err := http.NewRequest("POST", send.URL, bodyReader)
 		if err != nil {
 			return nil, err
 		}

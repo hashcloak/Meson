@@ -30,7 +30,6 @@ var (
 	ErrInvalidCurrencyRequest = errors.New("kaetzchen/meson: invalid request")
 	errInvalidJson            = errors.New("meson: bad json")
 	errWrongVersion           = errors.New("meson: request version mismatch")
-	errWrongCommand           = errors.New("meson: request command mismatch")
 	ErrWrongTicker            = errors.New("meson: request ticker mismatch")
 )
 
@@ -61,9 +60,6 @@ func RequestFromJson(rawRequest []byte) (*CurrencyRequest, error) {
 	// Sanity check the request.
 	if req.Version != CurrencyVersion {
 		return nil, errWrongVersion
-	}
-	if req.Command >= TotalCommands {
-		return nil, errWrongCommand
 	}
 	return &req, nil
 }
