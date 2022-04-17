@@ -13,6 +13,7 @@ import (
 	katvoting "github.com/katzenpost/authority/voting/server/config"
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -449,10 +450,14 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 		// TODO: make sure the voting power not exceed 1/3
 		// add or update validator
 		if rawAuth == nil && v.Power > 0 {
+			pubKey := v.PubKey.GetEd25519()
+			if pubKey == nil {
+				return ErrAuthorityKeyTypeNotSupported
+			}
 			rawAuth, err = EncodeJson(Authority{
 				Auth:    "katzenmint",
-				PubKey:  v.PubKey.GetEd25519(),
-				KeyType: "",
+				PubKey:  pubKey,
+				KeyType: ed25519.KeyType,
 				Power:   v.Power,
 			})
 			if err != nil {

@@ -3,6 +3,7 @@ package katzenmint
 import (
 	"crypto/ed25519"
 	"fmt"
+	"sort"
 
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
@@ -220,13 +221,22 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 }
 
 func (app *KatzenmintApplication) InitChain(req abcitypes.RequestInitChain) abcitypes.ResponseInitChain {
-	for _, v := range req.Validators {
-		err := app.state.updateAuthority(nil, v)
-		if err != nil {
-			app.logger.Error("failed to update validators", "error", err)
+	if len(req.Validators) > 0 {
+
+		sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
+
+		for _, v := range req.Validators {
+			err := app.state.updateAuthority(nil, v)
+			if err != nil {
+				app.logger.Error("failed to update validators", "error", err)
+			}
 		}
 	}
-	return abcitypes.ResponseInitChain{}
+	return abcitypes.ResponseInitChain{
+		// ConsensusParams: req.ConsensusParams,
+		Validators: req.Validators,
+		// AppHash: appHash,
+	}
 }
 
 // Track the block hash and header information
@@ -253,8 +263,9 @@ func (app *KatzenmintApplication) BeginBlock(req abcitypes.RequestBeginBlock) ab
 
 // Update validators
 func (app *KatzenmintApplication) EndBlock(req abcitypes.RequestEndBlock) abcitypes.ResponseEndBlock {
-	// will there be race condition?
-	return abcitypes.ResponseEndBlock{ValidatorUpdates: app.state.validatorUpdates}
+	return abcitypes.ResponseEndBlock{
+		ValidatorUpdates: app.state.validatorUpdates,
+	}
 }
 
 // TODO: state sync connection

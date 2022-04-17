@@ -16,6 +16,7 @@ require (
 	github.com/katzenpost/core v0.0.12
 	github.com/katzenpost/registration_client v0.0.1
 	github.com/prometheus/client_golang v1.8.0
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.10
@@ -27,6 +28,8 @@ require (
 	gopkg.in/eapache/channels.v1 v1.1.0
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 )
+
+require github.com/inconshreveable/mousetrap v1.0.0 // indirect
 
 require (
 	git.schwanenlied.me/yawning/bsaes.git v0.0.0-20190320102049-26d1add596b6 // indirect
