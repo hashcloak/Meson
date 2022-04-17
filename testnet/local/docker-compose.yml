@@ -12,7 +12,6 @@ services:
     ports:
       - "127.0.0.1:30001:30001"
       - "127.0.0.1:40001:40001"
-      - "127.0.0.1:6543:6543"
     depends_on:
       auth1:
         condition: service_healthy
@@ -181,6 +180,16 @@ services:
       - ./conf/monitoring/prometheus.yaml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    depends_on:
+      - auth1
+      - auth2
+      - auth3
+      - auth4
+      - provider1
+      - provider2
+      - mix1
+      - mix2
+      - mix3
     healthcheck:
       test: ["CMD", "wget", "-O", "-", "http://localhost:9090"]
       interval: 10s
@@ -194,6 +203,16 @@ services:
     image: grafana/grafana:8.4.3
     ports:
       - 3000:3000
+    depends_on:
+      - auth1
+      - auth2
+      - auth3
+      - auth4
+      - provider1
+      - provider2
+      - mix1
+      - mix2
+      - mix3
     networks:
       katzenmint_net:
         ipv4_address: 172.29.1.129
