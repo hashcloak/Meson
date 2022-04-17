@@ -1,2 +1,3 @@
-# Contact
-If you want to get in touch, you can contact us at `info _at_ hashcloak.com`
+# Where to reach us
+Twitter: [@MesonMixnet](https://twitter.com/MesonMixnet)
+Element Community: [Meson Community](https://matrix.to/#/#meson-community:matrix.org)
