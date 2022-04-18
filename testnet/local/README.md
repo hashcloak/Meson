@@ -88,14 +88,20 @@ $ docker-compose up
 
 server and meson monitoring tools are included docker compose.
 It has two component:
-- Prometheus - pull and stack data
-- Grafana - visualize data from prometheus
+- [Prometheus](https://prometheus.io/docs/introduction/overview/) - pull and stack data
+- [Grafana](https://grafana.com/docs/grafana/latest/introduction/oss-details/) - visualize data from prometheus
 You can open `127.0.0.1:3000` at browser to see grafana dashboard.
 
 ## Setting up data source
 
-## Sample dashboard
+To use grafana, You have to set up data source first.
+1. Login grafana. default user and pass is `admin:admin`.
+2. Select `Configuration` -> `data sources` -> `Add source` -> `Prometheus`
+3. fill the form.
+  - URL: `http://prometheus:9090/`
+4. then select `Save & Test`
 
+## Add dashboard
 
 
 # TBD
