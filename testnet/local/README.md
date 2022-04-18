@@ -84,6 +84,20 @@ Then, restart three katzenmint pki nodes.
 $ docker-compose up
 ```
 
+# Using monitoring tools
+
+server and meson monitoring tools are included docker compose.
+It has two component:
+- Prometheus - pull and stack data
+- Grafana - visualize data from prometheus
+You can open `127.0.0.1:3000` at browser to see grafana dashboard.
+
+## Setting up data source
+
+## Sample dashboard
+
+
+
 # TBD
 - [ ] Add wallet demo
 
