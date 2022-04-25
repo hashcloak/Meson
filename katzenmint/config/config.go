@@ -51,7 +51,6 @@ type Config struct {
 	Layers               int
 	MinNodesPerLayer     int
 	Parameters           katconfig.Parameters
-	Membership           bool
 }
 
 func DefaultConfig() (cfg *Config) {
