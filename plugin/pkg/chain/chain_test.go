@@ -38,13 +38,29 @@ func TestEthereumChainURLEmptyValue(t *testing.T) {
 	}
 }
 
+func TestEthereumChainMethod(t *testing.T) {
+	chainInterface, _ := GetChain("ETH")
+	expectedURL := "EXPECTED_URL"
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	postRequest, err := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if postRequest.Method != "POST" {
+		t.Fatalf("Expected %s, got %s", "POST", postRequest.Method)
+	}
+}
+
 func TestEthereumChainURLValue(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
 	expectedURL := "EXPECTED_URL"
 	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
-	postRequest, _ := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
-	if postRequest[0].URL != expectedURL {
-		t.Fatalf("Expected %s, got %s", expectedURL, postRequest[0].URL)
+	postRequest, err := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if postRequest.URL != expectedURL {
+		t.Fatalf("Expected %s, got %s", expectedURL, postRequest.URL)
 	}
 }
 
@@ -52,9 +68,12 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 	chainInterface, _ := GetChain("ETH")
 	txn := `"TXN"`
 	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: txn})
-	postRequest, _ := chainInterface.WrapRequest("URL", command.PostTransaction, req)
+	postRequest, err := chainInterface.WrapRequest("URL", command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
 	var gotValue ethRequest
-	err := json.Unmarshal(postRequest[0].Body, &gotValue)
+	err = json.Unmarshal(postRequest.Body, &gotValue)
 	if err != nil {
 		t.Fatalf("err unmarshal: %v\n", err)
 	}
@@ -78,11 +97,25 @@ func TestCosmosChainURLEmpty(t *testing.T) {
 		t.Fatalf("Should return an error when passed empty URL")
 	}
 }
+func TestCosmosChainMethod(t *testing.T) {
+	chainInterface, _ := GetChain("TBC")
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	getRequest, err := chainInterface.WrapRequest("URL", command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if getRequest.Method != "GET" {
+		t.Fatalf("Expected %s, got %s", "GET", getRequest.Method)
+	}
+}
 func TestCosmosChainBody(t *testing.T) {
 	chainInterface, _ := GetChain("TBC")
 	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
-	postRequest, _ := chainInterface.WrapRequest("URL", command.PostTransaction, req)
-	if len(postRequest[0].Body) > 0 {
+	getRequest, err := chainInterface.WrapRequest("URL", command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(getRequest.Body) > 0 {
 		t.Fatalf("Body should be empty for cosmos request")
 	}
 }
@@ -92,17 +125,23 @@ func TestCosmosChainURLAppend(t *testing.T) {
 	inputURL := "URL"
 	expectedResult := inputURL + broadcastTxAsync + inputTxn
 	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: inputTxn})
-	postRequest, _ := chainInterface.WrapRequest(inputURL, command.PostTransaction, req)
-	if postRequest[0].URL != expectedResult {
-		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest[0].URL)
+	getRequest, err := chainInterface.WrapRequest(inputURL, command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if getRequest.URL != expectedResult {
+		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, getRequest.URL)
 	}
 }
 func TestCosmosChainURL(t *testing.T) {
 	chainInterface, _ := GetChain("TBC")
 	expectedURL := "EXPECTED_URL"
 	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
-	postRequest, _ := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
-	if postRequest[0].URL != expectedURL+broadcastTxAsync {
-		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, postRequest[0].URL)
+	getRequest, err := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if getRequest.URL != expectedURL+broadcastTxAsync {
+		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, getRequest.URL)
 	}
 }
