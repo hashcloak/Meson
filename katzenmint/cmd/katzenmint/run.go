@@ -33,8 +33,6 @@ var (
 		RunE:  runNode,
 	}
 	configFile string
-	kConfig    *kcfg.Config
-	config     *cfg.Config
 )
 
 func readConfig(configFile string) (config *cfg.Config, err error) {
@@ -106,27 +104,25 @@ func newTendermint(app abci.Application, config *cfg.Config, logger log.Logger) 
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "katzenmint.toml", "Path to katzenmint.toml")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(registerValidatorCmd)
 }
 
-func initConfig() {
-	var err error
+func initConfig() (kConfig *kcfg.Config, config *cfg.Config, err error) {
 	kConfig, err = kcfg.LoadFile(configFile)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
-		os.Exit(1)
+		return
 	}
 	config, err = readConfig(kConfig.TendermintConfigPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
-		os.Exit(1)
-	}
+	return
 }
 
 func runNode(cmd *cobra.Command, args []string) error {
+	kConfig, config, err := initConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %v\n", err)
+	}
 	db, err := dbm.NewDB("katzenmint_db", dbm.BadgerDBBackend, kConfig.DBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open badger db: %v\ntry running with -tags badgerdb", err)

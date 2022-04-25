@@ -82,7 +82,11 @@ func joinNetwork(config *cfg.Config) error {
 }
 
 func registerValidator(cmd *cobra.Command, args []string) error {
-	err := joinNetwork(config)
+	_, config, err := initConfig()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %v\n", err)
+	}
+	err = joinNetwork(config)
 	if err != nil {
 		return err
 	}
