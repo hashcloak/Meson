@@ -1,15 +1,44 @@
 package chain
 
-// PostRequest is the common struct containing the body and url
-type PostRequest struct {
-	Body []byte
-	URL  string
+import (
+	"fmt"
+
+	"github.com/ugorji/go/codec"
+)
+
+// HttpData is the common struct containing the body and url
+// Tag is for specifying the response message
+type HttpData struct {
+	Method string
+	URL    string
+	Body   []byte
+}
+
+type RPCError struct {
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
+
+type RPCResponse struct {
+	Version string    `json:"jsonrpc,omitempty"`
+	ID      uint      `json:"id,omitempty"`
+	Error   *RPCError `json:"error,omitempty"`
+	Result  string    `json:"result,omitempty"`
 }
 
 // IChain is an abstraction for a cryptocurrency
-// It only enables creating raw transactions requests
+// It creates raw transactions
 type IChain interface {
-	// NewRequest takes an RPC URL and a hexadecimal transaction.
-	// Returns PostRequest with the with values depending on the chain type
-	NewRequest(rpcURL string, txHex string) (PostRequest, error)
+	WrapRequest(rpcURL string, cmd uint8, payload []byte) (*HttpData, error)
+	UnwrapResponse(cmd uint8, payload []RPCResponse) ([]byte, error)
+}
+
+var jsonHandle codec.JsonHandle
+
+func errNumResponse(expect, actual int) error {
+	return fmt.Errorf("expect %d response, got %d", expect, actual)
+}
+func errCodeAndMsg(code int, msg string) error {
+	return fmt.Errorf("error code: %d, msg: %s", code, msg)
 }

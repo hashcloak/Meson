@@ -35,8 +35,7 @@ import (
 )
 
 var (
-	jsonHandle codec.JsonHandle
-	logFormat  = logging.MustStringFormatter(
+	logFormat = logging.MustStringFormatter(
 		"%{level:.4s} %{id:03x} %{message}",
 	)
 )
@@ -72,23 +71,8 @@ func setupLoggerBackend(level logging.Level, writer io.Writer) logging.LeveledBa
 type Currency struct {
 	log        *logging.Logger
 	jsonHandle codec.JsonHandle
-
-	params map[string]string
-
-	rpc map[string]config.RPCMetadata
-}
-
-type RPCError struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data,omitempty"`
-}
-
-type RPCResponse struct {
-	Version string          `json:"jsonrpc,omitempty"`
-	ID      json.RawMessage `json:"id,omitempty"`
-	Error   *RPCError       `json:"error,omitempty"`
-	Result  string          `json:"result,omitempty"`
+	params     map[string]string
+	rpc        map[string]config.RPCMetadata
 }
 
 // GetParameters : Returns params from Currency struct
@@ -100,22 +84,43 @@ func (k *Currency) GetParameters() map[string]string {
 func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, error) {
 	k.log.Debugf("Handling request %d", id)
 
-	// Send request to HTTP RPC.
+	// Decode request
 	req, err := common.RequestFromJson(payload)
 	if err != nil {
 		k.log.Debug("Failed to decode currency transaction request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
-	if _, ok := k.rpc[req.Ticker]; !ok {
+
+	// Get supported chain
+	rpc, ok := k.rpc[req.Ticker]
+	if !ok {
 		return nil, common.ErrWrongTicker
 	}
-
-	hash, err := k.sendTransaction(req.Ticker, req.Tx)
+	c, err := chain.GetChain(req.Ticker)
 	if err != nil {
-		k.log.Debug("Failed to send currency transaction request: (%v)", err)
+		return nil, err
+	}
+
+	// Wrap command into transactions
+	sendData, err := c.WrapRequest(rpc.Url, req.Command, req.Payload)
+	if err != nil {
+		return nil, err
+	}
+
+	// Send the transactions
+	response, err := k.sendTransaction(rpc, sendData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send currency request: %v", err)
+	}
+
+	// Unwrap responses
+	result, err := c.UnwrapResponse(req.Command, response)
+	if err != nil {
+		k.log.Debug("Error response for currency request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
-	return common.RespondSuccess("Tx hash: " + hash), nil
+
+	return common.RespondSuccess(string(result)), nil
 }
 
 // Halt : Stops the plugin
@@ -123,27 +128,15 @@ func (k *Currency) Halt() {
 
 }
 
-func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) {
+func (k *Currency) sendTransaction(rpc config.RPCMetadata, sendData *chain.HttpData) ([]chain.RPCResponse, error) {
 	k.log.Debug("sendTransaction")
 
-	// Get supported chain
-	c, err := chain.GetChain(ticker)
+	var resp []chain.RPCResponse
+	var singleResp chain.RPCResponse
+	bodyReader := bytes.NewReader(sendData.Body)
+	httpReq, err := http.NewRequest(sendData.Method, sendData.URL, bodyReader)
 	if err != nil {
-		return "", err
-	}
-	rpc := k.rpc[ticker]
-	// Create a new appropriately marshalled request
-	postRequest, err := c.NewRequest(rpc.Url, txHex)
-	if err != nil {
-		return "", err
-	}
-
-	bodyReader := bytes.NewReader(postRequest.Body)
-
-	// create an http request
-	httpReq, err := http.NewRequest("POST", postRequest.URL, bodyReader)
-	if err != nil {
-		return "", err
+		return nil, err
 	}
 	httpReq.Close = true
 	httpReq.Header.Set("Content-Type", "application/json")
@@ -155,25 +148,24 @@ func (k *Currency) sendTransaction(ticker string, txHex string) (string, error) 
 	client := http.Client{}
 	httpResponse, err := client.Do(httpReq)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if httpResponse.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("currency RPC error status: %s", httpResponse.Status)
+		return nil, fmt.Errorf("currency RPC error status: %s", httpResponse.Status)
 	}
-	resp := RPCResponse{}
 	bodyBytes, err := ioutil.ReadAll(httpResponse.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	dec := codec.NewDecoderBytes(bodyBytes, &jsonHandle)
-	err = dec.Decode(&resp)
+	err = json.Unmarshal(bodyBytes, &resp)
 	if err != nil {
-		return "", err
+		err = json.Unmarshal(bodyBytes, &singleResp)
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, singleResp)
 	}
-	if resp.Error != nil {
-		return "", errors.New(resp.Error.Message)
-	}
-	return resp.Result, nil
+	return resp, nil
 }
 
 // New : Returns a pointer to a newly instantiated Currency struct

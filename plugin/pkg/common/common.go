@@ -23,11 +23,7 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-const (
-	CurrencyVersion    = 0
-	CurrencyCapability = "currency"
-	CurrencyTicker     = "ticker"
-)
+const CurrencyVersion = 0
 
 var (
 	jsonHandle                codec.JsonHandle
@@ -39,15 +35,17 @@ var (
 
 type CurrencyRequest struct {
 	Version int
-	Tx      string
+	Command uint8
 	Ticker  string
+	Payload []byte
 }
 
-func NewRequest(ticker string, hexBlob string) *CurrencyRequest {
+func NewRequest(command uint8, ticker string, payload []byte) *CurrencyRequest {
 	return &CurrencyRequest{
 		Version: CurrencyVersion,
+		Command: command,
 		Ticker:  ticker,
-		Tx:      hexBlob,
+		Payload: payload,
 	}
 }
 

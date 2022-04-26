@@ -3,6 +3,9 @@ package chain
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/hashcloak/Meson/plugin/pkg/command"
+	"github.com/ugorji/go/codec"
 )
 
 // An ethereum request abstraction.
@@ -17,7 +20,7 @@ type ethRequest struct {
 	// Which method you want to call
 	METHOD string `json:"method"`
 	// Params for the method you want to call
-	Params []string `json:"params"`
+	Params interface{} `json:"params"`
 }
 
 // ETHChain is a struct for identifier blockchains and their forks
@@ -26,18 +29,106 @@ type ETHChain struct {
 	ticker  string
 }
 
-// NewRequest takes an RPC URL and a hexadecimal transaction.
-// Returns PostRequest for ethereum nodes
-func (ec *ETHChain) NewRequest(rpcURL string, txHex string) (PostRequest, error) {
+func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*HttpData, error) {
 	if len(rpcURL) == 0 {
-		return PostRequest{}, fmt.Errorf("Non existent RPC URL for Ethereum chain")
+		return nil, fmt.Errorf("non existent RPC URL for Ethereum chain")
 	}
-	er := ethRequest{
-		ID:      ec.chainID,
-		JSONRPC: "2.0",
-		METHOD:  "eth_sendRawTransaction",
-		Params:  []string{txHex},
+
+	var marshalledRequest []byte
+	switch cmd {
+	case command.PostTransaction:
+		var req command.PostTransactionRequest
+		dec := codec.NewDecoderBytes(payload, &jsonHandle)
+		err := dec.Decode(&req)
+		if err != nil {
+			return nil, err
+		}
+		marshalledRequest, err = json.Marshal(ethRequest{
+			ID:      1,
+			JSONRPC: "2.0",
+			METHOD:  "eth_sendRawTransaction",
+			Params:  []string{req.TxHex},
+		})
+		if err != nil {
+			return nil, err
+		}
+
+	case command.EthQuery:
+		var req command.EthQueryRequest
+		dec := codec.NewDecoderBytes(payload, &jsonHandle)
+		err := dec.Decode(&req)
+		if err != nil {
+			return nil, err
+		}
+		nonceRequest := ethRequest{
+			ID:      1,
+			JSONRPC: "2.0",
+			METHOD:  "eth_getTransactionCount",
+			Params:  []string{req.From, "pending"},
+		}
+		gasPriceRequest := ethRequest{
+			ID:      2,
+			JSONRPC: "2.0",
+			METHOD:  "eth_gasPrice",
+		}
+		param := map[string]interface{}{
+			"to":    req.To,
+			"value": fmt.Sprintf("0x%x", req.Value),
+		}
+		if req.Data != "" {
+			param["data"] = req.Data
+		}
+		gasEstimateRequest := ethRequest{
+			ID:      3,
+			JSONRPC: "2.0",
+			METHOD:  "eth_estimateGas",
+			Params:  []interface{}{param},
+		}
+		marshalledRequest, err = json.Marshal([]ethRequest{
+			nonceRequest,
+			gasPriceRequest,
+			gasEstimateRequest,
+		})
+		if err != nil {
+			return nil, err
+		}
+
+	default:
+		return nil, fmt.Errorf("invalid cmd %x for chain %d", cmd, ec.chainID)
 	}
-	marshalledRequest, err := json.Marshal(er)
-	return PostRequest{URL: rpcURL, Body: marshalledRequest}, err
+
+	if marshalledRequest == nil {
+		return nil, fmt.Errorf("unexpected error when wrapping request")
+	}
+	return &HttpData{Method: "POST", URL: rpcURL, Body: marshalledRequest}, nil
+}
+
+func (ec *ETHChain) UnwrapResponse(cmd uint8, payload []RPCResponse) ([]byte, error) {
+	// Check if response type is error
+	for _, pl := range payload {
+		if pl.Error != nil {
+			return nil, errCodeAndMsg(pl.Error.Code, pl.Error.Message)
+		}
+	}
+
+	// Command-wise processing
+	switch cmd {
+	case command.PostTransaction:
+		if len(payload) != 1 {
+			return nil, errNumResponse(1, len(payload))
+		}
+		return json.Marshal(command.PostTransactionResponse{
+			TxHash: payload[0].Result,
+		})
+	case command.EthQuery:
+		if len(payload) != 3 {
+			return nil, errNumResponse(3, len(payload))
+		}
+		return json.Marshal(command.EthQueryResponse{
+			Nonce:    payload[0].Result,
+			GasPrice: payload[1].Result,
+			GasLimit: payload[2].Result,
+		})
+	}
+	return nil, fmt.Errorf("unexpected error when unwrapping response")
 }
