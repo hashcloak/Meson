@@ -35,10 +35,10 @@ var (
 	configFile string
 )
 
-func readConfig(configFile string) (config *cfg.Config, err error) {
+func readTendermintConfig(tConfigFile string) (config *cfg.Config, err error) {
 	config = cfg.DefaultConfig()
-	config.SetRoot(filepath.Dir(filepath.Dir(configFile)))
-	viper.SetConfigFile(configFile)
+	config.SetRoot(filepath.Dir(filepath.Dir(tConfigFile)))
+	viper.SetConfigFile(tConfigFile)
 	if err = viper.ReadInConfig(); err != nil {
 		err = fmt.Errorf("viper failed to read config file: %w", err)
 		return
@@ -114,7 +114,7 @@ func initConfig() (kConfig *kcfg.Config, config *cfg.Config, err error) {
 	if err != nil {
 		return
 	}
-	config, err = readConfig(kConfig.TendermintConfigPath)
+	config, err = readTendermintConfig(kConfig.TendermintConfigPath)
 	return
 }
 
