@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/mock"
@@ -46,7 +47,7 @@ func TestAddAuthority(t *testing.T) {
 		Auth:    "katzenmint",
 		Power:   1,
 		PubKey:  privKey.PublicKey().Bytes(),
-		KeyType: "",
+		KeyType: privKey.KeyType(),
 	}
 	rawAuth, err := EncodeJson(authority)
 	if err != nil {
@@ -70,11 +71,11 @@ func TestAddAuthority(t *testing.T) {
 
 	// make checks
 	validator := abcitypes.UpdateValidator(authority.PubKey, authority.Power, authority.KeyType)
-	protoPubKey, err := validator.PubKey.Marshal()
+	pubkey, err := cryptoenc.PubKeyFromProto(validator.PubKey)
 	if err != nil {
-		t.Fatalf("Failed to encode public with protobuf: %v\n", err)
+		t.Fatalf("Failed to decode public key: %v\n", err)
 	}
-	key := storageKey(authoritiesBucket, protoPubKey, 0)
+	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
 	_, err = app.state.Get(key)
 	if err != nil {
 		t.Fatalf("Failed to get authority from database: %+v\n", err)

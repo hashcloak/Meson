@@ -52,7 +52,14 @@ func (app *KatzenmintApplication) SetOption(req abcitypes.RequestSetOption) abci
 	return abcitypes.ResponseSetOption{}
 }
 
-func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payload []byte, desc *pki.MixDescriptor, doc *pki.Document, auth *Authority, err error) {
+func (app *KatzenmintApplication) isTxValid(rawTx []byte) (
+	tx *Transaction,
+	payload []byte,
+	desc *pki.MixDescriptor,
+	doc *pki.Document,
+	auth *AuthorityChecked,
+	err error,
+) {
 	// decode raw into transcation
 	tx = new(Transaction)
 	dec := codec.NewDecoderBytes(rawTx, jsonHandle)
@@ -102,8 +109,11 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payl
 			err = ErrTxAuthorityParse
 			return
 		}
-		addr := tx.Address()
-		if !app.state.isAuthorityAuthorized(addr) {
+		if !app.state.isAuthorityNew(auth) {
+			err = ErrTxAuthorityExists
+			return
+		}
+		if !app.state.isAuthorityAuthorized(tx.Address(), auth) {
 			err = ErrTxAuthorityNotAuthorized
 			return
 		}
@@ -114,7 +124,12 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payl
 	return
 }
 
-func (app *KatzenmintApplication) executeTx(tx *Transaction, payload []byte, desc *pki.MixDescriptor, doc *pki.Document, auth *Authority) error {
+func (app *KatzenmintApplication) executeTx(
+	tx *Transaction, payload []byte,
+	desc *pki.MixDescriptor,
+	doc *pki.Document,
+	auth *AuthorityChecked,
+) error {
 	// check for the epoch relative to the current epoch
 	if tx.Epoch < app.state.currentEpoch-1 || tx.Epoch > app.state.currentEpoch+1 {
 		return ErrTxWrongEpoch
@@ -127,7 +142,7 @@ func (app *KatzenmintApplication) executeTx(tx *Transaction, payload []byte, des
 			return ErrTxUpdateDesc
 		}
 	case AddNewAuthority:
-		err := app.state.updateAuthority(payload, abcitypes.UpdateValidator(auth.PubKey, auth.Power, auth.KeyType))
+		err := app.state.updateAuthority(payload, *auth.Val)
 		if err != nil {
 			app.logger.Error("failed to add new authority", "epoch", app.state.currentEpoch, "error", err)
 			return ErrTxUpdateAuth
@@ -237,7 +252,7 @@ func (app *KatzenmintApplication) BeginBlock(req abcitypes.RequestBeginBlock) ab
 	for _, ev := range req.ByzantineValidators {
 		if ev.Type == abcitypes.EvidenceType_DUPLICATE_VOTE {
 			addr := string(ev.Validator.Address)
-			if pubKey, ok := app.state.GetAuthorized(addr); ok {
+			if pubKey, ok := app.state.GetAuthorityPubKey(addr); ok {
 				_ = app.state.updateAuthority(nil, abcitypes.ValidatorUpdate{
 					PubKey: pubKey,
 					Power:  ev.Validator.Power - 1,

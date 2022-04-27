@@ -13,6 +13,7 @@ import (
 	"github.com/katzenpost/core/crypto/rand"
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	dbm "github.com/tendermint/tm-db"
 
 	// "github.com/stretchr/testify/assert"
@@ -175,11 +176,11 @@ func TestUpdateAuthority(t *testing.T) {
 	}
 
 	// test the data exists in database
-	protoPubKey, err := validator.PubKey.Marshal()
+	pubkey, err := cryptoenc.PubKeyFromProto(validator.PubKey)
 	if err != nil {
-		t.Fatalf("Failed to encode public with protobuf: %v\n", err)
+		t.Fatalf("Failed to decode public key: %v\n", err)
 	}
-	key := storageKey(authoritiesBucket, protoPubKey, 0)
+	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
 	_, err = state.Get(key)
 	if err != nil {
 		t.Fatalf("Failed to get authority from database: %+v\n", err)

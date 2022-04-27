@@ -57,7 +57,6 @@ type KatzenmintState struct {
 }
 
 func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
-	// TODO: should load the current state from database
 	tree, err := iavl.NewMutableTree(db, 100)
 	if err != nil {
 		panic(fmt.Errorf("error creating iavl tree"))
@@ -106,32 +105,17 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 	copy(end, []byte(authoritiesBucket))
 	end = append(end, 0xff)
 	_ = tree.IterateRange([]byte(authoritiesBucket), end, true, func(key, value []byte) bool {
-		id, _ := unpackStorageKey(key)
-		if id == nil {
-			// panic(fmt.Errorf("unable to unpack storage key %v", key))
-			return true
-		}
 		auth, err := VerifyAndParseAuthority(value)
 		if err != nil {
 			// panic(fmt.Errorf("error parsing authority: %v", err))
 			return true
 		}
-		var protopk pc.PublicKey
-		err = protopk.Unmarshal(id)
+		pk, err := cryptoenc.PubKeyFromProto(auth.Val.PubKey)
 		if err != nil {
-			// panic(fmt.Errorf("error unmarshal proto: %v", err))
+			// panic(fmt.Errorf("error extraction from proto: %v", err))
 			return true
 		}
-		pk, err := cryptoenc.PubKeyFromProto(protopk)
-		if err != nil {
-			panic(fmt.Errorf("error extraction from proto: %v", err))
-			// return true
-		}
-		state.validators[string(pk.Address())] = protopk
-		if !bytes.Equal(auth.PubKey, protopk.GetEd25519()) {
-			panic(fmt.Errorf("storage key id %v has another authority id %v", id, auth.PubKey))
-			// return false
-		}
+		state.validators[string(pk.Address())] = auth.Val.PubKey
 		return false
 	})
 
@@ -320,16 +304,29 @@ func (state *KatzenmintState) documentForEpoch(epoch uint64, height int64) ([]by
 	return doc, valueOp, nil
 }
 
-func (state *KatzenmintState) isAuthorityAuthorized(addr string) bool {
+func (state *KatzenmintState) isAuthorityNew(auth *AuthorityChecked) bool {
+	pubkey, err := cryptoenc.PubKeyFromProto(auth.Val.PubKey)
+	if err != nil {
+		return false
+	}
+	if _, ok := state.validators[string(pubkey.Address())]; ok {
+		return false
+	}
 	return true
 }
 
-func (state *KatzenmintState) GetAuthorized(addr string) (pc.PublicKey, bool) {
-	pubkey, ok := state.validators[addr]
-	return pubkey, ok
+func (state *KatzenmintState) isAuthorityAuthorized(addr string, auth *AuthorityChecked) bool {
+	// TODO: determine the criteria to prevent sybil attacks
+	return auth.Val.Power <= 1
+}
+
+func (state *KatzenmintState) GetAuthorityPubKey(addr string) (pc.PublicKey, bool) {
+	val, ok := state.validators[addr]
+	return val, ok
 }
 
 func (state *KatzenmintState) isDescriptorAuthorized(desc *pki.MixDescriptor) bool {
+	// TODO: determine the criteria to prevent sybil attacks
 	return true
 }
 
@@ -423,14 +420,7 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 	if err != nil {
 		return fmt.Errorf("can't decode public key: %w", err)
 	}
-	if _, ok := state.validators[string(pubkey.Address())]; ok {
-		return fmt.Errorf("authority had been added")
-	}
-	protoPubKey, err := v.PubKey.Marshal()
-	if err != nil {
-		return err
-	}
-	key := storageKey(authoritiesBucket, protoPubKey, 0)
+	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
 
 	if v.Power == 0 {
 		// remove validator
