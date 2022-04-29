@@ -252,7 +252,7 @@ func (app *KatzenmintApplication) BeginBlock(req abcitypes.RequestBeginBlock) ab
 	for _, ev := range req.ByzantineValidators {
 		if ev.Type == abcitypes.EvidenceType_DUPLICATE_VOTE {
 			addr := string(ev.Validator.Address)
-			if pubKey, ok := app.state.GetAuthorityPubKey(addr); ok {
+			if pubKey, ok := app.state.validators[addr]; ok {
 				_ = app.state.updateAuthority(nil, abcitypes.ValidatorUpdate{
 					PubKey: pubKey,
 					Power:  ev.Validator.Power - 1,

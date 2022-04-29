@@ -56,6 +56,10 @@ type KatzenmintState struct {
 	prevCommitError error
 }
 
+/*****************************************
+ *            Load & Save State          *
+ *****************************************/
+
 func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 	tree, err := iavl.NewMutableTree(db, 100)
 	if err != nil {
@@ -166,192 +170,9 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 	return appHash, err
 }
 
-func (state *KatzenmintState) newDocumentRequired() bool {
-	// TODO: determine when to finish the current epoch
-	return state.blockHeight > state.epochStartHeight+epochInterval
-}
-
-func (s *KatzenmintState) generateDocument() (*document, error) {
-	// Cannot lock here
-
-	// Load descriptors (providers and nodesDesc).
-	var providersDesc, nodesDesc []*descriptor
-	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
-	end := make([]byte, len(begin))
-	copy(end, begin)
-	end[len(end)-1] = 0xff
-	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
-		ret = false
-		id, _ := unpackStorageKey(key)
-		if id == nil {
-			return
-		}
-		desc, err := s11n.ParseDescriptorWithoutVerify(value)
-		if err != nil {
-			return
-		}
-		v := &descriptor{desc: desc, raw: value}
-		if v.desc.Layer == pki.LayerProvider {
-			providersDesc = append(providersDesc, v)
-		} else {
-			nodesDesc = append(nodesDesc, v)
-		}
-		return
-	})
-
-	// Assign nodes to layers. # No randomness yet.
-	var topology [][][]byte
-	if len(nodesDesc) < s.layers*s.minNodesPerLayer {
-		return nil, errDocInsufficientDescriptor
-	}
-	sortNodesByPublicKey(nodesDesc)
-	if s.prevDocument != nil {
-		topology = generateTopology(nodesDesc, s.prevDocument.doc, s.layers)
-	} else {
-		topology = generateRandomTopology(nodesDesc, s.layers)
-	}
-
-	// Sort the providers
-	var providers [][]byte
-	if len(providersDesc) == 0 {
-		return nil, errDocInsufficientProvider
-	}
-	sortNodesByPublicKey(providersDesc)
-	for _, v := range providersDesc {
-		providers = append(providers, v.raw)
-	}
-
-	// Build the Document.
-	doc := &s11n.Document{
-		Epoch:             s.currentEpoch,
-		GenesisEpoch:      genesisEpoch,
-		SendRatePerMinute: s.parameters.SendRatePerMinute,
-		Mu:                s.parameters.Mu,
-		MuMaxDelay:        s.parameters.MuMaxDelay,
-		LambdaP:           s.parameters.LambdaP,
-		LambdaPMaxDelay:   s.parameters.LambdaPMaxDelay,
-		LambdaL:           s.parameters.LambdaL,
-		LambdaLMaxDelay:   s.parameters.LambdaLMaxDelay,
-		LambdaD:           s.parameters.LambdaD,
-		LambdaDMaxDelay:   s.parameters.LambdaDMaxDelay,
-		LambdaM:           s.parameters.LambdaM,
-		LambdaMMaxDelay:   s.parameters.LambdaMMaxDelay,
-		Topology:          topology,
-		Providers:         providers,
-	}
-
-	// TODO: what to do with shared random value?
-
-	// Serialize the Document.
-	serialized, err := s11n.SerializeDocument(doc)
-	if err != nil {
-		return nil, fmt.Errorf("failed to serialize document: %v", err)
-	}
-
-	// Ensure the document is sane.
-	pDoc, err := s11n.VerifyAndParseDocument(serialized)
-	if err != nil {
-		return nil, fmt.Errorf("signed document failed validation: %v", err)
-	}
-	if pDoc.Epoch != s.currentEpoch {
-		return nil, fmt.Errorf("signed document has invalid epoch: %v", pDoc.Epoch)
-	}
-	ret := &document{
-		doc: pDoc,
-		raw: serialized,
-	}
-	return ret, nil
-}
-
-func (state *KatzenmintState) latestEpoch(height int64) ([]byte, merkle.ProofOperator, error) {
-	key := []byte(epochInfoKey)
-	val, proof, err := state.tree.GetVersionedWithProof(key, height)
-	if err != nil {
-		return nil, nil, err
-	}
-	if len(val) != 16 {
-		return nil, nil, fmt.Errorf("error fetching latest epoch for height %v", height)
-	}
-	valueOp := iavl.NewValueOp(key, proof)
-	return val, valueOp, nil
-
-}
-
-func (state *KatzenmintState) documentForEpoch(epoch uint64, height int64) ([]byte, merkle.ProofOperator, error) {
-	// TODO: postpone the document for some blocks?
-	// var postponDeadline = 10
-
-	if epoch == 0 {
-		return nil, nil, ErrQueryDocumentUnknown
-	}
-	e := make([]byte, 8)
-	binary.BigEndian.PutUint64(e, epoch)
-	key := storageKey(documentsBucket, e, epoch)
-	doc, proof, err := state.tree.GetVersionedWithProof(key, height)
-	if err != nil {
-		return nil, nil, err
-	}
-	if doc == nil {
-		if epoch < state.currentEpoch {
-			return nil, nil, ErrQueryNoDocument
-		}
-		if epoch == state.currentEpoch {
-			return nil, nil, ErrQueryDocumentNotReady
-		}
-		return nil, nil, fmt.Errorf("requesting document for a too future epoch %d", epoch)
-	}
-	valueOp := iavl.NewValueOp(key, proof)
-	return doc, valueOp, nil
-}
-
-func (state *KatzenmintState) isAuthorityNew(auth *AuthorityChecked) bool {
-	pubkey, err := cryptoenc.PubKeyFromProto(auth.Val.PubKey)
-	if err != nil {
-		return false
-	}
-	if _, ok := state.validators[string(pubkey.Address())]; ok {
-		return false
-	}
-	return true
-}
-
-func (state *KatzenmintState) isAuthorityAuthorized(addr string, auth *AuthorityChecked) bool {
-	// TODO: determine the criteria to prevent sybil attacks
-	return auth.Val.Power <= 1
-}
-
-func (state *KatzenmintState) GetAuthorityPubKey(addr string) (pc.PublicKey, bool) {
-	val, ok := state.validators[addr]
-	return val, ok
-}
-
-func (state *KatzenmintState) isDescriptorAuthorized(desc *pki.MixDescriptor) bool {
-	// TODO: determine the criteria to prevent sybil attacks
-	return true
-}
-
-func (state *KatzenmintState) Set(key []byte, value []byte) error {
-	state.tree.Set(key, value)
-	return nil
-}
-
-func (state *KatzenmintState) Delete(key []byte) error {
-	_, success := state.tree.Remove(key)
-	if !success {
-		return fmt.Errorf("remove from database failed")
-	}
-	return nil
-}
-
-func (state *KatzenmintState) Get(key []byte) ([]byte, error) {
-	_, val := state.tree.Get(key)
-	if val == nil {
-		return nil, fmt.Errorf("key '%v' does not exist", key)
-	}
-	ret := make([]byte, len(val))
-	copy(ret, val)
-	return ret, nil
-}
+/*****************************************
+ *              Modify State             *
+ *****************************************/
 
 // Note: Caller ensures that the epoch is the current epoch +- 1.
 func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixDescriptor, epoch uint64) (err error) {
@@ -458,4 +279,202 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 	state.validatorUpdates = append(state.validatorUpdates, v)
 
 	return nil
+}
+
+/*****************************************
+ *        Criteria of State Change       *
+ *****************************************/
+
+func (state *KatzenmintState) newDocumentRequired() bool {
+	// TODO: determine when to finish the current epoch
+	return state.blockHeight > state.epochStartHeight+epochInterval
+}
+
+func (state *KatzenmintState) isDescriptorAuthorized(desc *pki.MixDescriptor) bool {
+	// TODO: determine the criteria to prevent sybil attacks
+	return true
+}
+
+func (state *KatzenmintState) isAuthorityAuthorized(addr string, auth *AuthorityChecked) bool {
+	// TODO: determine the criteria to prevent sybil attacks
+	return auth.Val.Power <= 1
+}
+
+func (state *KatzenmintState) isAuthorityNew(auth *AuthorityChecked) bool {
+	pubkey, err := cryptoenc.PubKeyFromProto(auth.Val.PubKey)
+	if err != nil {
+		return false
+	}
+	if _, ok := state.validators[string(pubkey.Address())]; ok {
+		return false
+	}
+	return true
+}
+
+/*****************************************
+ *               Getter                  *
+ *****************************************/
+
+func (state *KatzenmintState) latestEpoch(height int64) ([]byte, merkle.ProofOperator, error) {
+	key := []byte(epochInfoKey)
+	val, proof, err := state.tree.GetVersionedWithProof(key, height)
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(val) != 16 {
+		return nil, nil, fmt.Errorf("error fetching latest epoch for height %v", height)
+	}
+	valueOp := iavl.NewValueOp(key, proof)
+	return val, valueOp, nil
+
+}
+
+func (state *KatzenmintState) documentForEpoch(epoch uint64, height int64) ([]byte, merkle.ProofOperator, error) {
+	// TODO: postpone the document for some blocks?
+	// var postponDeadline = 10
+
+	if epoch == 0 {
+		return nil, nil, ErrQueryDocumentUnknown
+	}
+	e := make([]byte, 8)
+	binary.BigEndian.PutUint64(e, epoch)
+	key := storageKey(documentsBucket, e, epoch)
+	doc, proof, err := state.tree.GetVersionedWithProof(key, height)
+	if err != nil {
+		return nil, nil, err
+	}
+	if doc == nil {
+		if epoch < state.currentEpoch {
+			return nil, nil, ErrQueryNoDocument
+		}
+		if epoch == state.currentEpoch {
+			return nil, nil, ErrQueryDocumentNotReady
+		}
+		return nil, nil, fmt.Errorf("requesting document for a too future epoch %d", epoch)
+	}
+	valueOp := iavl.NewValueOp(key, proof)
+	return doc, valueOp, nil
+}
+
+/*****************************************
+ *               Document                *
+ *****************************************/
+
+func (s *KatzenmintState) generateDocument() (*document, error) {
+	// Cannot lock here
+
+	// Load descriptors (providers and nodesDesc).
+	var providersDesc, nodesDesc []*descriptor
+	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
+	end := make([]byte, len(begin))
+	copy(end, begin)
+	end[len(end)-1] = 0xff
+	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
+		ret = false
+		id, _ := unpackStorageKey(key)
+		if id == nil {
+			return
+		}
+		desc, err := s11n.ParseDescriptorWithoutVerify(value)
+		if err != nil {
+			return
+		}
+		v := &descriptor{desc: desc, raw: value}
+		if v.desc.Layer == pki.LayerProvider {
+			providersDesc = append(providersDesc, v)
+		} else {
+			nodesDesc = append(nodesDesc, v)
+		}
+		return
+	})
+
+	// Assign nodes to layers. # No randomness yet.
+	var topology [][][]byte
+	if len(nodesDesc) < s.layers*s.minNodesPerLayer {
+		return nil, errDocInsufficientDescriptor
+	}
+	sortNodesByPublicKey(nodesDesc)
+	if s.prevDocument != nil {
+		topology = generateTopology(nodesDesc, s.prevDocument.doc, s.layers)
+	} else {
+		topology = generateRandomTopology(nodesDesc, s.layers)
+	}
+
+	// Sort the providers
+	var providers [][]byte
+	if len(providersDesc) == 0 {
+		return nil, errDocInsufficientProvider
+	}
+	sortNodesByPublicKey(providersDesc)
+	for _, v := range providersDesc {
+		providers = append(providers, v.raw)
+	}
+
+	// Build the Document.
+	doc := &s11n.Document{
+		Epoch:             s.currentEpoch,
+		GenesisEpoch:      genesisEpoch,
+		SendRatePerMinute: s.parameters.SendRatePerMinute,
+		Mu:                s.parameters.Mu,
+		MuMaxDelay:        s.parameters.MuMaxDelay,
+		LambdaP:           s.parameters.LambdaP,
+		LambdaPMaxDelay:   s.parameters.LambdaPMaxDelay,
+		LambdaL:           s.parameters.LambdaL,
+		LambdaLMaxDelay:   s.parameters.LambdaLMaxDelay,
+		LambdaD:           s.parameters.LambdaD,
+		LambdaDMaxDelay:   s.parameters.LambdaDMaxDelay,
+		LambdaM:           s.parameters.LambdaM,
+		LambdaMMaxDelay:   s.parameters.LambdaMMaxDelay,
+		Topology:          topology,
+		Providers:         providers,
+	}
+
+	// TODO: what to do with shared random value?
+
+	// Serialize the Document.
+	serialized, err := s11n.SerializeDocument(doc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize document: %v", err)
+	}
+
+	// Ensure the document is sane.
+	pDoc, err := s11n.VerifyAndParseDocument(serialized)
+	if err != nil {
+		return nil, fmt.Errorf("signed document failed validation: %v", err)
+	}
+	if pDoc.Epoch != s.currentEpoch {
+		return nil, fmt.Errorf("signed document has invalid epoch: %v", pDoc.Epoch)
+	}
+	ret := &document{
+		doc: pDoc,
+		raw: serialized,
+	}
+	return ret, nil
+}
+
+/*****************************************
+ *               Database                *
+ *****************************************/
+
+func (state *KatzenmintState) Set(key []byte, value []byte) error {
+	state.tree.Set(key, value)
+	return nil
+}
+
+func (state *KatzenmintState) Delete(key []byte) error {
+	_, success := state.tree.Remove(key)
+	if !success {
+		return fmt.Errorf("remove from database failed")
+	}
+	return nil
+}
+
+func (state *KatzenmintState) Get(key []byte) ([]byte, error) {
+	_, val := state.tree.Get(key)
+	if val == nil {
+		return nil, fmt.Errorf("key '%v' does not exist", key)
+	}
+	ret := make([]byte, len(val))
+	copy(ret, val)
+	return ret, nil
 }
