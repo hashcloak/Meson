@@ -17,6 +17,7 @@
 package client
 
 import (
+	"container/heap"
 	"fmt"
 	"sync"
 	"time"
@@ -72,7 +73,7 @@ func (a *TimerQueue) Remove(i Item) error {
 	defer a.Unlock()
 	if mo := a.priq.Peek(); mo != nil {
 		if mo.Value.(Item).Priority() == i.Priority() {
-			_ = a.priq.Pop()
+			_ = heap.Pop(a.priq)
 			if a.priq.Len() > 0 {
 				a.Signal()
 			}
@@ -114,7 +115,7 @@ func (a *TimerQueue) wakeupCh() chan struct{} {
 // pop top item from queue and forward to next queue
 func (a *TimerQueue) forward() {
 	a.Lock()
-	m := a.priq.Pop()
+	m := heap.Pop(a.priq)
 
 	a.Unlock()
 	if m == nil {
