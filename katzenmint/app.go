@@ -199,7 +199,7 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 		return
 	case GetEpoch:
 		resQuery.Height = app.state.blockHeight - 1
-		val, proof, err := app.state.latestEpoch(resQuery.Height)
+		val, proof, err := app.state.GetEpoch(resQuery.Height)
 		if err != nil {
 			app.logger.Error("peer: failed to retrieve epoch for height", "height", resQuery.Height, "error", err)
 			parseErrorResponse(ErrQueryEpochFailed, &resQuery)
@@ -213,7 +213,7 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 
 	case GetConsensus:
 		resQuery.Height = app.state.blockHeight - 1
-		doc, proof, err := app.state.documentForEpoch(kquery.Epoch, resQuery.Height)
+		doc, proof, err := app.state.GetDocument(kquery.Epoch, resQuery.Height)
 		if err != nil {
 			if err == ErrQueryNoDocument {
 				app.logger.Error("warn: detected a skipped document", "miss", kquery.Epoch, "now", app.state.currentEpoch)
@@ -235,6 +235,7 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 }
 
 func (app *KatzenmintApplication) InitChain(req abcitypes.RequestInitChain) abcitypes.ResponseInitChain {
+	app.state.BeginBlock()
 	for _, v := range req.Validators {
 		err := app.state.updateAuthority(nil, v)
 		if err != nil {
@@ -252,9 +253,11 @@ func (app *KatzenmintApplication) BeginBlock(req abcitypes.RequestBeginBlock) ab
 	for _, ev := range req.ByzantineValidators {
 		if ev.Type == abcitypes.EvidenceType_DUPLICATE_VOTE {
 			addr := string(ev.Validator.Address)
-			if pubKey, ok := app.state.validators[addr]; ok {
+			if ev.Validator.Power <= 0 {
+				app.logger.Error("non positive val power", "address", addr, "power", ev.Validator.Power)
+			} else if pubKey, err := app.state.GetAuthority(addr); err == nil {
 				_ = app.state.updateAuthority(nil, abcitypes.ValidatorUpdate{
-					PubKey: pubKey,
+					PubKey: *pubKey,
 					Power:  ev.Validator.Power - 1,
 				})
 				app.logger.Error("decreased val power by 1 because of the equivocation", "address", addr)

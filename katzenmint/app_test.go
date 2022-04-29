@@ -140,10 +140,11 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	// commit through the epoch
 	for i := int64(0); i <= epochInterval; i++ {
 		m.App.Commit()
+		m.App.BeginBlock(abcitypes.RequestBeginBlock{})
 	}
 
 	// test the doc is formed and exists in state
-	loaded, _, err := app.state.documentForEpoch(epoch, app.state.blockHeight)
+	loaded, _, err := app.state.GetDocument(epoch, app.state.blockHeight)
 	require.Nil(err, "Failed to get pki document from state: %+v\n", err)
 	require.NotNil(loaded, "Failed to get pki document from state: wrong key")
 	// test against the expected doc?
@@ -153,9 +154,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	appinfo, err = m.ABCIInfo(context.Background())
 	require.Nil(err)
 	apphash := appinfo.Response.LastBlockAppHash
-	e := make([]byte, 8)
-	binary.BigEndian.PutUint64(e, epoch)
-	key := storageKey(documentsBucket, e, epoch)
+	key := storageKey(documentsBucket, []byte{}, epoch)
 	path := "/" + url.PathEscape(string(key))
 
 	m.App.Commit()

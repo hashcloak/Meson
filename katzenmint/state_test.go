@@ -2,12 +2,10 @@ package katzenmint
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"testing"
 
 	"github.com/hashcloak/Meson/katzenmint/config"
-	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
@@ -82,64 +80,6 @@ func TestUpdateDescriptor(t *testing.T) {
 	}
 }
 
-func TestUpdateDocument(t *testing.T) {
-	require := require.New(t)
-
-	// create katzenmint state
-	db := dbm.NewMemDB()
-	defer db.Close()
-	state := NewKatzenmintState(kConfig, db)
-
-	// create, validate and deserialize document
-	_, sDoc := testutil.CreateTestDocument(require, testEpoch)
-	dDoc, err := s11n.VerifyAndParseDocument(sDoc)
-	if err != nil {
-		t.Fatalf("Failed to VerifyAndParseDocument document: %+v\n", err)
-	}
-
-	// update document
-	state.BeginBlock()
-	err = state.updateDocument(sDoc, dDoc, testEpoch)
-	if err != nil {
-		t.Fatalf("Failed to update pki document: %+v\n", err)
-	}
-	state.currentEpoch++
-	state.epochStartHeight = state.blockHeight
-	_, err = state.Commit()
-	if err != nil {
-		t.Fatalf("Failed to commit: %v\n", err)
-	}
-
-	// test the data exists in database
-	e := make([]byte, 8)
-	binary.BigEndian.PutUint64(e, testEpoch)
-	key := storageKey(documentsBucket, e, testEpoch)
-	gotRaw, err := state.Get(key)
-	if err != nil {
-		t.Fatalf("Failed to get pki document from database: %+v\n", err)
-	}
-	if !bytes.Equal(gotRaw, sDoc) {
-		t.Fatalf("Got a wrong document from database\n")
-	}
-
-	// test the data exists in memory
-	if state.prevDocument == nil {
-		t.Fatal("Failed to get pki document from memory\n")
-	}
-	if !bytes.Equal(state.prevDocument.raw, sDoc) {
-		t.Fatalf("Got a wrong document from memory\n")
-	}
-
-	// test the data can be reloaded into memory
-	state = NewKatzenmintState(kConfig, db)
-	if state.prevDocument == nil {
-		t.Fatal("Failed to reload pki document into memory\n")
-	}
-	if !bytes.Equal(state.prevDocument.raw, sDoc) {
-		t.Fatalf("Got a wrong document from reloaded memory\n")
-	}
-}
-
 func TestUpdateAuthority(t *testing.T) {
 	require := require.New(t)
 
@@ -199,9 +139,6 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	defer db.Close()
 	state := NewKatzenmintState(kConfig, db)
 	epoch := state.currentEpoch
-	e := make([]byte, 8)
-	binary.BigEndian.PutUint64(e, epoch)
-	key := storageKey(documentsBucket, e, epoch)
 
 	// create descriptorosts of providers
 	providers := make([]descriptor, 0)
@@ -237,26 +174,22 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 			t.Fatalf("Failed to update mix descriptor: %+v\n", err)
 		}
 	}
-	_, err := state.Commit()
-	if err != nil {
-		t.Fatalf("Failed to commit: %v\n", err)
-	}
 
 	// proceed with enough block commits to enter the next epoch
-	for i := 0; i < int(epochInterval)-1; i++ {
-		state.BeginBlock()
-		_, err = state.Commit()
+	for i := 0; i < int(epochInterval); i++ {
+		_, err := state.Commit()
 		if err != nil {
 			t.Fatalf("Failed to commit: %v\n", err)
 		}
+		state.BeginBlock()
 	}
-	state.BeginBlock()
-	_, err = state.Commit()
+	_, err := state.Commit()
 	if err == nil {
 		t.Fatal("Commit should report an error as a side effect because threshold of document creation is not achieved")
 	}
 
 	// test the non-existence of the document
+	key := storageKey(documentsBucket, []byte{}, epoch)
 	_, err = state.Get(key)
 	if state.prevDocument != nil || err == nil {
 		t.Fatalf("The pki document should not be generated at this moment because there is not enough mix descriptors\n")
@@ -290,7 +223,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	if newState.prevDocument == nil {
 		t.Fatalf("The pki document should be reloaded\n")
 	}
-	if !bytes.Equal(newState.prevDocument.raw, state.prevDocument.raw) {
+	if newState.prevDocument.String() != state.prevDocument.String() {
 		t.Fatalf("Reloaded doc inconsistent with the generated doc\n")
 	}
 }
