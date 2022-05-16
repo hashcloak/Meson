@@ -76,7 +76,7 @@ func TestAddAuthority(t *testing.T) {
 		t.Fatalf("Failed to decode public key: %v\n", err)
 	}
 	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
-	_, err = app.state.Get(key)
+	_, err = app.state.get(key)
 	if err != nil {
 		t.Fatalf("Failed to get authority from database: %+v\n", err)
 	}

@@ -135,6 +135,8 @@ func runNode(cmd *cobra.Command, args []string) error {
 	}
 
 	app := katzenmint.NewKatzenmintApplication(kConfig, db, logger)
+	defer app.Close()
+
 	node, err := newTendermint(app, config, logger)
 	if err != nil {
 		return err

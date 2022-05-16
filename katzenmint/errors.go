@@ -49,6 +49,7 @@ var (
 	ErrQueryNoDocument       = KatzenmintError{Code: 0x34, Msg: "requested epoch has passed and will never get a document"}
 	ErrQueryDocumentNotReady = KatzenmintError{Code: 0x35, Msg: "document for requested epoch is not ready yet"}
 	ErrQueryDocumentUnknown  = KatzenmintError{Code: 0x36, Msg: "unknown failure for document query"}
+	ErrQueryAppClosed        = KatzenmintError{Code: 0x37, Msg: "application has been closed"}
 
 	// Authority Errors
 	ErrAuthorityKeyTypeNotSupported = KatzenmintError{Code: 0x41, Msg: "authority key type is not supported"}

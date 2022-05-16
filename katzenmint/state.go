@@ -24,6 +24,7 @@ const epochInterval int64 = 10
 const lifeCycle int = 3
 
 var (
+	errStateClosed               = errors.New("katzenmint state is closed")
 	errDocInsufficientDescriptor = errors.New("insufficient descriptors uploaded")
 	errDocInsufficientProvider   = errors.New("no providers uploaded")
 )
@@ -98,16 +99,12 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 	return state
 }
 
-func (state *KatzenmintState) BeginBlock() {
-	state.Lock()
-	defer state.Unlock()
-	state.memAdded = dbm.NewMemDB()
-	state.validatorUpdates = make([]abcitypes.ValidatorUpdate, 0)
-}
-
 func (state *KatzenmintState) Commit() ([]byte, error) {
 	state.Lock()
 	defer state.Unlock()
+	if state.isClosed() {
+		return nil, errStateClosed
+	}
 
 	iter, _ := state.memAdded.Iterator([]byte{0x00}, []byte{0xFF})
 	for ; iter.Valid(); iter.Next() {
@@ -152,19 +149,34 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 	return appHash, err
 }
 
+func (state *KatzenmintState) Close() {
+	state.Lock()
+	defer state.Unlock()
+	state.tree = nil
+	if state.memAdded != nil {
+		_ = state.memAdded.Close()
+	}
+}
+
+func (state *KatzenmintState) isClosed() bool {
+	return state.tree == nil
+}
+
 /*****************************************
  *              Modify State             *
  *****************************************/
 
+func (state *KatzenmintState) BeginBlock() {
+	state.memAdded = dbm.NewMemDB()
+	state.validatorUpdates = make([]abcitypes.ValidatorUpdate, 0)
+}
+
 // Epoch has to be in [current epoch, current epoch + lifeCycle].
 func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixDescriptor, epoch uint64) (err error) {
-	state.Lock()
-	defer state.Unlock()
-
 	key := storageKey(descriptorsBucket, desc.IdentityKey.Bytes(), epoch)
 
 	// Check for redundant uploads.
-	if _, err := state.Get(key); err == nil {
+	if _, err := state.get(key); err == nil {
 		return fmt.Errorf("duplicated descriptor with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
 	}
 
@@ -177,7 +189,7 @@ func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixD
 	}
 
 	// Save it to memory db.
-	return state.memAdded.Set(key, rawDesc)
+	return state.set(key, rawDesc)
 }
 
 func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.ValidatorUpdate) error {
@@ -201,7 +213,7 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 		}
 	}
 
-	err = state.memAdded.Set(key, rawAuth)
+	err = state.set(key, rawAuth)
 	if err != nil {
 		return err
 	}
@@ -234,15 +246,21 @@ func (state *KatzenmintState) isAuthorityNew(auth *AuthorityChecked) bool {
 		return false
 	}
 	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
-	val, _ := state.Get(key)
+	val, _ := state.get(key)
 	return val == nil
 }
 
 /*****************************************
- *               Getter                  *
+ *           Internal Getter             *
  *****************************************/
 
-func (state *KatzenmintState) Get(key []byte) (val []byte, err error) {
+func (state *KatzenmintState) get(key []byte) (val []byte, err error) {
+	state.Lock()
+	defer state.Unlock()
+	if state.isClosed() {
+		return nil, errStateClosed
+	}
+
 	has, err := state.memAdded.Has(key)
 	if err != nil {
 		return nil, err
@@ -260,9 +278,31 @@ func (state *KatzenmintState) Get(key []byte) (val []byte, err error) {
 	return ret, nil
 }
 
+func (state *KatzenmintState) getProof(key []byte, height int64) ([]byte, *iavl.RangeProof, error) {
+	state.Lock()
+	defer state.Unlock()
+	if state.isClosed() {
+		return nil, nil, errStateClosed
+	}
+	return state.tree.GetVersionedWithProof(key, height)
+}
+
+func (state *KatzenmintState) set(key []byte, value []byte) error {
+	state.Lock()
+	defer state.Unlock()
+	if state.isClosed() {
+		return errStateClosed
+	}
+	return state.memAdded.Set(key, value)
+}
+
+/*****************************************
+ *           External Getter             *
+ *****************************************/
+
 func (state *KatzenmintState) GetAuthority(addr string) (*pc.PublicKey, error) {
 	key := storageKey(authoritiesBucket, []byte(addr), 0)
-	val, err := state.Get(key)
+	val, err := state.get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +315,7 @@ func (state *KatzenmintState) GetAuthority(addr string) (*pc.PublicKey, error) {
 
 func (state *KatzenmintState) GetEpoch(height int64) ([]byte, merkle.ProofOperator, error) {
 	key := []byte(epochInfoKey)
-	val, proof, err := state.tree.GetVersionedWithProof(key, height)
+	val, proof, err := state.getProof(key, height)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -284,7 +324,6 @@ func (state *KatzenmintState) GetEpoch(height int64) ([]byte, merkle.ProofOperat
 	}
 	valueOp := iavl.NewValueOp(key, proof)
 	return val, valueOp, nil
-
 }
 
 func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, merkle.ProofOperator, error) {
@@ -295,7 +334,7 @@ func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, m
 		return nil, nil, ErrQueryDocumentUnknown
 	}
 	key := storageKey(documentsBucket, []byte{}, epoch)
-	doc, proof, err := state.tree.GetVersionedWithProof(key, height)
+	doc, proof, err := state.getProof(key, height)
 	if err != nil {
 		return nil, nil, err
 	}

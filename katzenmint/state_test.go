@@ -71,7 +71,7 @@ func TestUpdateDescriptor(t *testing.T) {
 
 	// test the data exists in database
 	key := storageKey(descriptorsBucket, desc.IdentityKey.Bytes(), testEpoch)
-	gotRaw, err := state.Get(key)
+	gotRaw, err := state.get(key)
 	if err != nil {
 		t.Fatalf("Failed to get mix descriptor from database: %+v\n", err)
 	}
@@ -121,7 +121,7 @@ func TestUpdateAuthority(t *testing.T) {
 		t.Fatalf("Failed to decode public key: %v\n", err)
 	}
 	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
-	_, err = state.Get(key)
+	_, err = state.get(key)
 	if err != nil {
 		t.Fatalf("Failed to get authority from database: %+v\n", err)
 	}
@@ -190,7 +190,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 
 	// test the non-existence of the document
 	key := storageKey(documentsBucket, []byte{}, epoch)
-	_, err = state.Get(key)
+	_, err = state.get(key)
 	if state.prevDocument != nil || err == nil {
 		t.Fatalf("The pki document should not be generated at this moment because there is not enough mix descriptors\n")
 	}
@@ -207,7 +207,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	}
 
 	// test the existence of the document
-	_, err = state.Get(key)
+	_, err = state.get(key)
 	if state.prevDocument == nil || err != nil {
 		t.Fatalf("The pki document should be generated automatically\n")
 	}

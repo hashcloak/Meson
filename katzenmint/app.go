@@ -39,6 +39,10 @@ func NewKatzenmintApplication(kConfig *config.Config, db dbm.DB, logger log.Logg
 	}
 }
 
+func (app *KatzenmintApplication) Close() {
+	app.state.Close()
+}
+
 func (app *KatzenmintApplication) Info(req abcitypes.RequestInfo) abcitypes.ResponseInfo {
 	return abcitypes.ResponseInfo{
 		Data:             fmt.Sprint(app.state.currentEpoch),
@@ -202,8 +206,12 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 		resQuery.Height = app.state.blockHeight - 1
 		val, proof, err := app.state.GetEpoch(resQuery.Height)
 		if err != nil {
-			app.logger.Error("peer: failed to retrieve epoch for height", "height", resQuery.Height, "error", err)
-			parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			if err == errStateClosed {
+				parseErrorResponse(ErrQueryAppClosed, &resQuery)
+			} else {
+				app.logger.Error("peer: failed to retrieve epoch for height", "height", resQuery.Height, "error", err)
+				parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			}
 			return
 		}
 		resQuery.Key = proof.GetKey()
@@ -216,7 +224,9 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 		resQuery.Height = app.state.blockHeight - 1
 		doc, proof, err := app.state.GetDocument(kquery.Epoch, resQuery.Height)
 		if err != nil {
-			if err == ErrQueryNoDocument {
+			if err == errStateClosed {
+				parseErrorResponse(ErrQueryAppClosed, &resQuery)
+			} else if err == ErrQueryNoDocument {
 				app.logger.Error("warn: detected a skipped document", "miss", kquery.Epoch, "now", app.state.currentEpoch)
 				parseErrorResponse(err.(KatzenmintError), &resQuery)
 			} else if err == ErrQueryDocumentNotReady {
