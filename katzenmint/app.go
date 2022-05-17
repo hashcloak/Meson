@@ -136,7 +136,7 @@ func (app *KatzenmintApplication) executeTx(
 	auth *AuthorityChecked,
 ) error {
 	// check for the epoch relative to the current epoch
-	if tx.Epoch < app.state.currentEpoch-1 || tx.Epoch > app.state.currentEpoch+1 {
+	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+uint64(LifeCycle) {
 		return ErrTxWrongEpoch
 	}
 	switch tx.Command {
@@ -184,7 +184,7 @@ func (app *KatzenmintApplication) CheckTx(req abcitypes.RequestCheckTx) abcitype
 func (app *KatzenmintApplication) Commit() abcitypes.ResponseCommit {
 	appHash, err := app.state.Commit()
 	if err != nil {
-		app.logger.Error("commit failed", "epoch", app.state.currentEpoch, "error", err)
+		app.logger.Error("commit failed", "epoch", app.state.currentEpoch, "height", app.state.blockHeight, "error", err)
 	}
 	return abcitypes.ResponseCommit{Data: appHash}
 }
@@ -246,6 +246,10 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 }
 
 func (app *KatzenmintApplication) InitChain(req abcitypes.RequestInitChain) abcitypes.ResponseInitChain {
+	if app.state.currentEpoch != GenesisEpoch ||
+		app.state.blockHeight != app.state.epochStartHeight {
+		panic("state is already initialized")
+	}
 	app.state.BeginBlock()
 	sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
 	for _, v := range req.Validators {

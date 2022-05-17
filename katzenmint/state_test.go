@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hashcloak/Meson/katzenmint/config"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testEpoch = genesisEpoch
+const testEpoch = GenesisEpoch
 
 var kConfig *config.Config
 
@@ -43,7 +44,7 @@ func TestNewStateBasic(t *testing.T) {
 	// test that basic state info can be rebuilt
 	state = NewKatzenmintState(kConfig, db)
 	require.Equal(int64(1), state.blockHeight)
-	require.Equal(genesisEpoch, state.currentEpoch)
+	require.Equal(GenesisEpoch, state.currentEpoch)
 	require.Equal(int64(0), state.epochStartHeight)
 }
 
@@ -176,7 +177,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	}
 
 	// proceed with enough block commits to enter the next epoch
-	for i := 0; i < int(epochInterval); i++ {
+	for i := 0; i < int(EpochInterval-1); i++ {
 		_, err := state.Commit()
 		if err != nil {
 			t.Fatalf("Failed to commit: %v\n", err)
@@ -226,4 +227,11 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	if newState.prevDocument.String() != state.prevDocument.String() {
 		t.Fatalf("Reloaded doc inconsistent with the generated doc\n")
 	}
+
+	// test the document can be queried
+	loaded, _, err := state.GetDocument(testEpoch, state.blockHeight-1)
+	require.Nil(err, "Failed to get pki document from state: %+v\n", err)
+	require.NotNil(loaded, "Failed to get pki document from state: wrong key")
+	_, err = s11n.VerifyAndParseDocument(loaded)
+	require.Nil(err, "Failed to parse pki document: %+v\n", err)
 }

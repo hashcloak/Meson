@@ -19,9 +19,9 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-const genesisEpoch uint64 = 1
-const epochInterval int64 = 10
-const lifeCycle int = 3
+const GenesisEpoch uint64 = 1
+const EpochInterval int64 = 10
+const LifeCycle int = 3
 
 var (
 	errStateClosed               = errors.New("katzenmint state is closed")
@@ -85,8 +85,8 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 	}
 	_, epochInfoValue := state.tree.Get([]byte(epochInfoKey))
 	if version == 0 {
-		state.currentEpoch = genesisEpoch
-		state.epochStartHeight = 0
+		state.currentEpoch = GenesisEpoch
+		state.epochStartHeight = state.blockHeight
 	} else if epochInfoValue == nil || len(epochInfoValue) != 16 {
 		panic("error loading the current epoch number and its starting height")
 	} else {
@@ -106,6 +106,7 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 		return nil, errStateClosed
 	}
 
+	// Save descriptors/authorities persistently
 	iter, _ := state.memAdded.Iterator([]byte{0x00}, []byte{0xFF})
 	for ; iter.Valid(); iter.Next() {
 		_ = state.tree.Set(iter.Key(), iter.Value())
@@ -113,27 +114,28 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 	iter.Close()
 	state.memAdded.Close()
 
+	// Generate and save document persistently
 	var err error
-	state.blockHeight++
 	if state.newDocumentRequired() {
 		var doc *document
 		if doc, err = state.generateDocument(); err == nil {
 			state.prevDocument = doc.doc
 			key := storageKey(documentsBucket, []byte{}, state.currentEpoch)
 			_ = state.tree.Set(key, doc.raw)
-			state.epochStartHeight = state.blockHeight
+			state.currentEpoch++
+			state.epochStartHeight = state.blockHeight + 1
 			// TODO: Prune related descriptors
 		}
 	}
 
-	if state.blockHeight == state.epochStartHeight+1 && state.blockHeight > 1 {
-		state.currentEpoch++
-	}
+	// Save epoch info persistently
+	state.blockHeight++
 	epochInfoValue := make([]byte, 16)
 	binary.PutUvarint(epochInfoValue[:8], state.currentEpoch)
 	binary.PutVarint(epochInfoValue[8:], state.epochStartHeight)
 	_ = state.tree.Set([]byte(epochInfoKey), epochInfoValue)
 
+	// Mark a new version
 	appHash, _, errSave := state.tree.SaveVersion()
 	if errSave != nil {
 		return nil, errSave
@@ -171,7 +173,7 @@ func (state *KatzenmintState) BeginBlock() {
 	state.validatorUpdates = make([]abcitypes.ValidatorUpdate, 0)
 }
 
-// Epoch has to be in [current epoch, current epoch + lifeCycle].
+// Epoch has to be in [current epoch, current epoch + LifeCycle].
 func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixDescriptor, epoch uint64) (err error) {
 	key := storageKey(descriptorsBucket, desc.IdentityKey.Bytes(), epoch)
 
@@ -184,7 +186,7 @@ func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixD
 	if epoch < state.currentEpoch {
 		return fmt.Errorf("late descriptor upload with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
 	}
-	if epoch >= state.currentEpoch+uint64(lifeCycle) {
+	if epoch >= state.currentEpoch+uint64(LifeCycle) {
 		return fmt.Errorf("early descriptor upload with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
 	}
 
@@ -227,7 +229,7 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 
 func (state *KatzenmintState) newDocumentRequired() bool {
 	// TODO: determine when to finish the current epoch
-	return state.blockHeight > state.epochStartHeight+epochInterval
+	return state.blockHeight >= state.epochStartHeight+EpochInterval-1
 }
 
 func (state *KatzenmintState) isDescriptorAuthorized(desc *pki.MixDescriptor) bool {
@@ -398,7 +400,7 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 	// Build the Document.
 	doc := &s11n.Document{
 		Epoch:             s.currentEpoch,
-		GenesisEpoch:      genesisEpoch,
+		GenesisEpoch:      GenesisEpoch,
 		SendRatePerMinute: s.parameters.SendRatePerMinute,
 		Mu:                s.parameters.Mu,
 		MuMaxDelay:        s.parameters.MuMaxDelay,

@@ -107,7 +107,7 @@ func (p *PKIClient) GetDoc(ctx context.Context, epoch uint64) (*cpki.Document, [
 		return nil, nil, err
 	}
 	if resp.Response.Code != 0 {
-		if resp.Response.Code == 0x5 { //! Warning: MAGIC error code
+		if resp.Response.Code == kpki.ErrQueryNoDocument.Code {
 			return nil, nil, cpki.ErrNoDocument
 		}
 		return nil, nil, fmt.Errorf(resp.Response.Log)
