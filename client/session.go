@@ -91,7 +91,10 @@ func NewSession(
 
 	// TODO: create a pkiclient for minclient's use
 	// can only open database once
-	pkiCacheClient := kpki.NewCacheClient(pkiClient)
+	pkiCacheClient, err := kpki.NewCacheClient(pkiClient)
+	if err != nil {
+		return nil, err
+	}
 
 	clientLog := logBackend.GetLogger(fmt.Sprintf("%s@%s_client", cfg.Account.User, cfg.Account.Provider))
 	s := &Session{
