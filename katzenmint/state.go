@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/cosmos/iavl"
 	"github.com/hashcloak/Meson/katzenmint/config"
@@ -19,9 +20,12 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-const GenesisEpoch uint64 = 1
-const EpochInterval int64 = 10
-const LifeCycle int = 3
+const (
+	GenesisEpoch  uint64        = 1
+	EpochInterval int64         = 10
+	HeightPeriod  time.Duration = 1 * time.Second
+	LifeCycle     int           = 3
+)
 
 var (
 	errStateClosed               = errors.New("katzenmint state is closed")
