@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"fmt"
 	"io/ioutil"
 	"net/url"
 	"testing"
 
 	"github.com/cosmos/iavl"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
@@ -16,6 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/mock"
@@ -25,6 +28,45 @@ import (
 func newDiscardLogger() (logger log.Logger) {
 	logger = log.NewTMLogger(log.NewSyncWriter(ioutil.Discard))
 	return
+}
+
+func TestGetEpoch(t *testing.T) {
+	require := require.New(t)
+
+	// setup application
+	db := dbm.NewMemDB()
+	defer db.Close()
+	logger := newDiscardLogger()
+	app := NewKatzenmintApplication(kConfig, db, logger)
+	m := mock.ABCIApp{
+		App: app,
+	}
+	m.App.BeginBlock(abcitypes.RequestBeginBlock{})
+	m.App.Commit()
+
+	// fetch abci info
+	appinfo, err := m.ABCIInfo(context.Background())
+	require.Nil(err)
+
+	// advance block height
+	m.App.BeginBlock(abcitypes.RequestBeginBlock{})
+	m.App.Commit()
+
+	// get epoch
+	query, err := EncodeJson(&Query{
+		Version: protocolVersion,
+		Epoch:   0,
+		Command: GetEpoch,
+		Payload: "",
+	})
+	if err != nil {
+		t.Fatalf("Failed to marshal query: %+v\n", err)
+	}
+	resp := m.App.Query(abcitypes.RequestQuery{Data: query})
+	require.True(resp.IsOK(), resp.Log)
+	gotNum, _ := binary.Uvarint(resp.Value[:8])
+	gotStr := fmt.Sprint(gotNum)
+	require.Equal(appinfo.Response.Data, gotStr)
 }
 
 func TestAddAuthority(t *testing.T) {
@@ -46,7 +88,7 @@ func TestAddAuthority(t *testing.T) {
 		Auth:    "katzenmint",
 		Power:   1,
 		PubKey:  privKey.PublicKey().Bytes(),
-		KeyType: "",
+		KeyType: privKey.KeyType(),
 	}
 	rawAuth, err := EncodeJson(authority)
 	if err != nil {
@@ -70,12 +112,12 @@ func TestAddAuthority(t *testing.T) {
 
 	// make checks
 	validator := abcitypes.UpdateValidator(authority.PubKey, authority.Power, authority.KeyType)
-	protoPubKey, err := validator.PubKey.Marshal()
+	pubkey, err := cryptoenc.PubKeyFromProto(validator.PubKey)
 	if err != nil {
-		t.Fatalf("Failed to encode public with protobuf: %v\n", err)
+		t.Fatalf("Failed to decode public key: %v\n", err)
 	}
-	key := storageKey(authoritiesBucket, protoPubKey, 0)
-	_, err = app.state.Get(key)
+	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
+	_, err = app.state.get(key)
 	if err != nil {
 		t.Fatalf("Failed to get authority from database: %+v\n", err)
 	}
@@ -135,32 +177,47 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 		require.NotNil(res.DeliverTx)
 		assert.True(res.DeliverTx.IsOK(), res.DeliverTx.Log)
 	}
+	m.App.Commit()
 
-	// commit through the epoch
-	for i := int64(0); i <= epochInterval; i++ {
+	// commit through the epoch, and add one more
+	for i := 0; i < int(EpochInterval); i++ {
+		m.App.BeginBlock(abcitypes.RequestBeginBlock{})
 		m.App.Commit()
 	}
 
+	// test that the epoch proceeds
+	query, err := EncodeJson(&Query{
+		Version: protocolVersion,
+		Epoch:   0,
+		Command: GetEpoch,
+		Payload: "",
+	})
+	if err != nil {
+		t.Fatalf("Failed to marshal query: %+v\n", err)
+	}
+	resp := m.App.Query(abcitypes.RequestQuery{Data: query})
+	require.True(resp.IsOK(), resp.Log)
+	gotEpoch, _ := binary.Uvarint(resp.Value[:8])
+	require.Equal(epoch+1, gotEpoch)
+
 	// test the doc is formed and exists in state
-	loaded, _, err := app.state.documentForEpoch(epoch, app.state.blockHeight)
+	loaded, _, err := app.state.GetDocument(epoch, app.state.blockHeight-1)
 	require.Nil(err, "Failed to get pki document from state: %+v\n", err)
 	require.NotNil(loaded, "Failed to get pki document from state: wrong key")
-	// test against the expected doc?
-	/* require.Equal(sDoc, loaded, "App state contains an erroneous pki document") */
+	_, err = s11n.VerifyAndParseDocument(loaded)
+	require.Nil(err, "Failed to parse pki document: %+v\n", err)
 
-	// prepare verification metadata
+	// prepare verification metadata (in an old block)
 	appinfo, err = m.ABCIInfo(context.Background())
 	require.Nil(err)
 	apphash := appinfo.Response.LastBlockAppHash
-	e := make([]byte, 8)
-	binary.BigEndian.PutUint64(e, epoch)
-	key := storageKey(documentsBucket, e, epoch)
+	key := storageKey(documentsBucket, []byte{}, epoch)
 	path := "/" + url.PathEscape(string(key))
-
+	m.App.BeginBlock(abcitypes.RequestBeginBlock{})
 	m.App.Commit()
 
 	// make a query for the doc
-	query, err := EncodeJson(Query{
+	query, err = EncodeJson(Query{
 		Version: protocolVersion,
 		Epoch:   epoch,
 		Command: GetConsensus,

@@ -62,7 +62,7 @@ func (p *PKIClient) query(ctx context.Context, epoch uint64, command kpki.Comman
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode data: %v", err)
 	}
-	p.log.Debugf("Query: %v", query)
+	//p.log.Debugf("Query: %v", query)
 
 	// Make the abci query
 	opts := rpcclient.ABCIQueryOptions{Prove: true}
@@ -75,6 +75,8 @@ func (p *PKIClient) query(ctx context.Context, epoch uint64, command kpki.Comman
 
 // GetEpoch returns the epoch information of PKI.
 func (p *PKIClient) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
+	p.log.Debugf("Query epoch")
+
 	resp, err := p.query(ctx, 0, kpki.GetEpoch)
 	if err != nil {
 		return
@@ -99,7 +101,7 @@ func (p *PKIClient) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight 
 
 // GetDoc returns the PKI document along with the raw serialized form for the provided epoch.
 func (p *PKIClient) GetDoc(ctx context.Context, epoch uint64) (*cpki.Document, []byte, error) {
-	p.log.Debugf("Get(ctx, %d)", epoch)
+	p.log.Debugf("Get document for epoch %d", epoch)
 
 	// Make the query
 	resp, err := p.query(ctx, epoch, kpki.GetConsensus)
@@ -107,7 +109,7 @@ func (p *PKIClient) GetDoc(ctx context.Context, epoch uint64) (*cpki.Document, [
 		return nil, nil, err
 	}
 	if resp.Response.Code != 0 {
-		if resp.Response.Code == 0x5 { //! Warning: MAGIC error code
+		if resp.Response.Code == kpki.ErrQueryNoDocument.Code {
 			return nil, nil, cpki.ErrNoDocument
 		}
 		return nil, nil, fmt.Errorf(resp.Response.Log)
@@ -122,14 +124,31 @@ func (p *PKIClient) GetDoc(ctx context.Context, epoch uint64) (*cpki.Document, [
 		p.log.Warningf("Get() returned pki document for wrong epoch: %v", doc.Epoch)
 		return nil, nil, s11n.ErrInvalidEpoch
 	}
-	p.log.Debugf("Document: %v", doc)
+
+	s := "Topology: [0]{"
+	for l, nodes := range doc.Topology {
+		for idx, v := range nodes {
+			s += v.Name
+			if idx != len(nodes)-1 {
+				s += ","
+			}
+		}
+		if l < len(doc.Topology)-1 {
+			s += fmt.Sprintf("}, [%v]{", l+1)
+		}
+	}
+	s += "}, Providers: "
+	for _, v := range doc.Providers {
+		s += v.Name + ","
+	}
+	p.log.Debugf("Document summary: " + s)
 
 	return doc, resp.Response.Value, nil
 }
 
 // Post posts the node's descriptor to the PKI for the provided epoch.
 func (p *PKIClient) Post(ctx context.Context, epoch uint64, signingKey *eddsa.PrivateKey, d *cpki.MixDescriptor) error {
-	p.log.Debugf("Post(ctx, %d, %v, %+v)", epoch, signingKey.PublicKey(), d)
+	p.log.Debugf("Post descriptor for epoch %d: %v", epoch, d)
 
 	// Ensure that the descriptor we are about to post is well formed.
 	if err := s11n.IsDescriptorWellFormed(d, epoch); err != nil {

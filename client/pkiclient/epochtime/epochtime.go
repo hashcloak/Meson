@@ -5,23 +5,16 @@ import (
 	"time"
 
 	kpki "github.com/hashcloak/Meson/client/pkiclient"
+	"github.com/hashcloak/Meson/katzenmint"
 )
 
 //! The duration of a katzenmint epoch. Should refer to katzenmint PKI.
-var TestPeriod = 10 * time.Second
-
-//! Number of heights across an epoch. Should refer to katzenmint PKI.
-var testEpochInterval uint64 = 10
+var TestPeriod = katzenmint.HeightPeriod * time.Duration(katzenmint.EpochInterval)
 
 func Now(client kpki.Client) (epoch uint64, ellapsed, till time.Duration, err error) {
-	epoch, ellapsedHeight, err := client.GetEpoch(context.Background())
-	if ellapsedHeight > testEpochInterval {
-		ellapsedHeight = testEpochInterval
-	}
-	ellapsed = time.Duration(uint64(TestPeriod) * ellapsedHeight / testEpochInterval)
-	till = TestPeriod - ellapsed
-	// epoch should minus 1
-	// TODO: find a better way for this
-	epoch -= 1
+	preparingEpoch, ellapsedHeight, err := client.GetEpoch(context.Background())
+	epoch = preparingEpoch - 1
+	ellapsed = katzenmint.SinceEpochStart(int64(ellapsedHeight))
+	till = katzenmint.TillEpochFinish(int64(ellapsedHeight))
 	return
 }

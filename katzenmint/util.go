@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/katzenpost/core/pki"
 	"github.com/katzenpost/core/sphinx/constants"
@@ -139,4 +140,18 @@ func generateRandomTopology(nodes []*descriptor, layers int) [][][]byte {
 	}
 
 	return topology
+}
+
+func SinceEpochStart(ellapsedHeight int64) time.Duration {
+	//	if ellapsedHeight > EpochInterval {
+	//		ellapsedHeight = EpochInterval
+	//	}
+	return HeightPeriod * time.Duration(ellapsedHeight)
+}
+
+func TillEpochFinish(ellapsedHeight int64) time.Duration {
+	if ellapsedHeight > EpochInterval {
+		ellapsedHeight = EpochInterval
+	}
+	return HeightPeriod * time.Duration(EpochInterval-ellapsedHeight)
 }

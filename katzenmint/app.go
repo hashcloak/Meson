@@ -39,6 +39,10 @@ func NewKatzenmintApplication(kConfig *config.Config, db dbm.DB, logger log.Logg
 	}
 }
 
+func (app *KatzenmintApplication) Close() {
+	app.state.Close()
+}
+
 func (app *KatzenmintApplication) Info(req abcitypes.RequestInfo) abcitypes.ResponseInfo {
 	return abcitypes.ResponseInfo{
 		Data:             fmt.Sprint(app.state.currentEpoch),
@@ -53,7 +57,14 @@ func (app *KatzenmintApplication) SetOption(req abcitypes.RequestSetOption) abci
 	return abcitypes.ResponseSetOption{}
 }
 
-func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payload []byte, desc *pki.MixDescriptor, doc *pki.Document, auth *Authority, err error) {
+func (app *KatzenmintApplication) isTxValid(rawTx []byte) (
+	tx *Transaction,
+	payload []byte,
+	desc *pki.MixDescriptor,
+	doc *pki.Document,
+	auth *AuthorityChecked,
+	err error,
+) {
 	// decode raw into transcation
 	tx = new(Transaction)
 	dec := codec.NewDecoderBytes(rawTx, jsonHandle)
@@ -103,8 +114,11 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payl
 			err = ErrTxAuthorityParse
 			return
 		}
-		addr := tx.Address()
-		if !app.state.isAuthorityAuthorized(addr) {
+		if !app.state.isAuthorityNew(auth) {
+			err = ErrTxAuthorityExists
+			return
+		}
+		if !app.state.isAuthorityAuthorized(tx.Address(), auth) {
 			err = ErrTxAuthorityNotAuthorized
 			return
 		}
@@ -115,9 +129,14 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (tx *Transaction, payl
 	return
 }
 
-func (app *KatzenmintApplication) executeTx(tx *Transaction, payload []byte, desc *pki.MixDescriptor, doc *pki.Document, auth *Authority) error {
+func (app *KatzenmintApplication) executeTx(
+	tx *Transaction, payload []byte,
+	desc *pki.MixDescriptor,
+	doc *pki.Document,
+	auth *AuthorityChecked,
+) error {
 	// check for the epoch relative to the current epoch
-	if tx.Epoch < app.state.currentEpoch-1 || tx.Epoch > app.state.currentEpoch+1 {
+	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+uint64(LifeCycle) {
 		return ErrTxWrongEpoch
 	}
 	switch tx.Command {
@@ -128,7 +147,7 @@ func (app *KatzenmintApplication) executeTx(tx *Transaction, payload []byte, des
 			return ErrTxUpdateDesc
 		}
 	case AddNewAuthority:
-		err := app.state.updateAuthority(payload, abcitypes.UpdateValidator(auth.PubKey, auth.Power, auth.KeyType))
+		err := app.state.updateAuthority(payload, *auth.Val)
 		if err != nil {
 			app.logger.Error("failed to add new authority", "epoch", app.state.currentEpoch, "error", err)
 			return ErrTxUpdateAuth
@@ -165,7 +184,7 @@ func (app *KatzenmintApplication) CheckTx(req abcitypes.RequestCheckTx) abcitype
 func (app *KatzenmintApplication) Commit() abcitypes.ResponseCommit {
 	appHash, err := app.state.Commit()
 	if err != nil {
-		app.logger.Error("commit failed", "epoch", app.state.currentEpoch, "error", err)
+		app.logger.Error("commit failed", "epoch", app.state.currentEpoch, "height", app.state.blockHeight, "error", err)
 	}
 	return abcitypes.ResponseCommit{Data: appHash}
 }
@@ -185,10 +204,14 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 		return
 	case GetEpoch:
 		resQuery.Height = app.state.blockHeight - 1
-		val, proof, err := app.state.latestEpoch(resQuery.Height)
+		val, proof, err := app.state.GetEpoch(resQuery.Height)
 		if err != nil {
-			app.logger.Error("peer: failed to retrieve epoch for height", "height", resQuery.Height, "error", err)
-			parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			if err == errStateClosed {
+				parseErrorResponse(ErrQueryAppClosed, &resQuery)
+			} else {
+				app.logger.Error("peer: failed to retrieve epoch for height", "height", resQuery.Height, "error", err)
+				parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			}
 			return
 		}
 		resQuery.Key = proof.GetKey()
@@ -199,9 +222,11 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 
 	case GetConsensus:
 		resQuery.Height = app.state.blockHeight - 1
-		doc, proof, err := app.state.documentForEpoch(kquery.Epoch, resQuery.Height)
+		doc, proof, err := app.state.GetDocument(kquery.Epoch, resQuery.Height)
 		if err != nil {
-			if err == ErrQueryNoDocument {
+			if err == errStateClosed {
+				parseErrorResponse(ErrQueryAppClosed, &resQuery)
+			} else if err == ErrQueryNoDocument {
 				app.logger.Error("warn: detected a skipped document", "miss", kquery.Epoch, "now", app.state.currentEpoch)
 				parseErrorResponse(err.(KatzenmintError), &resQuery)
 			} else if err == ErrQueryDocumentNotReady {
@@ -221,21 +246,20 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 }
 
 func (app *KatzenmintApplication) InitChain(req abcitypes.RequestInitChain) abcitypes.ResponseInitChain {
-	if len(req.Validators) > 0 {
-
-		sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
-
-		for _, v := range req.Validators {
-			err := app.state.updateAuthority(nil, v)
-			if err != nil {
-				app.logger.Error("failed to update validators", "error", err)
-			}
+	if app.state.currentEpoch != GenesisEpoch ||
+		app.state.blockHeight != app.state.epochStartHeight {
+		panic("state is already initialized")
+	}
+	app.state.BeginBlock()
+	sort.Sort(abcitypes.ValidatorUpdates(req.Validators))
+	for _, v := range req.Validators {
+		err := app.state.updateAuthority(nil, v)
+		if err != nil {
+			app.logger.Error("failed to update validators", "error", err)
 		}
 	}
 	return abcitypes.ResponseInitChain{
-		// ConsensusParams: req.ConsensusParams,
 		Validators: req.Validators,
-		// AppHash: appHash,
 	}
 }
 
@@ -247,9 +271,11 @@ func (app *KatzenmintApplication) BeginBlock(req abcitypes.RequestBeginBlock) ab
 	for _, ev := range req.ByzantineValidators {
 		if ev.Type == abcitypes.EvidenceType_DUPLICATE_VOTE {
 			addr := string(ev.Validator.Address)
-			if pubKey, ok := app.state.GetAuthorized(addr); ok {
+			if ev.Validator.Power <= 0 {
+				app.logger.Error("non positive val power", "address", addr, "power", ev.Validator.Power)
+			} else if pubKey, err := app.state.GetAuthority(addr); err == nil {
 				_ = app.state.updateAuthority(nil, abcitypes.ValidatorUpdate{
-					PubKey: pubKey,
+					PubKey: *pubKey,
 					Power:  ev.Validator.Power - 1,
 				})
 				app.logger.Error("decreased val power by 1 because of the equivocation", "address", addr)
