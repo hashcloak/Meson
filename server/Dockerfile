@@ -7,18 +7,13 @@ ARG warped=false
 
 ENV ldflags="-X github.com/katzenpost/core/epochtime.WarpedEpoch=${warped} -X github.com/hashcloak/Meson/server/internal/pki.WarpedEpoch=${warped} -X github.com/katzenpost/minclient/pki.WarpedEpoch=${warped}"
 
-# Install git & make
-# Git is required for fetching the dependencies
 RUN apk update && \
     apk add --no-cache git make ca-certificates && \
     update-ca-certificates
 
-# Set the working directory for the container
 WORKDIR /go
 
-# Build the binary
 RUN cd /go ; git clone https://github.com/hashcloak/Meson.git
-RUN cd Meson ; git pull origin monorepo ;
 RUN cd /go/Meson/server && go build -o meson-server -ldflags "$ldflags" cmd/meson-server/*.go
 RUN cd /go ; git clone https://github.com/katzenpost/memspool.git
 RUN cd /go ; cd memspool/server/cmd/memspool ;  go build -ldflags "$ldflags"
@@ -44,11 +39,8 @@ COPY --from=builder /go/server_plugins/cbor_plugins/echo-go/echo_server /go/bin/
 COPY --from=builder /go/Meson/plugin/Meson /go/bin/Meson
 COPY --from=builder /go/genconfig/updateconfig /go/bin/updateconfig
 
-# Expose the application port
 # EXPOSE 8181
 
-# create a volume for the configuration persistence
 VOLUME /conf
 
-# This form of ENTRYPOINT allows the process to catch signals from the `docker stop` command
 ENTRYPOINT /go/bin/server -f /conf/katzenpost.toml
