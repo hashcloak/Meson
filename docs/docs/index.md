@@ -1,3 +1,7 @@
 # Welcome to the Meson Project Page
 
 This is the main project page for the Meson mixnet project. Our goal is to build a mixnet for cryptocurrency transactions. If you've been wanting to learn more about the Meson project, you are at the right place. 
+
+Overview: [Overview](overview.md)
+Specification: [Specification](specification.md)
+Docs: [Docs](docs.md)
