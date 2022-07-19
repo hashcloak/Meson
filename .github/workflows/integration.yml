@@ -14,13 +14,11 @@ jobs:
     
     - name: Build Server Container
       run: |
-        cd server
-        make build-docker
+        make build-docker-server
 
     - name: Build Katzenmint Container
       run: |
-        cd katzenmint
-        make build-docker
+        make build-docker-katzenmint
 
     # - name: Start local testnet
     #   run: |
