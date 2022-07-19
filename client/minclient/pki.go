@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/katzenmint"
 	cpki "github.com/katzenpost/core/pki"
 	"github.com/katzenpost/core/worker"
 	"gopkg.in/op/go-logging.v1"
@@ -100,8 +101,10 @@ func (p *pki) currentDocument() *cpki.Document {
 		p.log.Debugf("Couldn't find epoch: %+v", err)
 		return nil
 	}
-	if d, _ := p.docs.Load(now); d != nil {
-		return d.(*cpki.Document)
+	for i := 0; i < katzenmint.LifeCycle; i++ {
+		if d, _ := p.docs.Load(now - uint64(i)); d != nil {
+			return d.(*cpki.Document)
+		}
 	}
 	p.forceUpdateCh <- true
 	<-p.doneWorkerCh
@@ -142,7 +145,7 @@ func (p *pki) worker() {
 			p.log.Debugf("Couldn't find epoch: %+v", err)
 			continue
 		}
-		epochs := []uint64{now - 1, now}
+		epochs := []uint64{now}
 
 		// Fetch the documents that we are missing.
 		didUpdate := false

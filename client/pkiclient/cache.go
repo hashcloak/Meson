@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/hashcloak/Meson/katzenmint"
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/pki"
 	"github.com/katzenpost/core/worker"
@@ -53,9 +54,9 @@ type Cache struct {
 	docs map[uint64]*list.Element
 	lru  list.List
 
-	lastSyncTime time.Time
-	memEpoch     uint64
-	memHeight    uint64
+	timer     *time.Timer
+	memEpoch  uint64
+	memHeight uint64
 
 	fetchQueue chan *fetchOp
 }
@@ -69,6 +70,7 @@ type fetchOp struct {
 // Halt tears down the Client instance.
 func (c *Cache) Halt() {
 	c.Worker.Halt()
+	c.timer.Stop()
 
 	// Clean out c.fetchQueue.
 	for {
@@ -83,16 +85,7 @@ func (c *Cache) Halt() {
 
 // GetEpoch returns the epoch information of PKI.
 func (c *Cache) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
-	if time.Now().Before(c.lastSyncTime.Add(epochRetrieveInterval)) {
-		return c.memEpoch, c.memHeight, nil
-	}
-	epoch, ellapsedHeight, err = c.impl.GetEpoch(ctx)
-	if err == nil {
-		c.memEpoch = epoch
-		c.memHeight = ellapsedHeight
-		c.lastSyncTime = time.Now()
-	}
-	return
+	return c.memEpoch, c.memHeight, nil
 }
 
 // GetDoc returns the PKI document for the provided epoch.
@@ -102,14 +95,21 @@ func (c *Cache) GetDoc(ctx context.Context, epoch uint64) (*pki.Document, []byte
 		return d.doc, d.raw, nil
 	}
 
+	// Exit upon halt
+	select {
+	case <-c.HaltCh():
+		return nil, nil, fmt.Errorf("pki client is halted, cannot get new document")
+	default:
+	}
+
+	// Slow path
 	op := &fetchOp{
 		ctx:    ctx,
 		epoch:  epoch,
 		doneCh: make(chan interface{}),
 	}
 	c.fetchQueue <- op
-	v := <-op.doneCh
-	switch r := v.(type) {
+	switch r := (<-op.doneCh).(type) {
 	case error:
 		return nil, nil, r
 	case *cacheEntry:
@@ -122,7 +122,7 @@ func (c *Cache) GetDoc(ctx context.Context, epoch uint64) (*pki.Document, []byte
 
 // Post posts the node's descriptor to the PKI for the provided epoch.
 func (c *Cache) Post(ctx context.Context, epoch uint64, signingKey *eddsa.PrivateKey, d *pki.MixDescriptor) error {
-	return errNotSupported
+	return c.impl.Post(ctx, epoch, signingKey, d)
 }
 
 // Deserialize returns PKI document given the raw bytes.
@@ -159,18 +159,45 @@ func (c *Cache) insertLRU(newEntry *cacheEntry) {
 }
 
 func (c *Cache) worker() {
+	const retryTime = time.Second / 2
+
+	var epoch, height uint64
+	var ctx context.Context
+	var err error
 	for {
 		var op *fetchOp
 		select {
 		case <-c.HaltCh():
 			return
+		case <-c.timer.C:
+			if c.memHeight < uint64(katzenmint.EpochInterval) {
+				c.memHeight++
+				c.timer.Reset(katzenmint.HeightPeriod)
+				continue
+			}
+			ctx = context.Background()
+			epoch, height, err = c.impl.GetEpoch(context.Background())
+			if epoch == c.memEpoch && height < uint64(katzenmint.EpochInterval) {
+				c.memHeight = height
+			}
+			if err != nil || epoch == c.memEpoch {
+				c.timer.Reset(retryTime)
+				continue
+			}
+			c.memEpoch = epoch
+			c.memHeight = height
+			c.timer.Reset(katzenmint.HeightPeriod)
 		case op = <-c.fetchQueue:
+			ctx = op.ctx
+			epoch = op.epoch
 		}
 
 		// The fetch may have been in progress while the op was sitting in
 		// queue, check again.
-		if d := c.cacheGet(op.epoch); d != nil {
-			op.doneCh <- d
+		if d := c.cacheGet(epoch); d != nil {
+			if op != nil {
+				op.doneCh <- d
+			}
 			continue
 		}
 
@@ -178,27 +205,36 @@ func (c *Cache) worker() {
 		//
 		// TODO: This could allow concurrent fetches at some point, but for
 		// most common client use cases, this shouldn't matter much.
-		d, raw, err := c.impl.GetDoc(op.ctx, op.epoch)
+		d, raw, err := c.impl.GetDoc(ctx, epoch)
 		if err != nil {
-			op.doneCh <- err
+			if op != nil {
+				op.doneCh <- err
+			}
 			continue
 		}
 		e := &cacheEntry{doc: d, raw: raw}
 		c.insertLRU(e)
-		op.doneCh <- e
+		if op != nil {
+			op.doneCh <- e
+		}
 	}
 }
 
 // New constructs a new Client backed by an existing pki.Client instance.
-func NewCacheClient(impl Client) *Cache {
+func NewCacheClient(impl Client) (*Cache, error) {
+	var err error
 	c := new(Cache)
 	c.impl = impl
 	c.docs = make(map[uint64]*list.Element)
 	c.fetchQueue = make(chan *fetchOp, fetchBacklog)
-	c.lastSyncTime = time.Time{}
+	c.memEpoch, c.memHeight, err = c.impl.GetEpoch(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	c.timer = time.NewTimer(katzenmint.HeightPeriod)
 
 	c.Go(c.worker)
-	return c
+	return c, nil
 }
 
 // Shutdown the client

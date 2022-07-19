@@ -303,7 +303,7 @@ func (c *incomingConn) worker() {
 		if c.fromClient {
 			switch cmd := rawCmd.(type) {
 			case *commands.RetrieveMessage:
-				c.log.Debugf("Received RetrieveMessage from peer.")
+				//c.log.Debugf("Received RetrieveMessage from peer.")
 				if err := c.onRetrieveMessage(cmd); err != nil {
 					c.log.Debugf("Failed to handle RetreiveMessage: %v", err)
 					return
@@ -369,7 +369,7 @@ func (c *incomingConn) onRetrieveMessage(cmd *commands.RetrieveMessage) error {
 	advance := false
 	switch cmd.Sequence {
 	case c.retrSeq:
-		c.log.Debugf("RetrieveMessage: %d", cmd.Sequence)
+		//c.log.Debugf("RetrieveMessage: %d", cmd.Sequence)
 	case c.retrSeq + 1:
 		c.log.Debugf("RetrieveMessage: %d (Popping head)", cmd.Sequence)
 		c.retrSeq++ // Advance the sequence number.
