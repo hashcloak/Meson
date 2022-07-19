@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.19
-	github.com/tendermint/tm-db v0.6.6
+	github.com/tendermint/tm-db v0.6.7
 	github.com/ugorji/go/codec v1.1.7
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9
@@ -30,6 +30,7 @@ require (
 )
 
 require (
+	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/go-kit/log v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 )
@@ -97,7 +98,6 @@ require (
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20200815110645-5c35d600f0ca // indirect
-	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/sys v0.0.0-20220615213510-4f61da869c0c // indirect
