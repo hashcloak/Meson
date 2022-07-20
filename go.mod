@@ -8,12 +8,12 @@ require (
 	git.schwanenlied.me/yawning/bloom.git v0.0.0-20181019144233-44d6c5c71ed1
 	github.com/BurntSushi/toml v1.1.0
 	github.com/cosmos/iavl v0.19.0
-	github.com/fxamacker/cbor/v2 v2.2.0
+	github.com/fxamacker/cbor/v2 v2.3.0
 	github.com/hashcloak/Meson-plugin v0.0.0-20200627021923-d4745a3c9e02
 	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/katzenpost/authority v0.0.14
 	github.com/katzenpost/client v0.0.3
-	github.com/katzenpost/core v0.0.12
+	github.com/katzenpost/core v0.0.15
 	github.com/katzenpost/registration_client v0.0.3
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
