@@ -1,6 +1,6 @@
 FROM golang:alpine AS builder
 
-LABEL authors="Christian Muehlhaeuser: muesli@gmail.com"
+LABEL authors="Christian Muehlhaeuser: muesli@gmail.com;"
 
 # Can pass --build-arg warped=true to decrease epoch period
 ARG warped=false
@@ -11,9 +11,10 @@ RUN apk update && \
     apk add --no-cache git make ca-certificates && \
     update-ca-certificates
 
-WORKDIR /go
+WORKDIR /go/Meson
 
-RUN cd /go ; git clone https://github.com/hashcloak/Meson.git
+COPY . .
+
 RUN cd /go/Meson/server && go build -o meson-server -ldflags "$ldflags" cmd/meson-server/*.go
 RUN cd /go ; git clone https://github.com/katzenpost/memspool.git
 RUN cd /go ; cd memspool/server/cmd/memspool ;  go build -ldflags "$ldflags"

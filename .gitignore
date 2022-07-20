@@ -28,3 +28,5 @@ data/
 
 # docker genesis documents
 testnet/conf/node*/config/genesis.json
+
+plugin/ops/__pycache__

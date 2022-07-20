@@ -7,20 +7,22 @@ CONFIG = {
         "AUTH": {
             "CONTAINER": "katzenmint/pki",
             "REPOSITORY": "https://github.com/hashcloak/Meson",
-            "SUBDIRECTORY": "katzenmint",
+            "SUBDIRECTORY": "",
             "BRANCH": "monorepo",
             "GITHASH": "",
             "NAMEDTAG": "latest",
             "HASHTAG": "",
+            "DOCKERFILE": "Dockerfile.katzenmint"
         },
         "SERVER" : {
             "CONTAINER": "meson/server",
             "REPOSITORY": "https://github.com/hashcloak/Meson",
-            "SUBDIRECTORY": "server",
+            "SUBDIRECTORY": "",
             "BRANCH": "monorepo",
             "GITHASH": "",
             "NAMEDTAG": "latest",
             "HASHTAG": "",
+            "DOCKERFILE": "Dockerfile.server"
         },
     },
     "TEST": {
