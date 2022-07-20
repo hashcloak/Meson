@@ -11,7 +11,7 @@ require (
 	github.com/fxamacker/cbor/v2 v2.3.0
 	github.com/hashcloak/Meson-plugin v0.0.0-20200627021923-d4745a3c9e02
 	github.com/jackc/pgx v3.6.2+incompatible
-	github.com/katzenpost/authority v0.0.14
+	github.com/katzenpost/authority v0.0.19
 	github.com/katzenpost/client v0.0.3
 	github.com/katzenpost/core v0.0.15
 	github.com/katzenpost/registration_client v0.0.3
@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/tendermint/tendermint v0.34.19
 	github.com/tendermint/tm-db v0.6.7
-	github.com/ugorji/go/codec v1.1.7
+	github.com/ugorji/go/codec v1.2.6
 	go.etcd.io/bbolt v1.3.6
 	golang.org/x/net v0.0.0-20220617184016-355a448f1bc9
 	golang.org/x/text v0.3.7
