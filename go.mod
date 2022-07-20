@@ -14,7 +14,7 @@ require (
 	github.com/katzenpost/authority v0.0.14
 	github.com/katzenpost/client v0.0.3
 	github.com/katzenpost/core v0.0.12
-	github.com/katzenpost/registration_client v0.0.1
+	github.com/katzenpost/registration_client v0.0.3
 	github.com/prometheus/client_golang v1.12.1
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
