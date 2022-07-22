@@ -72,6 +72,7 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 			METHOD:  "eth_gasPrice",
 		}
 		param := map[string]interface{}{
+			"from":  req.From,
 			"to":    req.To,
 			"value": fmt.Sprintf("0x%x", req.Value),
 		}
