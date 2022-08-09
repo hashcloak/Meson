@@ -1,5 +1,5 @@
 # katzenmint-pki
-[![Go](https://github.com/hashcloak/Meson/actions/workflows/go.yml/badge.svg)](https://github.com/hashcloak/Meson/actions/workflows/go.yml)
+[![Katzenmint](https://github.com/hashcloak/Meson/actions/workflows/katzenmint.yml/badge.svg)](https://github.com/hashcloak/Meson/actions/workflows/katzenmint.yml)
 
 A BFT PKI for the Katzenpost Authority PKI System using Tendermint
 
@@ -20,8 +20,6 @@ $ cd tendermint
 $ git checkout v0.34.6
 $ make install
 ```
-2. `TMHOME=`pwd`/chain tendermint init`
-3. `make build`
-4. `./katzenmint -config ./chain/config/config.toml`
-5. `curl -s 'localhost:26657/broadcast_tx_commit?tx="tendermint=rocks"'`
-6. `curl -s 'localhost:26657/abci_query?data="tendermint"'`
+2. Initialize the identity credential identity `TMHOME=`pwd`/chain tendermint init`
+3. Build katzenmint `make build`
+4. Execute `./katzenmint -config ./chain/config/config.toml`

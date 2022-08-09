@@ -21,5 +21,5 @@ Plesase go to [docs.mesonmix.net](https://docs.mesonmix.net)
 
 ## Usage
 
-TODO
+Plesase go to [docs.mesonmix.net/docs/](https://docs.mesonmix.net/docs/)
 

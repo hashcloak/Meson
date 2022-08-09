@@ -1,4 +1,4 @@
-
+[![Server](https://github.com/hashcloak/Meson/actions/workflows/server.yml/badge.svg)](https://github.com/hashcloak/Meson/actions/workflows/server.yml)
 
 Katzenpost Mix Server
 =====================
