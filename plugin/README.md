@@ -1,6 +1,5 @@
 # Meson-plugin
-
-[![Go](https://github.com/hashcloak/Meson-plugin/actions/workflows/go.yml/badge.svg)](https://github.com/hashcloak/Meson-plugin/actions/workflows/go.yml)
+[![Plugin](https://github.com/hashcloak/Meson/actions/workflows/plugin.yml/badge.svg)](https://github.com/hashcloak/Meson/actions/workflows/plugin.yml)
 
 A Library for adding cryptocurrencies to Meson mixnet.
 
