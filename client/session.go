@@ -85,7 +85,6 @@ func NewSession(
 	proxyCfg := cfg.UpstreamProxyConfig()
 	pkiClient, err := cfg.NewPKIClient(logBackend, proxyCfg)
 	if err != nil {
-		fmt.Println("GG1")
 		return nil, err
 	}
 

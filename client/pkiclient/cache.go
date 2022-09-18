@@ -240,4 +240,5 @@ func NewCacheClient(impl Client) (*Cache, error) {
 // Shutdown the client
 func (c *Cache) Shutdown() {
 	c.Halt()
+	c.impl.Shutdown()
 }
