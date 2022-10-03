@@ -277,6 +277,15 @@ hash_sha256_verify() {
     return 1
   fi
 }
+root_check() {
+	if [ "$EUID" -eq 0 ]; then
+		echo "Do you want to install with root user (y/n)?"
+		read installAsRoot
+		if [ "$installAsRoot" = "n" ]; then
+			exit 0
+		fi
+	fi
+}
 cat /dev/null <<EOF
 ------------------------------------------------------------------------
 End of functions from https://github.com/client9/shlib
@@ -292,6 +301,8 @@ ARCH=$(uname_arch)
 PREFIX="$OWNER/$REPO"
 PLATFORM="${OS}/${ARCH}"
 GITHUB_DOWNLOAD=https://github.com/${OWNER}/${REPO}/releases/download
+
+root_check
 
 uname_os_check "$OS"
 uname_arch_check "$ARCH"
