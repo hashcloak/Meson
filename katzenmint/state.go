@@ -69,8 +69,8 @@ type KatzenmintState struct {
  *            Load & Save State          *
  *****************************************/
 
-func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
-	tree, err := iavl.NewMutableTree(db, 100)
+func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *KatzenmintState {
+	tree, err := iavl.NewMutableTree(db, dbCacheSize)
 	if err != nil {
 		panic(fmt.Errorf("error creating iavl tree"))
 	}
