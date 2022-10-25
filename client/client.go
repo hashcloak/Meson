@@ -80,7 +80,7 @@ func AutoRegisterRandomClient(cfg *config.Config) *ecdh.PrivateKey {
 		panic(err)
 	}
 	account := &config.Account{
-		User:           fmt.Sprintf("%x", linkKey.PublicKey().Bytes()),
+		User:           fmt.Sprintf("%s.%s", linkKey.PublicKey().String()[:6], cfg.UpstreamProxy.User),
 		Provider:       registrationProvider.Name,
 		ProviderKeyPin: registrationProvider.IdentityKey,
 	}

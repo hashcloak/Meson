@@ -99,7 +99,7 @@ def main():
         else:
             repoPath = path.join(path.dirname(path.dirname(path.dirname(path.realpath(__file__)))), repo["SUBDIRECTORY"])
 
-            dockerFile = path.join(repoPath, "Dockerfile")
+            dockerFile = path.join(repoPath, CONFIG["DOCKERFILE"])
             build_container(repo["CONTAINER"], repo["HASHTAG"], dockerFile, repoPath)
             retag(repo["CONTAINER"], repo["HASHTAG"], repo["NAMEDTAG"])
 

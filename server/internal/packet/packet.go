@@ -217,11 +217,11 @@ func newRedundantError(cmd commands.RoutingCommand) error {
 
 func ParseForwardPacket(pkt *Packet) ([]byte, []byte, error) {
 	const (
-		hdrLength    = constants.SphinxPlaintextHeaderLength + sphinx.SURBLength
 		flagsPadding = 0
 		flagsSURB    = 1
 		reserved     = 0
 	)
+	var hdrLength = constants.SphinxPlaintextHeaderLength + sphinx.SURBLength
 
 	// Sanity check the forward packet payload length.
 	if len(pkt.Payload) != constants.ForwardPayloadLength {
@@ -258,7 +258,7 @@ func NewPacketFromSURB(pkt *Packet, surb, payload []byte) (*Packet, error) {
 	}
 
 	// Pad out payloads to the full packet size.
-	var respPayload [constants.ForwardPayloadLength]byte
+	respPayload := make([]byte, constants.ForwardPayloadLength)
 	switch {
 	case len(payload) == 0:
 	case len(payload) > constants.ForwardPayloadLength:

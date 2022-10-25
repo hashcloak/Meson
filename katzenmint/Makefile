@@ -36,7 +36,3 @@ setup:
 .PHONY: build
 build:
 	go build -tags=$(GOTAGS) -ldflags '$(LD_FLAGS)' -o katzenmint cmd/katzenmint/*.go
-
-.PHONY: build-docker
-build-docker:
-	docker build --no-cache -t katzenmint/pki .

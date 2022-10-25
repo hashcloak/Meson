@@ -173,6 +173,15 @@ func (s *Session) worker() {
 		}
 
 		if mustResetAllTimers {
+			if !lambdaPTimer.Stop() {
+				<-lambdaPTimer.C
+			}
+			if !lambdaLTimer.Stop() {
+				<-lambdaLTimer.C
+			}
+			if !lambdaDTimer.Stop() {
+				<-lambdaDTimer.C
+			}
 			lambdaPTimer.Reset(lambdaPInterval)
 			lambdaLTimer.Reset(lambdaLInterval)
 			lambdaDTimer.Reset(lambdaDInterval)
