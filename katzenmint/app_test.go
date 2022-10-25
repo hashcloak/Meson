@@ -37,7 +37,7 @@ func TestGetEpoch(t *testing.T) {
 	db := dbm.NewMemDB()
 	defer db.Close()
 	logger := newDiscardLogger()
-	app := NewKatzenmintApplication(kConfig, db, logger)
+	app := NewKatzenmintApplication(kConfig, db, testDBCacheSize, logger)
 	m := mock.ABCIApp{
 		App: app,
 	}
@@ -76,7 +76,7 @@ func TestAddAuthority(t *testing.T) {
 	db := dbm.NewMemDB()
 	defer db.Close()
 	logger := newDiscardLogger()
-	app := NewKatzenmintApplication(kConfig, db, logger)
+	app := NewKatzenmintApplication(kConfig, db, testDBCacheSize, logger)
 	m := mock.ABCIApp{
 		App: app,
 	}
@@ -133,7 +133,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	db := dbm.NewMemDB()
 	defer db.Close()
 	logger := newDiscardLogger()
-	app := NewKatzenmintApplication(kConfig, db, logger)
+	app := NewKatzenmintApplication(kConfig, db, testDBCacheSize, logger)
 	m := mock.ABCIApp{
 		App: app,
 	}

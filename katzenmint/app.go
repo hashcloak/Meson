@@ -31,8 +31,8 @@ type KatzenmintApplication struct {
 	logger log.Logger
 }
 
-func NewKatzenmintApplication(kConfig *config.Config, db dbm.DB, logger log.Logger) *KatzenmintApplication {
-	state := NewKatzenmintState(kConfig, db)
+func NewKatzenmintApplication(kConfig *config.Config, db dbm.DB, dbCacheSize int, logger log.Logger) *KatzenmintApplication {
+	state := NewKatzenmintState(kConfig, db, dbCacheSize)
 	return &KatzenmintApplication{
 		state:  state,
 		logger: logger,

@@ -28,6 +28,8 @@ var (
 	abciClient *local.Local
 )
 
+const testDBCacheSize = 100
+
 func newDiscardLogger() (logger log.Logger) {
 	logger = log.NewTMLogger(log.NewSyncWriter(ioutil.Discard))
 	return
@@ -150,7 +152,7 @@ func TestMain(m *testing.M) {
 	kcfg := kconf.DefaultConfig()
 	db := dbm.NewMemDB()
 	logger := newDiscardLogger()
-	app := kpki.NewKatzenmintApplication(kcfg, db, logger)
+	app := kpki.NewKatzenmintApplication(kcfg, db, testDBCacheSize, logger)
 	node := rpctest.StartTendermint(app, rpctest.SuppressStdout)
 	abciClient = local.New(node)
 
