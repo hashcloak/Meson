@@ -1,9 +1,10 @@
 package client
 
 import (
+	"testing"
+
 	"github.com/katzenpost/client/constants"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 type foo struct {
@@ -38,4 +39,19 @@ func TestQueue(t *testing.T) {
 	}
 	_, err = q.Pop()
 	assert.Error(err)
+}
+
+func FuzzQueue(f *testing.F) {
+	f.Fuzz(func(t *testing.T, i int, s string) {
+		q := new(Queue)
+		t.Log("Pushing", i, s)
+		err := q.Push(foo{s})
+		if err != nil || s == "abc" {
+			t.Errorf("Push %v %v", s, err)
+		}
+		item, err := q.Pop()
+		if err != nil {
+			t.Errorf("Pop %v %v %v", s, item, err)
+		}
+	})
 }
