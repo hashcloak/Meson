@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/cosmos/iavl"
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
@@ -232,7 +232,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 
 	// verify query proof
 	verifier := merkle.NewProofRuntime()
-	verifier.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
+	verifier.RegisterOpDecoder(costypes.ProofOpIAVLCommitment, costypes.CommitmentOpDecoder)
 	err = verifier.VerifyValue(rsp.Response.ProofOps, apphash, path, rsp.Response.Value)
 	require.Nil(err, "Invalid proof for app responses")
 }

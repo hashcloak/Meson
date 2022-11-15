@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/cert"
@@ -214,10 +215,12 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		resQuery.Key = proof.GetKey()
+		exist := proof.GetExist()
+		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
+		resQuery.Key = exist.Key
 		resQuery.Value = val
 		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{proof.ProofOp()},
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 
 	case GetConsensus:
@@ -236,10 +239,12 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		resQuery.Key = proof.GetKey()
+		exist := proof.GetExist()
+		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
+		resQuery.Key = exist.Key
 		resQuery.Value = doc
 		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{proof.ProofOp()},
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 	}
 	return
