@@ -89,13 +89,13 @@ func (w *Worker) doUnwrap(pkt *packet.Packet) error {
 		return err
 	}
 
-	if k, ok := w.mixKeys[epoch-2]; ok && k != nil {
+	if k, ok := w.mixKeys[epoch]; ok && k != nil {
 		keys = append(keys, k)
 	}
 	if k, ok := w.mixKeys[epoch-1]; ok && k != nil {
 		keys = append(keys, k)
 	}
-	if k, ok := w.mixKeys[epoch]; ok && k != nil {
+	if k, ok := w.mixKeys[epoch-2]; ok && k != nil {
 		keys = append(keys, k)
 	}
 
@@ -182,6 +182,7 @@ func (w *Worker) worker() {
 
 	const absoluteMinimumDelay = 1 * time.Millisecond
 
+	var lastUpdateStart, lastUpdateEnd time.Duration
 	isProvider := w.glue.Config().Server.IsProvider
 	unwrapSlack := time.Duration(w.glue.Config().Debug.UnwrapDelay) * time.Millisecond
 	defer w.derefKeys()
@@ -196,8 +197,10 @@ func (w *Worker) worker() {
 			w.log.Debugf("Terminating gracefully.")
 			return
 		case <-w.updateCh:
+			lastUpdateStart = monotime.Now()
 			w.log.Debugf("Updating mix keys.")
 			w.glue.MixKeys().Shadow(w.mixKeys)
+			lastUpdateEnd = monotime.Now()
 			continue
 		case e := <-w.incomingCh:
 			pkt = e.(*packet.Packet)
@@ -212,7 +215,9 @@ func (w *Worker) worker() {
 		// Drop the packet if it has been sitting in the queue waiting to
 		// be unwrapped for way too long.
 		dwellTime := now - pkt.RecvAt
-		if dwellTime > unwrapSlack {
+		if pkt.RecvAt >= lastUpdateStart && pkt.RecvAt < lastUpdateEnd {
+			w.log.Debugf("Packet: %v (Unwrap queue delay: %v, blocked by mixkey update)", pkt.ID, dwellTime)
+		} else if dwellTime > unwrapSlack {
 			w.log.Debugf("Dropping packet: %v (Spent %v waiting for Unwrap())", pkt.ID, dwellTime)
 			packetsDropped.Inc()
 			pkt.Dispose()

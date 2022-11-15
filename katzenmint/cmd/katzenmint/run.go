@@ -32,7 +32,8 @@ var (
 		Short: "Run katzenmint PKI node",
 		RunE:  runNode,
 	}
-	configFile string
+	configFile  string
+	dbCacheSize int
 )
 
 func readTendermintConfig(tConfigFile string) (config *cfg.Config, err error) {
@@ -105,6 +106,7 @@ func newTendermint(app abci.Application, config *cfg.Config, logger log.Logger) 
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "katzenmint.toml", "Path to katzenmint.toml")
+	runCmd.Flags().IntVar(&dbCacheSize, "dbcachesize", 100, "Cache size for katzenmint db")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(registerValidatorCmd)
 }
@@ -134,7 +136,7 @@ func runNode(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to parse log level: %+v", err)
 	}
 
-	app := katzenmint.NewKatzenmintApplication(kConfig, db, logger)
+	app := katzenmint.NewKatzenmintApplication(kConfig, db, dbCacheSize, logger)
 	defer app.Close()
 
 	node, err := newTendermint(app, config, logger)

@@ -170,6 +170,7 @@ func (p *pki) worker() {
 
 		// Fetch the PKI documents as required.
 		var didUpdate bool
+		now, _, _, _ := epochtime.Now(p.impl)
 		for _, epoch := range p.documentsToFetch() {
 			fetchedPKIDocsTimer = prometheus.NewTimer(fetchedPKIDocsDuration)
 			// Certain errors in fetching documents are treated as hard
@@ -186,10 +187,12 @@ func (p *pki) worker() {
 				return
 			}
 			if err != nil {
-				p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
-				failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-				if err == cpki.ErrNoDocument {
-					p.setFailedFetch(epoch, err)
+				if epoch <= now {
+					p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
+					failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+					if err == cpki.ErrNoDocument {
+						p.setFailedFetch(epoch, err)
+					}
 				}
 				continue
 			}
@@ -340,14 +343,16 @@ func (p *pki) pruneDocuments() {
 }
 
 func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
-	publishDeadline := epochtime.TestPeriod / 10
+	publishGracePeriod := epochtime.TestPeriod / 3
 
-	now, _, till, err := p.Now()
+	epoch, _, till, err := p.Now()
 	if err != nil {
 		p.log.Debugf("Error fetching PKI epoch: %v", err)
 		return err
 	}
-	epoch := now + 1
+	if till < publishGracePeriod {
+		epoch++
+	}
 	doPublishEpoch := uint64(0)
 	switch p.lastPublishedEpoch {
 	case 0:
@@ -356,7 +361,7 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 		doPublishEpoch = epoch
 	case epoch:
 		// Check the deadline for the next publication time.
-		if till > publishDeadline {
+		if till > publishGracePeriod {
 			p.log.Debugf("Within the publication time for epoch: %v", epoch+1)
 			doPublishEpoch = epoch + 1
 			break
@@ -474,25 +479,29 @@ func (p *pki) entryForEpoch(epoch uint64) *pkicache.Entry {
 }
 
 func (p *pki) documentsToFetch() []uint64 {
+	const lateEpochSlack = 2 * time.Second
 
-	start, _, _, err := p.Now()
-	if start == 0 {
+	now, _, till, err := p.Now()
+	if till < lateEpochSlack {
+		now += 1
+	}
+	if now == 0 {
 		err = fmt.Errorf("before genesis epoch")
 	}
 	if err != nil {
 		p.log.Debugf("Error fetching PKI epoch: %v", err)
 		return nil
 	}
-	iterate := uint64(constants.NumMixKeys)
-	if iterate > start {
-		iterate = start
+	numFetches := uint64(constants.NumMixKeys)
+	if numFetches > now {
+		numFetches = now
 	}
-	ret := make([]uint64, 0, iterate)
+	ret := make([]uint64, 0, numFetches)
 
 	p.RLock()
 	defer p.RUnlock()
 
-	for epoch := start; epoch > start-iterate; epoch-- {
+	for epoch := now; epoch > now-numFetches; epoch-- {
 		if _, ok := p.docs[epoch]; !ok {
 			ret = append(ret, epoch)
 		}
@@ -502,12 +511,16 @@ func (p *pki) documentsToFetch() []uint64 {
 }
 
 func (p *pki) documentsForAuthentication() ([]*pkicache.Entry, *pkicache.Entry, uint64, time.Duration) {
+	const earlyEpochSlack = 2 * time.Second
 
 	// Figure out the list of epochs to consider valid.
 	//
 	// Note: The ordering is important and should not be changed without
 	// changes to pki.AuthenticateConnection().
-	now, _, till, _ := p.Now()
+	now, ellapsed, till, _ := p.Now()
+	if ellapsed < earlyEpochSlack {
+		now -= 1
+	}
 	iterate := uint64(constants.NumMixKeys)
 	if iterate > now {
 		iterate = now
@@ -561,7 +574,9 @@ func (p *pki) AuthenticateConnection(c *wire.PeerCredentials, isOutgoing bool) (
 	// Iterate over whatever documents we happen to have for the epochs
 	// [now+1, now, now-1, now-2].
 	docs, nowDoc, now, till := p.documentsForAuthentication()
+	//p.log.Debugf("pki authentication: now = %d", now)
 	for _, d := range docs {
+		//p.log.Debugf("pki authentication: doc %d", d.Epoch())
 		var m *cpki.MixDescriptor
 		switch isOutgoing {
 		case true:
@@ -734,7 +749,11 @@ func New(glue glue.Glue) (glue.PKI, error) {
 			DatabaseDir:        votingCfg.DatabaseDir,
 			RPCAddress:         votingCfg.RPCAddress,
 		}
-		p.impl, err = kpki.NewPKIClient(pkiCfg)
+		directPKI, err := kpki.NewPKIClient(pkiCfg)
+		if err != nil {
+			return nil, err
+		}
+		p.impl, err = kpki.NewCacheClient(directPKI)
 		if err != nil {
 			return nil, err
 		}

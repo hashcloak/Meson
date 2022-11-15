@@ -69,8 +69,8 @@ type KatzenmintState struct {
  *            Load & Save State          *
  *****************************************/
 
-func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
-	tree, err := iavl.NewMutableTree(db, 100, true)
+func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *KatzenmintState {
+	tree, err := iavl.NewMutableTree(db, dbCacheSize, true)
 	if err != nil {
 		panic(fmt.Errorf("error creating iavl tree"))
 	}
@@ -91,7 +91,10 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 		parameters:       &kConfig.Parameters,
 		prevCommitError:  nil,
 	}
-	epochInfoValue, _ := state.tree.Get([]byte(epochInfoKey))
+	epochInfoValue, err := state.tree.Get([]byte(epochInfoKey))
+	if err != nil {
+		panic(fmt.Errorf("error get value"))
+	}
 	if version == 0 {
 		state.currentEpoch = GenesisEpoch
 		state.epochStartHeight = state.blockHeight
@@ -102,7 +105,10 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
 		state.epochStartHeight, _ = binary.Varint(epochInfoValue[8:])
 	}
 	keyDoc := storageKey(documentsBucket, []byte{}, state.currentEpoch-1)
-	rawDoc, _ := state.tree.Get(keyDoc)
+	rawDoc, err := state.tree.Get(keyDoc)
+	if err != nil {
+		panic(fmt.Errorf("error get value"))
+	}
 	state.prevDocument, _ = s11n.VerifyAndParseDocument(rawDoc)
 	return state
 }
@@ -115,21 +121,28 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 	}
 
 	// Save descriptors/authorities persistently
+	var err error
+	var dbErr error
 	iter, _ := state.memAdded.Iterator([]byte{0x00}, []byte{0xFF})
 	for ; iter.Valid(); iter.Next() {
-		_, _ = state.tree.Set(iter.Key(), iter.Value())
+		_, dbErr = state.tree.Set(iter.Key(), iter.Value())
+		if dbErr != nil {
+			return nil, dbErr
+		}
 	}
 	iter.Close()
 	state.memAdded.Close()
 
 	// Generate and save document persistently
-	var err error
 	if state.newDocumentRequired() {
 		var doc *document
 		if doc, err = state.generateDocument(); err == nil {
 			state.prevDocument = doc.doc
 			key := storageKey(documentsBucket, []byte{}, state.currentEpoch)
-			_, _ = state.tree.Set(key, doc.raw)
+			_, dbErr = state.tree.Set(key, doc.raw)
+			if dbErr != nil {
+				return nil, dbErr
+			}
 			state.currentEpoch++
 			state.epochStartHeight = state.blockHeight + 1
 			// TODO: Prune related descriptors
@@ -141,7 +154,10 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 	epochInfoValue := make([]byte, 16)
 	binary.PutUvarint(epochInfoValue[:8], state.currentEpoch)
 	binary.PutVarint(epochInfoValue[8:], state.epochStartHeight)
-	_, _ = state.tree.Set([]byte(epochInfoKey), epochInfoValue)
+	_, dbErr = state.tree.Set([]byte(epochInfoKey), epochInfoValue)
+	if dbErr != nil {
+		return nil, dbErr
+	}
 
 	// Mark a new version
 	appHash, _, errSave := state.tree.SaveVersion()
@@ -278,8 +294,8 @@ func (state *KatzenmintState) get(key []byte) (val []byte, err error) {
 	if has {
 		val, _ = state.memAdded.Get(key)
 	} else {
-		val, _ = state.tree.Get(key)
-		if val == nil {
+		val, err = state.tree.Get(key)
+		if err != nil || val == nil {
 			return nil, fmt.Errorf("key '%v' does not exist", key)
 		}
 	}

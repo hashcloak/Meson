@@ -20,6 +20,7 @@ import (
 )
 
 const testEpoch = GenesisEpoch
+const testDBCacheSize = 100
 
 var kConfig *config.Config
 
@@ -33,7 +34,7 @@ func TestNewStateBasic(t *testing.T) {
 	// create katzenmint state
 	db := dbm.NewMemDB()
 	defer db.Close()
-	state := NewKatzenmintState(kConfig, db)
+	state := NewKatzenmintState(kConfig, db, testDBCacheSize)
 
 	// advance block height
 	require.Equal(int64(0), state.blockHeight)
@@ -42,7 +43,7 @@ func TestNewStateBasic(t *testing.T) {
 	require.Equal(int64(1), state.blockHeight)
 
 	// test that basic state info can be rebuilt
-	state = NewKatzenmintState(kConfig, db)
+	state = NewKatzenmintState(kConfig, db, testDBCacheSize)
 	require.Equal(int64(1), state.blockHeight)
 	require.Equal(GenesisEpoch, state.currentEpoch)
 	require.Equal(int64(0), state.epochStartHeight)
@@ -54,7 +55,7 @@ func TestUpdateDescriptor(t *testing.T) {
 	// create katzenmint state
 	db := dbm.NewMemDB()
 	defer db.Close()
-	state := NewKatzenmintState(kConfig, db)
+	state := NewKatzenmintState(kConfig, db, testDBCacheSize)
 
 	// create test descriptor
 	desc, rawDesc, _ := testutil.CreateTestDescriptor(require, 1, pki.LayerProvider, testEpoch)
@@ -87,7 +88,7 @@ func TestUpdateAuthority(t *testing.T) {
 	// create katzenmint state
 	db := dbm.NewMemDB()
 	defer db.Close()
-	state := NewKatzenmintState(kConfig, db)
+	state := NewKatzenmintState(kConfig, db, testDBCacheSize)
 
 	// create authority
 	k, err := eddsa.NewKeypair(rand.Reader)
@@ -138,7 +139,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	// create katzenmint state
 	db := dbm.NewMemDB()
 	defer db.Close()
-	state := NewKatzenmintState(kConfig, db)
+	state := NewKatzenmintState(kConfig, db, testDBCacheSize)
 	epoch := state.currentEpoch
 
 	// create descriptorosts of providers
@@ -220,7 +221,7 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	}
 
 	// test the document can be reloaded
-	newState := NewKatzenmintState(kConfig, db)
+	newState := NewKatzenmintState(kConfig, db, testDBCacheSize)
 	if newState.prevDocument == nil {
 		t.Fatalf("The pki document should be reloaded\n")
 	}

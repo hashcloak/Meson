@@ -98,7 +98,9 @@ func TestMockPKIClientGetDocument(t *testing.T) {
 	tree, err := iavl.NewMutableTree(dbm.NewMemDB(), 100, true)
 	require.NoError(err)
 
-	tree.Set(key, value)
+	isUpdated, err := tree.Set(key, value)
+	require.NoError(err)
+	require.False(isUpdated)
 
 	proof, err := tree.GetMembershipProof(key)
 	require.NoError(err)

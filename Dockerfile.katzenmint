@@ -6,10 +6,11 @@ RUN apk update && \
     apk add --no-cache git make ca-certificates build-base && \
     update-ca-certificates
 
-WORKDIR /go
+WORKDIR /go/Meson
 
-RUN git clone https://github.com/hashcloak/Meson.git
-RUN cd Meson/katzenmint ; make build ;
+COPY . .
+
+RUN cd katzenmint ; make build ;
 
 FROM alpine
 

@@ -303,7 +303,7 @@ func (d *decoy) sendLoopPacket(doc *pki.Document, recipient []byte, src, dst *pk
 		}
 
 		if deltaT := then.Sub(now); deltaT < epochtime.TestPeriod*2 {
-			var zeroBytes [constants.UserForwardPayloadLength]byte
+			zeroBytes := make([]byte, constants.UserForwardPayloadLength)
 			payload := make([]byte, 2, 2+sphinx.SURBLength+constants.UserForwardPayloadLength)
 			payload[0] = 1 // Packet has a SURB.
 
@@ -343,7 +343,7 @@ func (d *decoy) sendLoopPacket(doc *pki.Document, recipient []byte, src, dst *pk
 }
 
 func (d *decoy) sendDiscardPacket(doc *pki.Document, recipient []byte, src, dst *pki.MixDescriptor) {
-	var payload [2 + sphinx.SURBLength + constants.UserForwardPayloadLength]byte
+	payload := make([]byte, 2+sphinx.SURBLength+constants.UserForwardPayloadLength)
 
 	for attempts := 0; attempts < maxAttempts; attempts++ {
 		now := time.Now()

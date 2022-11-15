@@ -4,4 +4,7 @@ Layers=1
 MinNodesPerLayer=1
 
 [Parameters]
-  Mu=0.1
+  Mu=0.01
+  LambdaP=0.001
+  LambdaL=0.001
+  LambdaD=0.001
