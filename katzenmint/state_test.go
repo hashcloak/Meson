@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
@@ -13,7 +14,6 @@ import (
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	dbm "github.com/tendermint/tm-db"
 
 	// "github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

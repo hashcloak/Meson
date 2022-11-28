@@ -8,7 +8,7 @@ require (
 	git.schwanenlied.me/yawning/bloom.git v0.0.0-20181019144233-44d6c5c71ed1
 	github.com/BurntSushi/toml v1.2.0
 	github.com/confio/ics23/go v0.7.0
-	github.com/cosmos/iavl v0.19.4
+	github.com/cosmos/iavl v0.19.2-0.20221019080720-401725aea1a0
 	github.com/fxamacker/cbor/v2 v2.2.0
 	github.com/hashcloak/Meson-plugin v0.0.0-20200627021923-d4745a3c9e02
 	github.com/jackc/pgx v3.6.2+incompatible
@@ -34,23 +34,24 @@ require (
 	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/klauspost/compress v1.15.12 // indirect
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
 	golang.org/x/sys v0.2.0 // indirect
 )
 
 require (
+	cloud.google.com/go/iam v0.4.0 // indirect
+	cosmossdk.io/math v1.0.0-beta.3 // indirect
+	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
+	github.com/cosmos/cosmos-db v0.0.0-20220822060143-23a8145386c0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
-	github.com/cosmos/cosmos-sdk v0.46.4
-	github.com/google/btree v1.1.2 // indirect
+	github.com/cosmos/cosmos-sdk v0.46.0-rc3
 	github.com/hashicorp/go-getter v1.6.2 // indirect
 	github.com/katzenpost/noise v0.0.2 // indirect
 	github.com/katzenpost/server v0.0.12
 	github.com/shopspring/decimal v1.2.0 // indirect
-	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect
 )
 
 replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1

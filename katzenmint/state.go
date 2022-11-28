@@ -8,6 +8,7 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
@@ -17,7 +18,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -310,7 +310,7 @@ func (state *KatzenmintState) getProof(key []byte, height int64) ([]byte, *ics23
 	if state.isClosed() {
 		return nil, nil, errStateClosed
 	}
-	proof, err := state.tree.GetMembershipProof(key)
+	proof, err := state.tree.GetVersionedProof(key, height)
 	if err != nil {
 		return nil, nil, err
 	}

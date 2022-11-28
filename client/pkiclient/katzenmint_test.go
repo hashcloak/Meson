@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/iavl"
 
 	ics23 "github.com/confio/ics23/go"
+	dbm "github.com/cosmos/cosmos-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
@@ -32,7 +33,6 @@ import (
 	rpcmock "github.com/tendermint/tendermint/rpc/client/mocks"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (

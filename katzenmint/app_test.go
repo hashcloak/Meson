@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"testing"
 
+	dbm "github.com/cosmos/cosmos-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
@@ -22,7 +23,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/mock"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func newDiscardLogger() (logger log.Logger) {
@@ -207,13 +207,13 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	require.Nil(err, "Failed to parse pki document: %+v\n", err)
 
 	// prepare verification metadata (in an old block)
+	appinfo, err = m.ABCIInfo(context.Background())
+	require.Nil(err)
+	apphash := appinfo.Response.LastBlockAppHash
 	key := storageKey(documentsBucket, []byte{}, epoch)
 	keyPath := "/" + url.PathEscape(string(key))
 	m.App.BeginBlock(abcitypes.RequestBeginBlock{})
 	m.App.Commit()
-	appinfo, err = m.ABCIInfo(context.Background())
-	require.Nil(err)
-	apphash := appinfo.Response.LastBlockAppHash
 
 	// make a query for the doc
 	query, err = EncodeJson(Query{
