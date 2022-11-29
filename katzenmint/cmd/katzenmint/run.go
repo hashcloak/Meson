@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	dbm "github.com/cosmos/cosmos-db"
 	katzenmint "github.com/hashcloak/Meson/katzenmint"
 	kcfg "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/spf13/cobra"
@@ -20,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -123,9 +123,9 @@ func initConfig() (kConfig *kcfg.Config, config *cfg.Config, err error) {
 func runNode(cmd *cobra.Command, args []string) error {
 	kConfig, config, err := initConfig()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %v\n", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
-	db, err := dbm.NewDB("katzenmint_db", dbm.BadgerDBBackend, kConfig.DBPath)
+	db, err := dbm.NewDB("katzenmint_db", dbm.GoLevelDBBackend, kConfig.DBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open badger db: %v\ntry running with -tags badgerdb", err)
 	}

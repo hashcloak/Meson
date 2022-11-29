@@ -20,6 +20,9 @@ import (
 	// ics23 "github.com/confio/ics23/go"
 	"github.com/cosmos/iavl"
 
+	ics23 "github.com/confio/ics23/go"
+	dbm "github.com/cosmos/cosmos-db"
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/merkle"
 	tmbytes "github.com/tendermint/tendermint/libs/bytes"
@@ -30,7 +33,6 @@ import (
 	rpcmock "github.com/tendermint/tendermint/rpc/client/mocks"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"github.com/tendermint/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -47,8 +49,9 @@ func getEpoch(abciClient rpcclient.Client, require *require.Assertions) uint64 {
 }
 
 type testOp struct {
+	Tree  *iavl.MutableTree
 	Key   []byte
-	Proof *iavl.RangeProof
+	Proof *ics23.CommitmentProof
 }
 
 func (op testOp) GetKey() []byte {
@@ -56,26 +59,18 @@ func (op testOp) GetKey() []byte {
 }
 
 func (op testOp) ProofOp() tmcrypto.ProofOp {
-	proof := iavl.NewValueOp(op.Key, op.Proof)
-	return proof.ProofOp()
+	return costypes.NewIavlCommitmentOp(op.Key, op.Proof).ProofOp()
 }
 
-func (op testOp) Run(args [][]byte) ([][]byte, error) {
-	root := op.Proof.ComputeRootHash()
-	switch len(args) {
-	case 0:
-		if err := op.Proof.Verify(root); err != nil {
-			return nil, fmt.Errorf("root did not verified: %+v", err)
-		}
-	case 1:
-		if err := op.Proof.VerifyAbsence(args[0]); err != nil {
-			return nil, fmt.Errorf("proof did not verified: %+v", err)
-		}
-	default:
-		return nil, fmt.Errorf("args must be length 0 or 1, got: %d", len(args))
+func (op testOp) Run(args [][]byte) (root []byte, err error) {
+	exist := op.Proof.GetExist()
+	if exist == nil {
+		return nil, fmt.Errorf("proof did not existed")
 	}
-
-	return [][]byte{root}, nil
+	if root, err = op.Tree.WorkingHash(); err != nil {
+		return nil, fmt.Errorf("cannot get root hash: %+v", err)
+	}
+	return root, nil
 }
 
 // TestMockPKIClientGetDocument tests PKI Client get document and verifies proofs.
@@ -100,18 +95,20 @@ func TestMockPKIClientGetDocument(t *testing.T) {
 	require.Equal(n, len(docSer))
 
 	// create iavl tree
-	tree, err := iavl.NewMutableTree(dbm.NewMemDB(), 100)
+	tree, err := iavl.NewMutableTree(dbm.NewMemDB(), 100, true)
 	require.NoError(err)
 
 	isUpdated, err := tree.Set(key, value)
 	require.NoError(err)
 	require.False(isUpdated)
 
-	rawDoc, proof, err := tree.GetWithProof(key)
+	proof, err := tree.GetMembershipProof(key)
 	require.NoError(err)
+	rawDoc := proof.GetExist().Value
 	require.Equal(rawDoc, docSer)
 
 	testOp := &testOp{
+		Tree:  tree,
 		Key:   key,
 		Proof: proof,
 	}
@@ -165,7 +162,7 @@ func TestMockPKIClientGetDocument(t *testing.T) {
 	lc.On("VerifyLightBlockAtHeight", context.Background(), int64(2), mock.AnythingOfType("time.Time")).Return(
 		&types.LightBlock{
 			SignedHeader: &types.SignedHeader{
-				Header: &types.Header{AppHash: rootHash[0]},
+				Header: &types.Header{AppHash: rootHash},
 			},
 		},
 		nil,

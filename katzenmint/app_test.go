@@ -9,7 +9,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/cosmos/iavl"
+	dbm "github.com/cosmos/cosmos-db"
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"
 	"github.com/katzenpost/core/crypto/eddsa"
@@ -22,7 +23,6 @@ import (
 	"github.com/tendermint/tendermint/crypto/merkle"
 	"github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/mock"
-	dbm "github.com/tendermint/tm-db"
 )
 
 func newDiscardLogger() (logger log.Logger) {
@@ -64,9 +64,8 @@ func TestGetEpoch(t *testing.T) {
 	}
 	resp := m.App.Query(abcitypes.RequestQuery{Data: query})
 	require.True(resp.IsOK(), resp.Log)
-	gotNum, _ := binary.Uvarint(resp.Value[:8])
-	gotStr := fmt.Sprint(gotNum)
-	require.Equal(appinfo.Response.Data, gotStr)
+	expectEpoch, _ := binary.Uvarint(resp.Value[:8])
+	require.Equal(appinfo.Response.Data, fmt.Sprint(expectEpoch))
 }
 
 func TestAddAuthority(t *testing.T) {
@@ -212,7 +211,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	require.Nil(err)
 	apphash := appinfo.Response.LastBlockAppHash
 	key := storageKey(documentsBucket, []byte{}, epoch)
-	path := "/" + url.PathEscape(string(key))
+	keyPath := "/" + url.PathEscape(string(key))
 	m.App.BeginBlock(abcitypes.RequestBeginBlock{})
 	m.App.Commit()
 
@@ -232,7 +231,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 
 	// verify query proof
 	verifier := merkle.NewProofRuntime()
-	verifier.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
-	err = verifier.VerifyValue(rsp.Response.ProofOps, apphash, path, rsp.Response.Value)
+	verifier.RegisterOpDecoder(costypes.ProofOpIAVLCommitment, costypes.CommitmentOpDecoder)
+	err = verifier.VerifyValue(rsp.Response.ProofOps, apphash, keyPath, rsp.Response.Value)
 	require.Nil(err, "Invalid proof for app responses")
 }

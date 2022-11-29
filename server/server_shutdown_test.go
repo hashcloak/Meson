@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	kconf "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/server/config"
@@ -37,7 +38,6 @@ import (
 	httpp "github.com/tendermint/tendermint/light/provider/http"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (

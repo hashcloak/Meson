@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	dbm "github.com/cosmos/cosmos-db"
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/cert"
@@ -13,7 +15,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"github.com/tendermint/tendermint/version"
-	dbm "github.com/tendermint/tm-db"
 	"github.com/ugorji/go/codec"
 	// cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
 )
@@ -214,10 +215,12 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		resQuery.Key = proof.GetKey()
+		exist := proof.GetExist()
+		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
+		resQuery.Key = exist.Key
 		resQuery.Value = val
 		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{proof.ProofOp()},
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 
 	case GetConsensus:
@@ -236,10 +239,12 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		resQuery.Key = proof.GetKey()
+		exist := proof.GetExist()
+		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
+		resQuery.Key = exist.Key
 		resQuery.Value = doc
 		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{proof.ProofOp()},
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 	}
 	return
