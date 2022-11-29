@@ -8,6 +8,7 @@ import (
 	"strings"
 	"syscall"
 
+	dbm "github.com/cosmos/cosmos-db"
 	katzenmint "github.com/hashcloak/Meson/katzenmint"
 	kcfg "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/spf13/cobra"
@@ -20,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/p2p"
 	"github.com/tendermint/tendermint/privval"
 	"github.com/tendermint/tendermint/proxy"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
@@ -32,7 +32,8 @@ var (
 		Short: "Run katzenmint PKI node",
 		RunE:  runNode,
 	}
-	configFile string
+	configFile  string
+	dbCacheSize int
 )
 
 func readTendermintConfig(tConfigFile string) (config *cfg.Config, err error) {
@@ -105,6 +106,7 @@ func newTendermint(app abci.Application, config *cfg.Config, logger log.Logger) 
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "katzenmint.toml", "Path to katzenmint.toml")
+	runCmd.Flags().IntVar(&dbCacheSize, "dbcachesize", 100, "Cache size for katzenmint db")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(registerValidatorCmd)
 }
@@ -121,9 +123,9 @@ func initConfig() (kConfig *kcfg.Config, config *cfg.Config, err error) {
 func runNode(cmd *cobra.Command, args []string) error {
 	kConfig, config, err := initConfig()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %v\n", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
-	db, err := dbm.NewDB("katzenmint_db", dbm.BadgerDBBackend, kConfig.DBPath)
+	db, err := dbm.NewDB("katzenmint_db", dbm.GoLevelDBBackend, kConfig.DBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open badger db: %v\ntry running with -tags badgerdb", err)
 	}
@@ -134,7 +136,7 @@ func runNode(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to parse log level: %+v", err)
 	}
 
-	app := katzenmint.NewKatzenmintApplication(kConfig, db, logger)
+	app := katzenmint.NewKatzenmintApplication(kConfig, db, dbCacheSize, logger)
 	defer app.Close()
 
 	node, err := newTendermint(app, config, logger)

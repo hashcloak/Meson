@@ -8,7 +8,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cosmos/iavl"
+	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/katzenpost/core/crypto/eddsa"
@@ -245,7 +245,7 @@ func NewPKIClient(cfg *PKIClientConfig) (*PKIClient, error) {
 		return kp, nil
 	})
 	p.light = lightrpc.NewClient(provider, lightclient, kpFunc)
-	p.light.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
+	p.light.RegisterOpDecoder(costypes.ProofOpIAVLCommitment, costypes.CommitmentOpDecoder)
 	return p, nil
 }
 
@@ -254,7 +254,7 @@ func NewPKIClientFromLightClient(light *lightrpc.Client, logBackend *log.Backend
 	p := new(PKIClient)
 	p.log = logBackend.GetLogger("pki/client")
 	p.light = light
-	p.light.RegisterOpDecoder(iavl.ProofOpIAVLValue, iavl.ValueOpDecoder)
+	p.light.RegisterOpDecoder(costypes.ProofOpIAVLCommitment, costypes.CommitmentOpDecoder)
 	return p, nil
 }
 

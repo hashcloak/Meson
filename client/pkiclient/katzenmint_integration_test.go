@@ -16,17 +16,19 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	dbm "github.com/cosmos/cosmos-db"
 	log "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/light"
 	"github.com/tendermint/tendermint/light/provider/http"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
 	abciClient *local.Local
 )
+
+const testDBCacheSize = 100
 
 func newDiscardLogger() (logger log.Logger) {
 	logger = log.NewTMLogger(log.NewSyncWriter(ioutil.Discard))
@@ -150,7 +152,7 @@ func TestMain(m *testing.M) {
 	kcfg := kconf.DefaultConfig()
 	db := dbm.NewMemDB()
 	logger := newDiscardLogger()
-	app := kpki.NewKatzenmintApplication(kcfg, db, logger)
+	app := kpki.NewKatzenmintApplication(kcfg, db, testDBCacheSize, logger)
 	node := rpctest.StartTendermint(app, rpctest.SuppressStdout)
 	abciClient = local.New(node)
 

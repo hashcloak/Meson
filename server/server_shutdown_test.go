@@ -25,6 +25,7 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	kconf "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/server/config"
@@ -37,13 +38,14 @@ import (
 	httpp "github.com/tendermint/tendermint/light/provider/http"
 	"github.com/tendermint/tendermint/rpc/client/local"
 	rpctest "github.com/tendermint/tendermint/rpc/test"
-	dbm "github.com/tendermint/tm-db"
 )
 
 var (
 	testDir    string
 	abciClient *local.Local
 )
+
+const testDBCacheSize = 100
 
 func newDiscardLogger() (logger tmlog.Logger) {
 	logger = tmlog.NewTMLogger(tmlog.NewSyncWriter(ioutil.Discard))
@@ -155,7 +157,7 @@ func TestMain(m *testing.M) {
 	// start katzenmint node in the background to test against
 	db := dbm.NewMemDB()
 	logger := newDiscardLogger()
-	app := kpki.NewKatzenmintApplication(kconf.DefaultConfig(), db, logger)
+	app := kpki.NewKatzenmintApplication(kconf.DefaultConfig(), db, testDBCacheSize, logger)
 	node := rpctest.StartTendermint(app, rpctest.SuppressStdout)
 	abciClient = local.New(node)
 

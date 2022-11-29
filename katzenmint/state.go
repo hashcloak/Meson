@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	ics23 "github.com/confio/ics23/go"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
@@ -15,9 +17,7 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	"github.com/tendermint/tendermint/crypto/merkle"
 	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	dbm "github.com/tendermint/tm-db"
 )
 
 const (
@@ -69,22 +69,22 @@ type KatzenmintState struct {
  *            Load & Save State          *
  *****************************************/
 
-func NewKatzenmintState(kConfig *config.Config, db dbm.DB) *KatzenmintState {
-	tree, err := iavl.NewMutableTree(db, 100)
+func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *KatzenmintState {
+	tree, err := iavl.NewMutableTree(db, dbCacheSize, true)
 	if err != nil {
 		panic(fmt.Errorf("error creating iavl tree"))
 	}
 	version, err := tree.Load()
 	if err != nil {
-		panic(fmt.Errorf("error loading tree"))
+		panic(fmt.Errorf("error loading iavl tree: %v", err))
 	}
-	rootHash, err := tree.Hash()
+	appHash, err := tree.Hash()
 	if err != nil {
-		panic(fmt.Errorf("error generate root hash"))
+		panic(fmt.Errorf("error loading iavl tree hash: %v", err))
 	}
 	state := &KatzenmintState{
 		tree:             tree,
-		appHash:          rootHash,
+		appHash:          appHash,
 		blockHeight:      version,
 		layers:           kConfig.Layers,
 		minNodesPerLayer: kConfig.MinNodesPerLayer,
@@ -304,13 +304,17 @@ func (state *KatzenmintState) get(key []byte) (val []byte, err error) {
 	return ret, nil
 }
 
-func (state *KatzenmintState) getProof(key []byte, height int64) ([]byte, *iavl.RangeProof, error) {
+func (state *KatzenmintState) getProof(key []byte, height int64) ([]byte, *ics23.CommitmentProof, error) {
 	state.Lock()
 	defer state.Unlock()
 	if state.isClosed() {
 		return nil, nil, errStateClosed
 	}
-	return state.tree.GetVersionedWithProof(key, height)
+	proof, err := state.tree.GetVersionedProof(key, height)
+	if err != nil {
+		return nil, nil, err
+	}
+	return proof.GetExist().Value, proof, err
 }
 
 func (state *KatzenmintState) set(key []byte, value []byte) error {
@@ -339,7 +343,7 @@ func (state *KatzenmintState) GetAuthority(addr string) (*pc.PublicKey, error) {
 	return &auth.Val.PubKey, nil
 }
 
-func (state *KatzenmintState) GetEpoch(height int64) ([]byte, merkle.ProofOperator, error) {
+func (state *KatzenmintState) GetEpoch(height int64) ([]byte, *ics23.CommitmentProof, error) {
 	key := []byte(epochInfoKey)
 	val, proof, err := state.getProof(key, height)
 	if err != nil {
@@ -348,11 +352,10 @@ func (state *KatzenmintState) GetEpoch(height int64) ([]byte, merkle.ProofOperat
 	if len(val) != 16 {
 		return nil, nil, fmt.Errorf("error fetching latest epoch for height %v", height)
 	}
-	valueOp := iavl.NewValueOp(key, proof)
-	return val, valueOp, nil
+	return val, proof, nil
 }
 
-func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, merkle.ProofOperator, error) {
+func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, *ics23.CommitmentProof, error) {
 	// TODO: postpone the document for some blocks?
 	// var postponDeadline = 10
 
@@ -373,8 +376,7 @@ func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, m
 		}
 		return nil, nil, fmt.Errorf("requesting document for a too future epoch %d", epoch)
 	}
-	valueOp := iavl.NewValueOp(key, proof)
-	return doc, valueOp, nil
+	return doc, proof, nil
 }
 
 /*****************************************
