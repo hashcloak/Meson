@@ -230,7 +230,7 @@ func New(cfg *config.Config) (*Server, error) {
 	}
 	instrument.Init()
 
-	s.log.Notice("Katzenpost is still pre-alpha.  DO NOT DEPEND ON IT FOR STRONG SECURITY OR ANONYMITY.")
+	s.log.Notice("Meson is still alpha.  DO NOT DEPEND ON IT FOR STRONG SECURITY OR ANONYMITY.")
 	if s.cfg.Debug.IsUnsafe() {
 		s.log.Warning("Unsafe Debug configuration options are set.")
 	}
