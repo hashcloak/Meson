@@ -42,16 +42,54 @@ func TestQueue(t *testing.T) {
 }
 
 func FuzzQueue(f *testing.F) {
-	f.Fuzz(func(t *testing.T, i int, s string) {
+	f.Fuzz(func(t *testing.T, _, s string) {
 		q := new(Queue)
-		t.Log("Pushing", i, s)
+		t.Log("Pushing", s)
 		err := q.Push(foo{s})
-		if err != nil || s == "abc" {
+		if err != nil {
 			t.Errorf("Push %v %v", s, err)
 		}
 		item, err := q.Pop()
 		if err != nil {
 			t.Errorf("Pop %v %v %v", s, item, err)
+		}
+	})
+}
+
+func FuzzQueuePushSerial(f *testing.F) {
+	f.Fuzz(func(t *testing.T, i int, s string) {
+		q := new(Queue)
+		if i > constants.MaxEgressQueueSize {
+			return
+		}
+		for j := 0; j < i; j++ {
+			t.Log("Pushing", s)
+			err := q.Push(foo{s})
+			if err != nil {
+				t.Errorf("Push %v %v", s, err)
+			}
+		}
+	})
+}
+
+func FuzzQueuePushParalell(f *testing.F) {
+	f.Fuzz(func(t *testing.T, i int, s string) {
+		q := new(Queue)
+		if i > constants.MaxEgressQueueSize {
+			return
+		}
+		t.Logf("Pushing '%v' for %v times", s, i)
+		for j := 0; j < i; j++ {
+			t.Log("Pushing", s)
+			go func() {
+				err := q.Push(foo{s})
+				if err != nil {
+					t.Errorf("Push %v %v", s, err)
+				}
+			}()
+		}
+		if q.len != i {
+			t.Errorf("Expected len: %v, actual %v", i, q.len)
 		}
 	})
 }
