@@ -36,6 +36,10 @@ type opNewDocument struct {
 	doc *pki.Document
 }
 
+type opRetransmit struct {
+	msg *Message
+}
+
 func (s *Session) connStatusChange(op opConnStatusChanged) bool {
 	isConnected := op.isConnected
 	if isConnected {
@@ -136,6 +140,8 @@ func (s *Session) worker() {
 				lambdaL = doc.LambdaL
 				lambdaD = doc.LambdaD
 				mustResetAllTimers = true
+			case opRetransmit:
+				s.doRetransmit(op.msg)
 			default:
 				s.log.Warningf("BUG: Worker received nonsensical op: %T", op)
 			} // end of switch

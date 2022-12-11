@@ -48,6 +48,12 @@ type Message struct {
 	// sending of the query and the receiving of it's reply.
 	IsBlocking bool
 
+	// Reliable indicate whether automatic retransmissions should be used.
+	Reliable bool
+
+	// Retransmissions counts the number of times the message has been retransmitted.
+	Retransmissions uint32
+
 	// SURBID is the SURB identifier.
 	SURBID *[sConstants.SURBIDLength]byte
 
