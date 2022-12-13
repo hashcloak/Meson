@@ -90,14 +90,14 @@ func FuzzQueuePushParalell(f *testing.F) {
 		for j := 0; j < i; j++ {
 			t.Log("Pushing", s)
 			wg.Add(1)
-			go func(wg *sync.WaitGroup) {
+			go func(wg *sync.WaitGroup, s string, q *Queue, t *testing.T) {
 				defer wg.Done()
 				err := q.Push(foo{s})
 				if err != nil {
 					t.Errorf("Push %v %v", s, err)
 				}
 				t.Logf("len: %v", q.len)
-			}(&wg)
+			}(&wg, s, q, t)
 		}
 		wg.Wait()
 		if q.len != i {
