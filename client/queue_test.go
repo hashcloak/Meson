@@ -2,6 +2,7 @@ package client
 
 import (
 	"testing"
+	"sync"
 
 	"github.com/katzenpost/client/constants"
 	"github.com/stretchr/testify/assert"
@@ -73,22 +74,32 @@ func FuzzQueuePushSerial(f *testing.F) {
 }
 
 func FuzzQueuePushParalell(f *testing.F) {
+	f.Add(1, "abcde")
+	f.Add(1, "")
+	f.Add(1, string([]byte{0x00}))
 	f.Fuzz(func(t *testing.T, i int, s string) {
 		q := new(Queue)
 		if i > constants.MaxEgressQueueSize {
 			return
 		}
+		if i < 0 {
+			return
+		}
 		t.Logf("Pushing '%v' for %v times", s, i)
+		var wg sync.WaitGroup
 		for j := 0; j < i; j++ {
 			t.Log("Pushing", s)
-			go func() {
+			wg.Add(1)
+			go func(wg *sync.WaitGroup) {
+				defer wg.Done()
 				err := q.Push(foo{s})
 				if err != nil {
 					t.Errorf("Push %v %v", s, err)
 				}
 				t.Logf("len: %v", q.len)
-			}()
+			}(&wg)
 		}
+		wg.Wait()
 		if q.len != i {
 			t.Errorf("Expected len: %v, actual %v", i, q.len)
 		}
