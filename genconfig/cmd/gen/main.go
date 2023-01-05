@@ -85,6 +85,7 @@ type katzenpost struct {
 	outputDir   string
 	authAddress string
 	currency    int
+	mainnet     bool
 
 	authIdentity    *eddsa.PrivateKey
 	authPubIdentity string
@@ -401,7 +402,9 @@ func (s *katzenpost) genValidatorConfig(index int) error {
 		nodeDirName := fmt.Sprintf("auth-%d", i)
 		nodeDir := filepath.Join(s.outputDir, nodeDirName)
 		tmConfig.SetRoot(nodeDir)
-		tmConfig.P2P.AllowDuplicateIP = true
+		if !s.mainnet {
+			tmConfig.P2P.AllowDuplicateIP = true
+		}
 		tmConfig.Moniker = nodeDirName
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), dirPerm)
@@ -537,6 +540,7 @@ func main() {
 	mixNodeOnly := flag.Bool("node", false, "Only generate a mix node config.")
 	providerNodeOnly := flag.Bool("provider", false, "Only generate a provider node config.")
 	validatorNodeOnly := flag.Bool("validator", false, "Only generate a validator config.")
+	mainnet := flag.Bool("mainnet", false, "Only generate mainnet config.")
 	publicIPAddress := flag.String("ipv4", "127.0.0.1", "The public ipv4 address of the single node.")
 	name := flag.String("name", "", "The name of the node.")
 	authPubIdentity := flag.String("authID", "", "Authority public ID.")
@@ -567,6 +571,7 @@ func main() {
 	s.onlyMixNode = *mixNodeOnly
 	s.onlyProviderNode = *providerNodeOnly
 	s.onlyValidatorNode = *validatorNodeOnly
+	s.mainnet = *mainnet
 	s.publicIPAddress = *publicIPAddress
 	s.nameOfSingleNode = *name
 	s.authPubIdentity = *authPubIdentity
