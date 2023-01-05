@@ -165,11 +165,7 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 		return nil, errSave
 	}
 	state.appHash = appHash
-
-	// Mute the error if keeps occuring
-	if err == state.prevCommitError {
-		err = nil
-	} else {
+	if err != state.prevCommitError {
 		state.prevCommitError = err
 	}
 	return appHash, err
