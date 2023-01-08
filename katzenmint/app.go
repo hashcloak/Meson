@@ -185,7 +185,7 @@ func (app *KatzenmintApplication) CheckTx(req abcitypes.RequestCheckTx) abcitype
 func (app *KatzenmintApplication) Commit() abcitypes.ResponseCommit {
 	appHash, err := app.state.Commit()
 	if err != nil {
-		// swallow insufficient descriptot / provier error
+		// swallow insufficient descriptor / provider error
 		if err == errDocInsufficientDescriptor || err == errDocInsufficientProvider {
 			app.logger.Debug("insufficient error", "epoch", app.state.currentEpoch, "height", app.state.blockHeight, "error", err)
 		} else {
