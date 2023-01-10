@@ -31,6 +31,7 @@ const (
 	absoluteMaxDelay            = 6 * 60 * 60 * 1000 // 6 hours.
 )
 
+// TODO: do we need to cap the default value of LambdaP/LambdaL/LambdaD/LambdaM max delay?
 var DefaultParameters = katconfig.Parameters{
 	SendRatePerMinute: defaultSendRatePerMinute,
 	Mu:                defaultMu,
@@ -81,31 +82,31 @@ func (c *Config) FixupAndValidate() (err error) {
 	if c.Parameters.Mu <= 0 {
 		c.Parameters.Mu = DefaultParameters.Mu
 	}
-	if c.Parameters.MuMaxDelay <= 0 {
+	if c.Parameters.MuMaxDelay <= 0 || c.Parameters.MuMaxDelay > absoluteMaxDelay {
 		c.Parameters.MuMaxDelay = DefaultParameters.MuMaxDelay
 	}
 	if c.Parameters.LambdaP <= 0 {
 		c.Parameters.LambdaP = DefaultParameters.LambdaP
 	}
-	if c.Parameters.LambdaPMaxDelay <= 0 {
+	if c.Parameters.LambdaPMaxDelay <= 0 || c.Parameters.LambdaPMaxDelay > absoluteMaxDelay {
 		c.Parameters.LambdaPMaxDelay = DefaultParameters.LambdaPMaxDelay
 	}
 	if c.Parameters.LambdaL <= 0 {
 		c.Parameters.LambdaL = DefaultParameters.LambdaL
 	}
-	if c.Parameters.LambdaLMaxDelay <= 0 {
+	if c.Parameters.LambdaLMaxDelay <= 0 || c.Parameters.LambdaLMaxDelay > absoluteMaxDelay {
 		c.Parameters.LambdaLMaxDelay = DefaultParameters.LambdaLMaxDelay
 	}
 	if c.Parameters.LambdaD <= 0 {
 		c.Parameters.LambdaD = DefaultParameters.LambdaD
 	}
-	if c.Parameters.LambdaDMaxDelay <= 0 {
+	if c.Parameters.LambdaDMaxDelay <= 0 || c.Parameters.LambdaDMaxDelay > absoluteMaxDelay {
 		c.Parameters.LambdaDMaxDelay = DefaultParameters.LambdaDMaxDelay
 	}
 	if c.Parameters.LambdaM <= 0 {
 		c.Parameters.LambdaM = DefaultParameters.LambdaM
 	}
-	if c.Parameters.LambdaMMaxDelay <= 0 {
+	if c.Parameters.LambdaMMaxDelay <= 0 || c.Parameters.LambdaMMaxDelay > absoluteMaxDelay {
 		c.Parameters.LambdaMMaxDelay = DefaultParameters.LambdaMMaxDelay
 	}
 	return
@@ -120,7 +121,7 @@ func Load(b []byte) (*Config, error) {
 		return nil, err
 	}
 	if undecoded := md.Undecoded(); len(undecoded) != 0 {
-		return nil, fmt.Errorf("config: Undecoded keys in config file: %v", undecoded)
+		return nil, fmt.Errorf("undecoded keys in config file (%v)", undecoded)
 	}
 	if err := cfg.FixupAndValidate(); err != nil {
 		return nil, err

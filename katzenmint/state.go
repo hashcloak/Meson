@@ -72,15 +72,15 @@ type KatzenmintState struct {
 func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *KatzenmintState {
 	tree, err := iavl.NewMutableTree(db, dbCacheSize, true)
 	if err != nil {
-		panic(fmt.Errorf("error creating iavl tree"))
+		panic(fmt.Errorf("failed to create iavl tree: %v", err))
 	}
 	version, err := tree.Load()
 	if err != nil {
-		panic(fmt.Errorf("error loading iavl tree: %v", err))
+		panic(fmt.Errorf("failed to load iavl tree: %v", err))
 	}
 	appHash, err := tree.Hash()
 	if err != nil {
-		panic(fmt.Errorf("error loading iavl tree hash: %v", err))
+		panic(fmt.Errorf("failed to load iavl tree hash: %v", err))
 	}
 	state := &KatzenmintState{
 		tree:             tree,
@@ -93,13 +93,13 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *Kat
 	}
 	epochInfoValue, err := state.tree.Get([]byte(epochInfoKey))
 	if err != nil {
-		panic(fmt.Errorf("error get value"))
+		panic(fmt.Errorf("failed to get epoch %s: %v", epochInfoKey, err))
 	}
 	if version == 0 {
 		state.currentEpoch = GenesisEpoch
 		state.epochStartHeight = state.blockHeight
 	} else if epochInfoValue == nil || len(epochInfoValue) != 16 {
-		panic("error loading the current epoch number and its starting height")
+		panic(fmt.Errorf("failed to load the current epoch number and its starting height (%x)", epochInfoValue))
 	} else {
 		state.currentEpoch, _ = binary.Uvarint(epochInfoValue[:8])
 		state.epochStartHeight, _ = binary.Varint(epochInfoValue[8:])
@@ -107,7 +107,7 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *Kat
 	keyDoc := storageKey(documentsBucket, []byte{}, state.currentEpoch-1)
 	rawDoc, err := state.tree.Get(keyDoc)
 	if err != nil {
-		panic(fmt.Errorf("error get value"))
+		panic(fmt.Errorf("failed to get document (%d): %v", state.currentEpoch-1, err))
 	}
 	state.prevDocument, _ = s11n.VerifyAndParseDocument(rawDoc)
 	return state
@@ -165,11 +165,7 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 		return nil, errSave
 	}
 	state.appHash = appHash
-
-	// Mute the error if keeps occuring
-	if err == state.prevCommitError {
-		err = nil
-	} else {
+	if err != state.prevCommitError {
 		state.prevCommitError = err
 	}
 	return appHash, err
@@ -203,15 +199,15 @@ func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixD
 
 	// Check for redundant uploads.
 	if _, err := state.get(key); err == nil {
-		return fmt.Errorf("duplicated descriptor with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
+		return fmt.Errorf("duplicated descriptor with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
 
 	// Check for epoch
 	if epoch < state.currentEpoch {
-		return fmt.Errorf("late descriptor upload with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
+		return fmt.Errorf("late descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
 	if epoch >= state.currentEpoch+uint64(LifeCycle) {
-		return fmt.Errorf("early descriptor upload with key %s for epoch %d", EncodeHex(desc.IdentityKey.Bytes()), epoch)
+		return fmt.Errorf("early descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
 
 	// Save it to memory db.
@@ -223,7 +219,7 @@ func (state *KatzenmintState) updateAuthority(rawAuth []byte, v abcitypes.Valida
 
 	pubkey, err := cryptoenc.PubKeyFromProto(v.PubKey)
 	if err != nil {
-		return fmt.Errorf("can't decode public key: %w", err)
+		return fmt.Errorf("can't decode public key: %v", err)
 	}
 	key := storageKey(authoritiesBucket, pubkey.Address(), 0)
 
@@ -296,7 +292,7 @@ func (state *KatzenmintState) get(key []byte) (val []byte, err error) {
 	} else {
 		val, err = state.tree.Get(key)
 		if err != nil || val == nil {
-			return nil, fmt.Errorf("key '%v' does not exist", key)
+			return nil, fmt.Errorf("key (%v) does not exist", key)
 		}
 	}
 	ret := make([]byte, len(val))
@@ -350,7 +346,7 @@ func (state *KatzenmintState) GetEpoch(height int64) ([]byte, *ics23.CommitmentP
 		return nil, nil, err
 	}
 	if len(val) != 16 {
-		return nil, nil, fmt.Errorf("error fetching latest epoch for height %v", height)
+		return nil, nil, fmt.Errorf("failed to fetching latest epoch for height (%v)", height)
 	}
 	return val, proof, nil
 }
@@ -374,7 +370,7 @@ func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, *
 		if epoch == state.currentEpoch {
 			return nil, nil, ErrQueryDocumentNotReady
 		}
-		return nil, nil, fmt.Errorf("requesting document for a too future epoch %d", epoch)
+		return nil, nil, fmt.Errorf("requesting document for a too future epoch (%d)", epoch)
 	}
 	return doc, proof, nil
 }
@@ -456,7 +452,7 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 		return nil, fmt.Errorf("signed document failed validation: %v", err)
 	}
 	if pDoc.Epoch != s.currentEpoch {
-		return nil, fmt.Errorf("signed document has invalid epoch: %v", pDoc.Epoch)
+		return nil, fmt.Errorf("signed document has invalid epoch (%v)", pDoc.Epoch)
 	}
 	ret := &document{
 		doc: pDoc,
