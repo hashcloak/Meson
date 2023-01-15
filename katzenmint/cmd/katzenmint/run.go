@@ -109,6 +109,7 @@ func init() {
 	runCmd.Flags().IntVar(&dbCacheSize, "dbcachesize", 100, "Cache size for katzenmint db")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(registerValidatorCmd)
+	rootCmd.AddCommand(showNodeIDCmd)
 }
 
 func initConfig() (kConfig *kcfg.Config, config *cfg.Config, err error) {
