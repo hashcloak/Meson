@@ -85,6 +85,7 @@ type katzenpost struct {
 	outputDir   string
 	authAddress string
 	currency    int
+	mainnet     bool
 
 	authIdentity    *eddsa.PrivateKey
 	authPubIdentity string
@@ -94,16 +95,17 @@ type katzenpost struct {
 	nodeIdx     int
 	providerIdx int
 
-	recipients       map[string]*ecdh.PublicKey
-	nrProviders      int
-	nrNodes          int
-	nValidators      int
-	trustOptions     light.TrustOptions
-	chainID          string
-	onlyMixNode      bool
-	onlyProviderNode bool
-	publicIPAddress  string
-	nameOfSingleNode string
+	recipients        map[string]*ecdh.PublicKey
+	nrProviders       int
+	nrNodes           int
+	nValidators       int
+	trustOptions      light.TrustOptions
+	chainID           string
+	onlyMixNode       bool
+	onlyProviderNode  bool
+	onlyValidatorNode bool
+	publicIPAddress   string
+	nameOfSingleNode  string
 }
 
 func (s *katzenpost) genProviderConfig(name string) (cfg *sConfig.Config, err error) {
@@ -358,10 +360,12 @@ func (s *katzenpost) generateVotingMixnetConfigs() {
 		}
 	}
 
+	s.generateValidatorNodesOfMixnet()
+	s.generateProviderNodesOfMixnet()
 	s.generateNodesOfMixnet()
 }
 
-func (s *katzenpost) generateNodesOfMixnet() {
+func (s *katzenpost) generateValidatorNodesOfMixnet() {
 	// Generate the katzenmint configs.
 	if s.authAddress == "" {
 		for i := 0; i < s.nValidators; i++ {
@@ -370,14 +374,18 @@ func (s *katzenpost) generateNodesOfMixnet() {
 			}
 		}
 	}
+}
 
+func (s *katzenpost) generateProviderNodesOfMixnet() {
 	// Generate the provider configs.
 	for i := 0; i < s.nrProviders; i++ {
 		if err := s.genNodeConfig(true); err != nil {
 			log.Fatalf("Failed to generate provider config: %v", err)
 		}
 	}
+}
 
+func (s *katzenpost) generateNodesOfMixnet() {
 	// Generate the node configs.
 	for i := 0; i < s.nrNodes; i++ {
 		if err := s.genNodeConfig(false); err != nil {
@@ -394,6 +402,10 @@ func (s *katzenpost) genValidatorConfig(index int) error {
 		nodeDirName := fmt.Sprintf("auth-%d", i)
 		nodeDir := filepath.Join(s.outputDir, nodeDirName)
 		tmConfig.SetRoot(nodeDir)
+		if !s.mainnet {
+			tmConfig.P2P.AllowDuplicateIP = true
+		}
+		tmConfig.Moniker = nodeDirName
 
 		err := os.MkdirAll(filepath.Join(nodeDir, "config"), dirPerm)
 		if err != nil {
@@ -437,7 +449,7 @@ func (s *katzenpost) genValidatorConfig(index int) error {
 	}
 
 	// Write genesis file.
-	for i := 0; i < nValidators; i++ {
+	for i := 0; i < s.nValidators; i++ {
 		nodeDirName := fmt.Sprintf("auth-%d", i)
 		nodeDir := filepath.Join(s.outputDir, nodeDirName)
 		if err := genDoc.SaveAs(filepath.Join(nodeDir, tmConfig.BaseConfig.Genesis)); err != nil {
@@ -447,19 +459,19 @@ func (s *katzenpost) genValidatorConfig(index int) error {
 	}
 
 	// Overwrite default config.
-	for i := 0; i < nValidators; i++ {
+	for i := 0; i < s.nValidators; i++ {
 		nodeDirName := fmt.Sprintf("auth-%d", i)
 		nodeDir := filepath.Join(s.outputDir, nodeDirName)
-		tmConfig.SetRoot(nodeDir)
-		tmConfig.P2P.AllowDuplicateIP = true
-		tmConfig.Moniker = nodeDirName
 		cfgPath := filepath.Join(nodeDir, "config", "config.toml")
 		cfg.WriteConfigFile(cfgPath, tmConfig)
 
 		katConfig := kConfig.DefaultConfig()
 		katConfig.DBPath = filepath.Join(nodeDir, "kdata")
 		katConfig.TendermintConfigPath = cfgPath
-		kConfig.WriteConfigFile(filepath.Join(s.outputDir, nodeDirName, "katzenmint.toml"), katConfig)
+		if err := kConfig.WriteConfigFile(filepath.Join(s.outputDir, nodeDirName, "katzenmint.toml"), katConfig); err != nil {
+			_ = os.RemoveAll(nodeDir)
+			return err
+		}
 	}
 
 	log.Printf("initialized katzenmint of %v", index)
@@ -525,8 +537,10 @@ func main() {
 	goBinDir := flag.String("g", "/go/bin", "Path to golang bin.")
 	baseDir := flag.String("b", "/conf", "Path to for DataDir in the config files.")
 	outputDir := flag.String("o", "./output", "Output path of the generate config files.")
-	mixNodeConfig := flag.Bool("node", false, "Only generate a mix node config.")
-	providerNodeConfig := flag.Bool("provider", false, "Only generate a provider node config.")
+	mixNodeOnly := flag.Bool("node", false, "Only generate a mix node config.")
+	providerNodeOnly := flag.Bool("provider", false, "Only generate a provider node config.")
+	validatorNodeOnly := flag.Bool("validator", false, "Only generate a validator config.")
+	mainnet := flag.Bool("mainnet", false, "Only generate mainnet config.")
 	publicIPAddress := flag.String("ipv4", "127.0.0.1", "The public ipv4 address of the single node.")
 	name := flag.String("name", "", "The name of the node.")
 	authPubIdentity := flag.String("authID", "", "Authority public ID.")
@@ -554,13 +568,17 @@ func main() {
 	s.nrProviders = *nrProviders
 	s.nrNodes = *nrNodes
 	s.nValidators = *nValidators
-	s.onlyMixNode = *mixNodeConfig
-	s.onlyProviderNode = *providerNodeConfig
+	s.onlyMixNode = *mixNodeOnly
+	s.onlyProviderNode = *providerNodeOnly
+	s.onlyValidatorNode = *validatorNodeOnly
+	s.mainnet = *mainnet
 	s.publicIPAddress = *publicIPAddress
 	s.nameOfSingleNode = *name
 	s.authPubIdentity = *authPubIdentity
 
-	if s.onlyMixNode || s.onlyProviderNode {
+	if s.onlyValidatorNode {
+		s.generateValidatorNodesOfMixnet()
+	} else if s.onlyMixNode || s.onlyProviderNode {
 		if s.onlyMixNode && s.onlyProviderNode {
 			fmt.Fprintf(os.Stderr, "Please specify one of either -node or -provider config\n")
 			os.Exit(-1)
@@ -580,15 +598,16 @@ func main() {
 		if err := s.fetchKatzenmintInfo(); err != nil {
 			log.Fatalf("fetchKatzenmintInfo failed: %s", err)
 		}
-		err = s.genNodeConfig(s.onlyProviderNode)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(-1)
+		if s.onlyProviderNode {
+			s.generateProviderNodesOfMixnet()
+		} else {
+			s.generateNodesOfMixnet()
 		}
 	} else {
 		s.generateVotingMixnetConfigs()
 	}
 
+	// probably save directly in generate function
 	for _, v := range s.nodeConfigs {
 		if err := saveCfg(outDir, v); err != nil {
 			log.Fatalf("%s", err)
