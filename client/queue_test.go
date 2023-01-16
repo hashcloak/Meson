@@ -96,7 +96,6 @@ func FuzzQueuePushParalell(f *testing.F) {
 				if err != nil {
 					t.Errorf("Push %v %v", s, err)
 				}
-				t.Logf("len: %v", q.len)
 			}(&wg, s, q, t)
 		}
 		wg.Wait()
