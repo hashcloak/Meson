@@ -26,6 +26,13 @@ var (
 	appVersion      uint64                = 1
 )
 
+type katzenmintVersion struct {
+	Protocol   string
+	Tendermint string
+	ABCI       string
+	BuildTime  string
+}
+
 type KatzenmintApplication struct {
 	state *KatzenmintState
 
@@ -44,14 +51,20 @@ func (app *KatzenmintApplication) Close() {
 	app.state.Close()
 }
 
-func (app *KatzenmintApplication) Info(req abcitypes.RequestInfo) abcitypes.ResponseInfo {
-	return abcitypes.ResponseInfo{
+func (app *KatzenmintApplication) Info(req abcitypes.RequestInfo) (res abcitypes.ResponseInfo) {
+	ver := katzenmintVersion{protocolVersion, version.TMCoreSemVer, version.ABCIVersion, buildTime}
+	verJSON, err := EncodeJson(ver)
+	res = abcitypes.ResponseInfo{
 		Data:             fmt.Sprint(app.state.currentEpoch),
-		Version:          fmt.Sprintf("%s/%s/%s", protocolVersion, version.ABCIVersion, buildTime),
 		AppVersion:       appVersion,
 		LastBlockHeight:  app.state.blockHeight,
 		LastBlockAppHash: app.state.appHash,
 	}
+	if err != nil {
+		return
+	}
+	res.Version = string(verJSON)
+	return
 }
 
 func (app *KatzenmintApplication) SetOption(req abcitypes.RequestSetOption) abcitypes.ResponseSetOption {
