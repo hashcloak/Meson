@@ -85,6 +85,8 @@ func (c *Cache) Halt() {
 
 // GetEpoch returns the epoch information of PKI.
 func (c *Cache) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
+	c.Lock()
+	defer c.Unlock()
 	return c.memEpoch, c.memHeight, nil
 }
 
@@ -170,8 +172,10 @@ func (c *Cache) worker() {
 		case <-c.HaltCh():
 			return
 		case <-c.timer.C:
+			c.Lock()
 			if c.memHeight < uint64(katzenmint.EpochInterval) {
 				c.memHeight++
+				c.Unlock()
 				c.timer.Reset(katzenmint.HeightPeriod)
 				continue
 			}
@@ -182,10 +186,12 @@ func (c *Cache) worker() {
 			}
 			if err != nil || epoch == c.memEpoch {
 				c.timer.Reset(retryTime)
+				c.Unlock()
 				continue
 			}
 			c.memEpoch = epoch
 			c.memHeight = height
+			c.Unlock()
 			c.timer.Reset(katzenmint.HeightPeriod)
 		case op = <-c.fetchQueue:
 			ctx = op.ctx
