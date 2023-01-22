@@ -310,7 +310,11 @@ func (state *KatzenmintState) getProof(key []byte, height int64) ([]byte, *ics23
 	if err != nil {
 		return nil, nil, err
 	}
-	return proof.GetExist().Value, proof, err
+	existProof := proof.GetExist()
+	if existProof == nil {
+		return nil, nil, fmt.Errorf("proof (%v) not found at (%d)", key, height)
+	}
+	return existProof.Value, proof, err
 }
 
 func (state *KatzenmintState) set(key []byte, value []byte) error {

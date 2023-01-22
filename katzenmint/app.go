@@ -233,12 +233,14 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		exist := proof.GetExist()
-		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
-		resQuery.Key = exist.Key
-		resQuery.Value = val
-		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{op.ProofOp()},
+		existProof := proof.GetExist()
+		if existProof != nil {
+			op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+			resQuery.Key = existProof.Key
+			resQuery.Value = val
+			resQuery.ProofOps = &tmcrypto.ProofOps{
+				Ops: []tmcrypto.ProofOp{op.ProofOp()},
+			}
 		}
 
 	case GetConsensus:
@@ -257,12 +259,14 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		exist := proof.GetExist()
-		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
-		resQuery.Key = exist.Key
-		resQuery.Value = doc
-		resQuery.ProofOps = &tmcrypto.ProofOps{
-			Ops: []tmcrypto.ProofOp{op.ProofOp()},
+		existProof := proof.GetExist()
+		if existProof != nil {
+			op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+			resQuery.Key = existProof.Key
+			resQuery.Value = doc
+			resQuery.ProofOps = &tmcrypto.ProofOps{
+				Ops: []tmcrypto.ProofOp{op.ProofOp()},
+			}
 		}
 	}
 	return
