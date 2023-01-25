@@ -233,9 +233,13 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		exist := proof.GetExist()
-		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
-		resQuery.Key = exist.Key
+		existProof := proof.GetExist()
+		if existProof == nil {
+			parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			return
+		}
+		op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+		resQuery.Key = existProof.Key
 		resQuery.Value = val
 		resQuery.ProofOps = &tmcrypto.ProofOps{
 			Ops: []tmcrypto.ProofOp{op.ProofOp()},
@@ -257,9 +261,13 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			}
 			return
 		}
-		exist := proof.GetExist()
-		op := costypes.NewIavlCommitmentOp(exist.Key, proof)
-		resQuery.Key = exist.Key
+		existProof := proof.GetExist()
+		if existProof == nil {
+			parseErrorResponse(ErrQueryDocumentUnknown, &resQuery)
+			return
+		}
+		op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+		resQuery.Key = existProof.Key
 		resQuery.Value = doc
 		resQuery.ProofOps = &tmcrypto.ProofOps{
 			Ops: []tmcrypto.ProofOp{op.ProofOp()},
