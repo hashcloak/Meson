@@ -234,13 +234,15 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			return
 		}
 		existProof := proof.GetExist()
-		if existProof != nil {
-			op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
-			resQuery.Key = existProof.Key
-			resQuery.Value = val
-			resQuery.ProofOps = &tmcrypto.ProofOps{
-				Ops: []tmcrypto.ProofOp{op.ProofOp()},
-			}
+		if existProof == nil {
+			parseErrorResponse(ErrQueryEpochFailed, &resQuery)
+			return
+		}
+		op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+		resQuery.Key = existProof.Key
+		resQuery.Value = val
+		resQuery.ProofOps = &tmcrypto.ProofOps{
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 
 	case GetConsensus:
@@ -260,13 +262,15 @@ func (app *KatzenmintApplication) Query(rquery abcitypes.RequestQuery) (resQuery
 			return
 		}
 		existProof := proof.GetExist()
-		if existProof != nil {
-			op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
-			resQuery.Key = existProof.Key
-			resQuery.Value = doc
-			resQuery.ProofOps = &tmcrypto.ProofOps{
-				Ops: []tmcrypto.ProofOp{op.ProofOp()},
-			}
+		if existProof == nil {
+			parseErrorResponse(ErrQueryDocumentUnknown, &resQuery)
+			return
+		}
+		op := costypes.NewIavlCommitmentOp(existProof.Key, proof)
+		resQuery.Key = existProof.Key
+		resQuery.Value = doc
+		resQuery.ProofOps = &tmcrypto.ProofOps{
+			Ops: []tmcrypto.ProofOp{op.ProofOp()},
 		}
 	}
 	return
