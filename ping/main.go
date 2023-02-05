@@ -54,6 +54,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer c.Shutdown()
 
 	s, err := c.NewSession(linkKey)
 	if err != nil {
@@ -75,6 +76,4 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Return: %s\n", payload)
-
-	c.Shutdown()
 }
