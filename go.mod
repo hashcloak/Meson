@@ -40,7 +40,6 @@ require (
 )
 
 require (
-	cloud.google.com/go/iam v0.4.0 // indirect
 	cosmossdk.io/math v1.0.0-beta.3 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/OneOfOne/xxhash v1.2.5 // indirect
@@ -48,7 +47,7 @@ require (
 	github.com/cosmos/cosmos-db v0.0.0-20220822060143-23a8145386c0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
 	github.com/cosmos/cosmos-sdk v0.46.0-rc3
-	github.com/hashicorp/go-getter v1.6.2 // indirect
+	github.com/hashicorp/go-getter v1.7.0 // indirect
 	github.com/katzenpost/noise v0.0.2 // indirect
 	github.com/katzenpost/server v0.0.12
 	github.com/shopspring/decimal v1.2.0 // indirect
