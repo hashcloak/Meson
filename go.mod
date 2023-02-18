@@ -24,8 +24,8 @@ require (
 	github.com/tendermint/tm-db v0.6.7
 	github.com/ugorji/go/codec v1.1.7
 	go.etcd.io/bbolt v1.3.6
-	golang.org/x/net v0.1.0
-	golang.org/x/text v0.4.0
+	golang.org/x/net v0.7.0
+	golang.org/x/text v0.7.0
 	gopkg.in/eapache/channels.v1 v1.1.0
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473
 )
@@ -36,7 +36,6 @@ require (
 	github.com/klauspost/compress v1.15.12 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
-	golang.org/x/sys v0.2.0 // indirect
 )
 
 require (
