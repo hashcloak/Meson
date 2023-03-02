@@ -12,12 +12,12 @@ jobs:
         go: ["1.17.x", "1.18.x", "1.19.x"]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/setup-go@v1
+    - uses: actions/setup-go@v3
       name: "Install Golang"
       with:
         go-version: ${{ matrix.go }}
     
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     
     - name: "Test katzenmint"
       run: |
@@ -33,14 +33,14 @@ jobs:
 
     - if: runner.os == 'macOS'
       name: "Setup katzenmint filename"
-      run: echo "ZIPNAME=katzenmint_darwin" >> $GITHUB_ENV
+      run: echo "ZIPNAME=katzenmint_darwin_${{ matrix.go }}" >> $GITHUB_ENV
 
     - if: runner.os == 'Linux'
       name: "Setup katzenmint filename"
-      run: echo "ZIPNAME=katzenmint_linux" >> $GITHUB_ENV
+      run: echo "ZIPNAME=katzenmint_linux_${{ matrix.go }}" >> $GITHUB_ENV
 
     - name: Archive katzenmint
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ env.ZIPNAME }}
         path: katzenmint/dist
