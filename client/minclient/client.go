@@ -177,6 +177,10 @@ func (c *Client) halt() {
 		c.pki.Halt()
 		c.pki = nil
 	}
+
+	if c.cfg != nil && c.cfg.PKIClient != nil {
+		c.cfg.PKIClient.Shutdown()
+	}
 	c.conn = nil
 
 	c.log.Notice("Shutdown complete.")
