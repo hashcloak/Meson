@@ -9,7 +9,7 @@ User={{service}}
 Group={{service}}
 PermissionsStartOnly=true
 WorkingDirectory=/home/{{service}}/.{{service}}
-ExecStart=/usr/bin/katzenmint --config /home/{{service}}/.{{service}}/katzenmint.toml
+ExecStart=/usr/bin/katzenmint run --config /home/{{service}}/.{{service}}/katzenmint.toml
 ExecReload=/bin/kill -HUP $MAINPID
 KillSignal=SIGTERM
 

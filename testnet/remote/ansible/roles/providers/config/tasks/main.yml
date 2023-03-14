@@ -12,6 +12,12 @@
     dest: /usr/bin
     mode: 0755
 
+- name: Copy meson plugin binary
+  copy:
+    src: "{{BINARYDIR}}/meson-plugin"
+    dest: /usr/bin
+    mode: 0755
+
 - name: Copy config
   when: item <= N and ansible_hostname == 'cyclotron-providernet-node' ~ item
   copy:
