@@ -31,7 +31,6 @@ var (
 	errStateClosed               = errors.New("katzenmint state is closed")
 	errDocInsufficientDescriptor = errors.New("insufficient descriptors uploaded")
 	errDocInsufficientProvider   = errors.New("no providers uploaded")
-	errEscapedDocument           = errors.New("escaped document")
 )
 
 type descriptor struct {
@@ -147,7 +146,7 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 			state.currentEpoch++
 			state.epochStartHeight = state.blockHeight + 1
 		}
-		state.pruneDocument()
+		// TODO: state.pruneDocument()
 	}
 
 	// Save epoch info persistently
@@ -384,18 +383,6 @@ func (state *KatzenmintState) GetDocument(epoch uint64, height int64) ([]byte, *
  *               Document                *
  *****************************************/
 
-func (s *KatzenmintState) pruneDocument() {
-	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
-	end := storageKey(descriptorsBucket, []byte{}, s.currentEpoch+1)
-	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
-		_, err := s11n.ParseDescriptorWithoutVerify(value)
-		if err != nil {
-			s.tree.Remove(key)
-		}
-		return false
-	})
-}
-
 func (s *KatzenmintState) generateDocument() (*document, error) {
 	// Cannot lock here
 
@@ -403,10 +390,12 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 	var providersDesc, nodesDesc []*descriptor
 	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
 	end := storageKey(descriptorsBucket, []byte{}, s.currentEpoch+1)
-	escaped := s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
+	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
 		desc, err := s11n.ParseDescriptorWithoutVerify(value)
 		if err != nil {
-			// TODO: check different error
+			// might happened when network stuck or the data was corrupted
+			// should remove the outdated or corrupted data
+			s.tree.Remove(key)
 			return true
 		}
 		v := &descriptor{desc: desc, raw: value}
@@ -417,10 +406,6 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 		}
 		return false
 	})
-
-	if escaped {
-		return nil, errEscapedDocument
-	}
 
 	// Assign nodes to layers. # No randomness yet.
 	var topology [][][]byte
