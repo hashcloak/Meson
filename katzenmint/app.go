@@ -157,7 +157,7 @@ func (app *KatzenmintApplication) executeTx(
 	case PublishMixDescriptor:
 		err := app.state.updateMixDescriptor(payload, desc, tx.Epoch)
 		if err != nil {
-			app.logger.Error("failed to publish descriptor", "epoch", app.state.currentEpoch, "error", err)
+			app.logger.Error("failed to publish descriptor", "epoch", tx.Epoch, "error", err)
 			return ErrTxUpdateDesc
 		}
 	case AddNewAuthority:
