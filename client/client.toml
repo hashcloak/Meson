@@ -15,7 +15,7 @@
     ChainID = "test-chain-QvpdAC"
     PrimaryAddress = "tcp://127.0.0.1:26657"
     WitnessesAddresses = ["tcp://127.0.0.1:26657"]
-    DatabaseName = "test_meson_server_pkiclient_db"
+    DatabaseName = "test_meson_server_pkiclient"
     DatabaseDir = "/tmp/meson_server/server_data"
     RPCAddress = "tcp://127.0.0.1:26657"
 
