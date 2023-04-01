@@ -150,7 +150,7 @@ func (app *KatzenmintApplication) executeTx(
 	auth *AuthorityChecked,
 ) error {
 	// check for the epoch relative to the current epoch
-	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+uint64(LifeCycle) {
+	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+LifeCycle {
 		return ErrTxWrongEpoch
 	}
 	switch tx.Command {

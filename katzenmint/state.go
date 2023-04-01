@@ -24,7 +24,7 @@ const (
 	GenesisEpoch  uint64        = 1
 	EpochInterval int64         = 10
 	HeightPeriod  time.Duration = 1 * time.Second
-	LifeCycle     int           = 3
+	LifeCycle     uint64        = 3
 )
 
 var (
@@ -206,7 +206,7 @@ func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixD
 	if epoch < state.currentEpoch {
 		return fmt.Errorf("late descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
-	if epoch >= state.currentEpoch+uint64(LifeCycle) {
+	if epoch >= state.currentEpoch+LifeCycle {
 		return fmt.Errorf("early descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
 
