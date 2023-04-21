@@ -75,8 +75,6 @@ func (p *PKIClient) query(ctx context.Context, epoch uint64, command kpki.Comman
 
 // GetEpoch returns the epoch information of PKI.
 func (p *PKIClient) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
-	p.log.Debugf("Query epoch")
-
 	resp, err := p.query(ctx, 0, kpki.GetEpoch)
 	if err != nil {
 		return
