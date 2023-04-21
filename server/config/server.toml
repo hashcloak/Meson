@@ -40,7 +40,7 @@
     ChainID = "katzenmint-chain-71DRoz"
     PrimaryAddress = "tcp://104.131.108.194:26657"
     WitnessesAddresses = [ "165.227.158.164:26657", "165.227.90.185:26657", "104.131.108.194:26657" ]
-    DatabaseName = "pkiclient_db"
+    DatabaseName = "pkiclient"
     DatabaseDir = "/tmp/meson_server/server_data"
     RPCAddress = "tcp://104.131.108.194:26657"
 

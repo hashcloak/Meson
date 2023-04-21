@@ -126,7 +126,7 @@ func runNode(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load config: %v", err)
 	}
-	db, err := dbm.NewDB("katzenmint_db", dbm.GoLevelDBBackend, kConfig.DBPath)
+	db, err := dbm.NewDB("katzenmint", dbm.GoLevelDBBackend, kConfig.DBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open badger db: %v\ntry running with -tags badgerdb", err)
 	}
