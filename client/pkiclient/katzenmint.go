@@ -29,6 +29,17 @@ var (
 	protocolVersion = "development"
 )
 
+type BroadcastTxError struct {
+	Resp *ctypes.ResultBroadcastTxCommit
+}
+
+func (e BroadcastTxError) Error() string {
+	if !e.Resp.CheckTx.IsOK() {
+		return fmt.Sprintf("send transaction failed at checking tx: %v", e.Resp.CheckTx.Log)
+	}
+	return fmt.Sprintf("send transaction failed at delivering tx: %v", e.Resp.DeliverTx.Log)
+}
+
 type PKIClientConfig struct {
 	LogBackend         *log.Backend
 	ChainID            string
@@ -170,26 +181,12 @@ func (p *PKIClient) Post(ctx context.Context, epoch uint64, signingKey *eddsa.Pr
 	// Post the abci transaction
 	_, err = p.PostTx(ctx, tx)
 	if err != nil {
+		if _, ok := err.(BroadcastTxError); ok {
+			return cpki.ErrInvalidPostEpoch
+		}
 		return err
 	}
 	return nil
-
-	// TODO: Make sure to subscribe for events
-	// Parse the post_descriptor_status command.
-	/*
-		r, ok := resp.(*commands.PostDescriptorStatus)
-		if !ok {
-			return fmt.Errorf("nonvoting/client: Post() unexpected reply: %T", resp)
-		}
-		switch r.ErrorCode {
-		case commands.DescriptorOk:
-			return nil
-		case commands.DescriptorConflict:
-			return cpki.ErrInvalidPostEpoch
-		default:
-			return fmt.Errorf("nonvoting/client: Post() rejected by authority: %v", postErrorToString(r.ErrorCode))
-		}
-	*/
 }
 
 // PostTx posts the transaction to the katzenmint node.
@@ -201,10 +198,10 @@ func (p *PKIClient) PostTx(ctx context.Context, tx []byte) (*ctypes.ResultBroadc
 		return nil, err
 	}
 	if !resp.CheckTx.IsOK() {
-		return nil, fmt.Errorf("send transaction failed at checking tx: %v", resp.CheckTx.Log)
+		return nil, BroadcastTxError{Resp: resp}
 	}
 	if !resp.DeliverTx.IsOK() {
-		return nil, fmt.Errorf("send transaction failed at delivering tx: %v", resp.DeliverTx.Log)
+		return nil, BroadcastTxError{Resp: resp}
 	}
 	return resp, nil
 }
