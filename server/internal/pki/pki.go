@@ -358,6 +358,7 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 			now := time.Now()
 			elapsed := now.Sub(p.lastPublishedTime)
 			if elapsed > s11n.CertificateExpiration {
+				// Should we republish epoch + 1?
 				p.log.Debugf("Publish epoch again: %d.", epoch)
 				p.lastPublishedEpoch = 0
 			}
@@ -370,7 +371,7 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 	case 0:
 		// Initial startup.  Regardless of the deadline, publish.
 		// Or publish if network stuck
-		p.log.Debugf("Initial startup or correcting for time jump.")
+		p.log.Debugf("Initial startup or correcting for network stuck.")
 		doPublishEpoch = epoch
 	case epoch:
 		// Check the deadline for the next publication time.
