@@ -29,6 +29,7 @@ import (
 
 	kpki "github.com/hashcloak/Meson/client/pkiclient"
 	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/server/internal/constants"
 	"github.com/hashcloak/Meson/server/internal/debug"
 	"github.com/hashcloak/Meson/server/internal/glue"
@@ -62,6 +63,7 @@ type pki struct {
 	failedFetches      map[uint64]error
 	lastPublishedEpoch uint64
 	lastWarnedEpoch    uint64
+	lastPublishedTime  time.Time
 }
 
 var (
@@ -351,12 +353,23 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 		return err
 	}
 	if till < publishGracePeriod {
-		epoch++
+		// check whether the certificate is expired and the network stuck
+		if p.lastPublishedTime.Unix() > 0 {
+			now := time.Now()
+			elapsed := now.Sub(p.lastPublishedTime)
+			if elapsed > s11n.CertificateExpiration {
+				p.log.Debugf("Publish epoch again: %d.", epoch)
+				p.lastPublishedEpoch = 0
+			}
+		} else {
+			epoch++
+		}
 	}
 	doPublishEpoch := uint64(0)
 	switch p.lastPublishedEpoch {
 	case 0:
 		// Initial startup.  Regardless of the deadline, publish.
+		// Or publish if network stuck
 		p.log.Debugf("Initial startup or correcting for time jump.")
 		doPublishEpoch = epoch
 	case epoch:
@@ -454,15 +467,18 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 	case nil:
 		p.log.Debugf("Posted descriptor for epoch: %v", doPublishEpoch)
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	case cpki.ErrInvalidPostEpoch:
 		// Treat this class (conflict/late descriptor) as a permanent rejection
 		// and suppress further uploads.
 		p.log.Warningf("Authority rejected upload for epoch: %v (Conflict/Late)", doPublishEpoch)
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	default:
 		// XXX: the voting authority implementation does not return any of the above error types...
 		// and the mix will continue to fail to submit the same descriptor repeatedly.
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	}
 
 	return err
