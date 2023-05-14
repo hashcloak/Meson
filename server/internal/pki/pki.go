@@ -59,7 +59,6 @@ type pki struct {
 	impl               kpki.Client
 	descAddrMap        map[cpki.Transport][]string
 	docs               map[uint64]*pkicache.Entry
-	rawDocs            map[uint64][]byte
 	failedFetches      map[uint64]error
 	lastPublishedEpoch uint64
 	lastWarnedEpoch    uint64
@@ -183,7 +182,7 @@ func (p *pki) worker() {
 				continue
 			}
 
-			d, rawDoc, err := p.impl.GetDoc(pkiCtx, epoch)
+			d, _, err := p.impl.GetDoc(pkiCtx, epoch)
 			if isCanceled() {
 				// Canceled mid-fetch.
 				return
@@ -214,7 +213,6 @@ func (p *pki) worker() {
 			}
 
 			p.Lock()
-			p.rawDocs[epoch] = rawDoc
 			p.docs[epoch] = ent
 			p.Unlock()
 			didUpdate = true
@@ -335,7 +333,6 @@ func (p *pki) pruneDocuments() {
 		if epoch+(constants.NumMixKeys-1) < now {
 			p.log.Debugf("Discarding PKI for epoch: %v", epoch)
 			delete(p.docs, epoch)
-			delete(p.rawDocs, epoch)
 		}
 		if epoch > now+1 {
 			// This should NEVER happen.
@@ -688,26 +685,9 @@ func (p *pki) OutgoingDestinations() map[[sConstants.NodeIDLength]byte]*cpki.Mix
 	return descMap
 }
 
+// TODO: remove this from interface
 func (p *pki) GetRawConsensus(epoch uint64) ([]byte, error) {
-	if ok, err := p.getFailedFetch(epoch); ok {
-		p.log.Debugf("GetRawConsensus failure: no cached PKI document for epoch %v: %v", epoch, err)
-		return nil, cpki.ErrNoDocument
-	}
-	p.RLock()
-	defer p.RUnlock()
-	val, ok := p.rawDocs[epoch]
-	if !ok {
-		now, _, _, err := p.Now()
-		if err != nil {
-			return nil, err
-		}
-		// Return cpki.ErrNoDocument if documents will never exist.
-		if epoch < now-1 {
-			return nil, cpki.ErrNoDocument
-		}
-		return nil, errNotCached
-	}
-	return val, nil
+	return nil, nil
 }
 
 func (p *pki) Now() (epoch uint64, ellapsed time.Duration, till time.Duration, err error) {
@@ -723,7 +703,6 @@ func New(glue glue.Glue) (glue.PKI, error) {
 		glue:          glue,
 		log:           glue.LogBackend().GetLogger("pki"),
 		docs:          make(map[uint64]*pkicache.Entry),
-		rawDocs:       make(map[uint64][]byte),
 		failedFetches: make(map[uint64]error),
 	}
 

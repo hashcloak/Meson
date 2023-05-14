@@ -444,24 +444,25 @@ func (c *connection) onWireConn(w *wire.Session) {
 		case <-c.fetchCh:
 			doFetch = true
 		case ctx := <-c.getConsensusCh:
-			c.log.Debugf("Dequeued GetConsesus for send.")
-			if consensusCtx != nil {
-				ctx.doneFn(fmt.Errorf("outstanding GetConsensus already exists: %v", consensusCtx.epoch))
-			} else {
-				consensusCtx = ctx
-				cmd := &commands.GetConsensus{
-					Epoch: ctx.epoch,
-				}
-				wireErr = w.SendCommand(cmd)
-				ctx.doneFn(wireErr)
-				if wireErr != nil {
-					c.log.Debugf("Failed to send GetConsensus: %v", wireErr)
-					return
-				}
-				c.log.Debugf("Sent GetConsensus.")
-			}
+			c.log.Debugf("[Deprecated] Dequeued GetConsesus for send.")
+			ctx.doneFn(fmt.Errorf("deprecated GetConsensus wire command"))
+			// if consensusCtx != nil {
+			// 	ctx.doneFn(fmt.Errorf("outstanding GetConsensus already exists: %v", consensusCtx.epoch))
+			// } else {
+			// 	consensusCtx = ctx
+			// 	cmd := &commands.GetConsensus{
+			// 		Epoch: ctx.epoch,
+			// 	}
+			// 	wireErr = w.SendCommand(cmd)
+			// 	ctx.doneFn(wireErr)
+			// 	if wireErr != nil {
+			// 		c.log.Debugf("Failed to send GetConsensus: %v", wireErr)
+			// 		return
+			// 	}
+			// 	c.log.Debugf("Sent GetConsensus.")
+			// }
 
-			adjFetchDelay()
+			// adjFetchDelay()
 			continue
 		case ctx := <-c.sendCh:
 			c.log.Debugf("Dequeued packet for send.")
