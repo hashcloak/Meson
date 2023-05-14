@@ -41,7 +41,6 @@ var (
 )
 
 type cacheEntry struct {
-	raw []byte
 	doc *pki.Document
 }
 
@@ -94,7 +93,7 @@ func (c *Cache) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint
 func (c *Cache) GetDoc(ctx context.Context, epoch uint64) (*pki.Document, []byte, error) {
 	// Fast path, cache hit.
 	if d := c.cacheGet(epoch); d != nil {
-		return d.doc, d.raw, nil
+		return d.doc, nil, nil
 	}
 
 	// Exit upon halt
@@ -116,7 +115,7 @@ func (c *Cache) GetDoc(ctx context.Context, epoch uint64) (*pki.Document, []byte
 		return nil, nil, r
 	case *cacheEntry:
 		// Worker will handle the LRU.
-		return r.doc, r.raw, nil
+		return r.doc, nil, nil
 	default:
 		return nil, nil, fmt.Errorf("BUG: pkiclient: worker returned nonsensical result: %+v", r)
 	}
@@ -161,6 +160,7 @@ func (c *Cache) insertLRU(newEntry *cacheEntry) {
 }
 
 func (c *Cache) worker() {
+	// TODO: maybe implement backoff delay?
 	const retryTime = time.Second / 2
 
 	var epoch, height uint64
@@ -181,9 +181,6 @@ func (c *Cache) worker() {
 			}
 			ctx = context.Background()
 			epoch, height, err = c.impl.GetEpoch(context.Background())
-			if epoch == c.memEpoch && height < uint64(katzenmint.EpochInterval) {
-				c.memHeight = height
-			}
 			if err != nil || epoch == c.memEpoch {
 				c.timer.Reset(retryTime)
 				c.Unlock()
@@ -211,14 +208,14 @@ func (c *Cache) worker() {
 		//
 		// TODO: This could allow concurrent fetches at some point, but for
 		// most common client use cases, this shouldn't matter much.
-		d, raw, err := c.impl.GetDoc(ctx, epoch)
+		d, _, err := c.impl.GetDoc(ctx, epoch)
 		if err != nil {
 			if op != nil {
 				op.doneCh <- err
 			}
 			continue
 		}
-		e := &cacheEntry{doc: d, raw: raw}
+		e := &cacheEntry{doc: d}
 		c.insertLRU(e)
 		if op != nil {
 			op.doneCh <- e

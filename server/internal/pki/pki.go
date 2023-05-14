@@ -171,53 +171,54 @@ func (p *pki) worker() {
 
 		// Fetch the PKI documents as required.
 		var didUpdate bool
-		now, _, _, _ := epochtime.Now(p.impl)
-		for _, epoch := range p.documentsToFetch() {
-			fetchedPKIDocsTimer = prometheus.NewTimer(fetchedPKIDocsDuration)
-			// Certain errors in fetching documents are treated as hard
-			// failures that suppress further attempts to fetch the document
-			// for the epoch.
-			if ok, err := p.getFailedFetch(epoch); ok {
-				p.log.Debugf("Skipping fetch for epoch %v: %v", epoch, err)
-				continue
-			}
-
-			d, _, err := p.impl.GetDoc(pkiCtx, epoch)
-			if isCanceled() {
-				// Canceled mid-fetch.
-				return
-			}
-			if err != nil {
-				if epoch <= now {
-					p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
-					failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-					if err == cpki.ErrNoDocument {
-						p.setFailedFetch(epoch, err)
-					}
+		if now, _, _, err := p.Now(); err == nil {
+			for _, epoch := range p.documentsToFetch() {
+				fetchedPKIDocsTimer = prometheus.NewTimer(fetchedPKIDocsDuration)
+				// Certain errors in fetching documents are treated as hard
+				// failures that suppress further attempts to fetch the document
+				// for the epoch.
+				if ok, err := p.getFailedFetch(epoch); ok {
+					p.log.Debugf("Skipping fetch for epoch %v: %v", epoch, err)
+					continue
 				}
-				continue
-			}
 
-			ent, err := pkicache.New(d, p.glue.IdentityKey().PublicKey(), p.glue.Config().Server.IsProvider)
-			if err != nil {
-				p.log.Warningf("Failed to generate PKI cache for epoch %v: %v", epoch, err)
-				p.setFailedFetch(epoch, err)
-				failedPKICacheGeneration.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-				continue
-			}
-			if err = p.validateCacheEntry(ent); err != nil {
-				p.log.Warningf("Generated PKI cache is invalid: %v", err)
-				p.setFailedFetch(epoch, err)
-				invalidPKICache.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-				continue
-			}
+				d, _, err := p.impl.GetDoc(pkiCtx, epoch)
+				if isCanceled() {
+					// Canceled mid-fetch.
+					return
+				}
+				if err != nil {
+					if epoch <= now {
+						p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
+						failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+						if err == cpki.ErrNoDocument {
+							p.setFailedFetch(epoch, err)
+						}
+					}
+					continue
+				}
 
-			p.Lock()
-			p.docs[epoch] = ent
-			p.Unlock()
-			didUpdate = true
-			fetchedPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)})
-			fetchedPKIDocsTimer.ObserveDuration()
+				ent, err := pkicache.New(d, p.glue.IdentityKey().PublicKey(), p.glue.Config().Server.IsProvider)
+				if err != nil {
+					p.log.Warningf("Failed to generate PKI cache for epoch %v: %v", epoch, err)
+					p.setFailedFetch(epoch, err)
+					failedPKICacheGeneration.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+					continue
+				}
+				if err = p.validateCacheEntry(ent); err != nil {
+					p.log.Warningf("Generated PKI cache is invalid: %v", err)
+					p.setFailedFetch(epoch, err)
+					invalidPKICache.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+					continue
+				}
+
+				p.Lock()
+				p.docs[epoch] = ent
+				p.Unlock()
+				didUpdate = true
+				fetchedPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)})
+				fetchedPKIDocsTimer.ObserveDuration()
+			}
 		}
 
 		p.pruneFailures()
