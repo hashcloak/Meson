@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/katzenpost/core/crypto/cert"
+	"github.com/hashcloak/Meson/katzenmint/cert"
 	"github.com/katzenpost/core/epochtime"
 	"github.com/katzenpost/core/pki"
 	"github.com/katzenpost/core/sphinx/constants"
@@ -89,7 +89,7 @@ func GetVerifierFromDescriptor(rawDesc []byte) (cert.Verifier, error) {
 }
 
 func ParseDescriptorWithoutVerify(b []byte) (*pki.MixDescriptor, error) {
-	payload, err := cert.GetCertified(b)
+	payload, err := cert.GetUnsafe(b)
 	if err != nil {
 		return nil, err
 	}

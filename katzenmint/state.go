@@ -392,10 +392,9 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 	end := storageKey(descriptorsBucket, []byte{}, s.currentEpoch+1)
 	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
 		desc, err := s11n.ParseDescriptorWithoutVerify(value)
+		// might happened when the data was corrupted
 		if err != nil {
-			// might happened when network stuck or the data was corrupted
-			// should remove the outdated or corrupted data
-			s.tree.Remove(key)
+			// s.tree.Remove(key)
 			return true
 		}
 		v := &descriptor{desc: desc, raw: value}
