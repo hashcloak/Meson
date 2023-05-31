@@ -16,7 +16,8 @@ type EthQueryRequest struct {
 
 // Response Types
 type EthQueryResponse struct {
-	Nonce    string
-	GasPrice string
-	GasLimit string
+	Nonce      string
+	GasPrice   string
+	GasLimit   string
+	CallResult string
 }
