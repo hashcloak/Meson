@@ -85,10 +85,17 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 			METHOD:  "eth_estimateGas",
 			Params:  []interface{}{param},
 		}
+		ethCallRequest := ethRequest{
+			ID:      3,
+			JSONRPC: "2.0",
+			METHOD:  "eth_call",
+			Params:  []interface{}{param},
+		}
 		marshalledRequest, err = json.Marshal([]ethRequest{
 			nonceRequest,
 			gasPriceRequest,
 			gasEstimateRequest,
+			ethCallRequest,
 		})
 		if err != nil {
 			return nil, err
@@ -122,13 +129,14 @@ func (ec *ETHChain) UnwrapResponse(cmd uint8, payload []RPCResponse) ([]byte, er
 			TxHash: payload[0].Result,
 		})
 	case command.EthQuery:
-		if len(payload) != 3 {
-			return nil, errNumResponse(3, len(payload))
+		if len(payload) != 4 {
+			return nil, errNumResponse(4, len(payload))
 		}
 		return json.Marshal(command.EthQueryResponse{
-			Nonce:    payload[0].Result,
-			GasPrice: payload[1].Result,
-			GasLimit: payload[2].Result,
+			Nonce:      payload[0].Result,
+			GasPrice:   payload[1].Result,
+			GasLimit:   payload[2].Result,
+			CallResult: payload[3].Result,
 		})
 	}
 	return nil, fmt.Errorf("unexpected error when unwrapping response")
