@@ -89,7 +89,7 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 			ID:      3,
 			JSONRPC: "2.0",
 			METHOD:  "eth_call",
-			Params:  []interface{}{param},
+			Params:  []interface{}{param, "latest"},
 		}
 		marshalledRequest, err = json.Marshal([]ethRequest{
 			nonceRequest,
