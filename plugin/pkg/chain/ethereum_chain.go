@@ -53,6 +53,32 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 			return nil, err
 		}
 
+	case command.EthQueryTransaction:
+		var req command.EthQueryTransactionRequest
+		dec := codec.NewDecoderBytes(payload, &jsonHandle)
+		err := dec.Decode(&req)
+		if err != nil {
+			return nil, err
+		}
+		blockNumberRequest := ethRequest{
+			ID:      2,
+			JSONRPC: "2.0",
+			METHOD:  "eth_blockNumber",
+		}
+		receiptRequest := ethRequest{
+			ID:      1,
+			JSONRPC: "2.0",
+			METHOD:  "eth_getTransactionReceipt",
+			Params:  []string{req.TxHash},
+		}
+		marshalledRequest, err = json.Marshal([]ethRequest{
+			blockNumberRequest,
+			receiptRequest,
+		})
+		if err != nil {
+			return nil, err
+		}
+
 	case command.EthQuery:
 		var req command.EthQueryRequest
 		dec := codec.NewDecoderBytes(payload, &jsonHandle)
@@ -89,7 +115,7 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 			ID:      3,
 			JSONRPC: "2.0",
 			METHOD:  "eth_call",
-			Params:  []interface{}{param},
+			Params:  []interface{}{param, "latest"},
 		}
 		marshalledRequest, err = json.Marshal([]ethRequest{
 			nonceRequest,
@@ -127,6 +153,14 @@ func (ec *ETHChain) UnwrapResponse(cmd uint8, payload []RPCResponse) ([]byte, er
 		}
 		return json.Marshal(command.PostTransactionResponse{
 			TxHash: payload[0].Result,
+		})
+	case command.EthQueryTransaction:
+		if len(payload) != 2 {
+			return nil, errNumResponse(2, len(payload))
+		}
+		return json.Marshal(command.EthQueryTransactionResponse{
+			BlockNumber: payload[0].Result,
+			Tx:          payload[1].Result,
 		})
 	case command.EthQuery:
 		if len(payload) != 4 {
