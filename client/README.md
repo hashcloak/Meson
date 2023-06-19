@@ -15,6 +15,8 @@ docker run --rm \
   -w /client \
   golang:buster \
   /bin/bash -c "GORACE=history_size=7 go test -race"
+  ## or to run fuzzing use below command
+  # go test -fuzz ./...
 ```
 
 The above can be de-constructed as follows:
@@ -24,3 +26,18 @@ The above can be de-constructed as follows:
 - `-w /client`: Working directory for the docker image
 - `golang:buster`: The docker image to be used
 -  `/bin/bash -c "GORACE=history_size=7 go test -race"`: The command to run inside the container
+
+
+### Fuzzing test
+
+To run fuzzing test
+```
+go test -fuzz=<Test Name here>
+```
+
+example: `go test -fuzz=FuzzQueuePushSerial`
+
+- Tests
+  - FuzzQueue
+  - FuzzQueuePushSerial
+  - FuzzQueuePushParalell
