@@ -5,6 +5,9 @@ services:
   provider1:
     restart: unless-stopped
     image: meson/server
+    build:
+      context: ../../
+      dockerfile: Dockerfile.server
     volumes:
       - ./conf/provider1:/conf
       - ./scripts:/scripts
@@ -28,6 +31,9 @@ services:
   provider2:
     restart: unless-stopped
     image: meson/server
+    build:
+      context: ../../
+      dockerfile: Dockerfile.server
     volumes:
       - ./conf/provider2:/conf
       - ./scripts:/scripts
@@ -51,6 +57,9 @@ services:
   mix1:
     restart: unless-stopped
     image: meson/server
+    build:
+      context: ../../
+      dockerfile: Dockerfile.server
     volumes:
       - ./conf/mix1:/conf
       - ./scripts:/scripts
@@ -72,6 +81,9 @@ services:
   mix2:
     restart: unless-stopped
     image: meson/server
+    build:
+      context: ../../
+      dockerfile: Dockerfile.server
     volumes:
       - ./conf/mix2:/conf
       - ./scripts:/scripts
@@ -93,6 +105,9 @@ services:
   mix3:
     restart: unless-stopped
     image: meson/server
+    build:
+      context: ../../
+      dockerfile: Dockerfile.server
     volumes:
       - ./conf/mix3:/conf
       - ./scripts:/scripts
@@ -114,6 +129,9 @@ services:
   auth1:
     restart: unless-stopped
     image: katzenmint/pki
+    build:
+      context: ../../
+      dockerfile: Dockerfile.katzenmint
     volumes:
       - ./conf/node1:/chain
     healthcheck:
@@ -130,6 +148,9 @@ services:
   auth2:
     restart: unless-stopped
     image: katzenmint/pki
+    build:
+      context: ../../
+      dockerfile: Dockerfile.katzenmint
     volumes:
       - ./conf/node2:/chain
     healthcheck:
@@ -145,6 +166,9 @@ services:
   auth3:
     restart: unless-stopped
     image: katzenmint/pki
+    build:
+      context: ../../
+      dockerfile: Dockerfile.katzenmint
     volumes:
       - ./conf/node3:/chain
     healthcheck:
@@ -161,6 +185,9 @@ services:
   auth4:
     restart: unless-stopped
     image: katzenmint/pki
+    build:
+      context: ../../
+      dockerfile: Dockerfile.katzenmint
     volumes:
       - ./conf/node4:/chain
     healthcheck:
