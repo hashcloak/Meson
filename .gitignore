@@ -28,6 +28,6 @@ testdb
 data/
 
 # docker genesis documents
-testnet/conf/node*/config/genesis.json
+testnet/local/conf/node*/config/genesis.json
 
 plugin/ops/__pycache__
