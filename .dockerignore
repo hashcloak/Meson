@@ -1,1 +1,6 @@
 ./ops/nonvoting_testnet
+.github/
+.git/
+testnet/
+docs/
+Dockerfile.*
