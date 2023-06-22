@@ -38,11 +38,6 @@ x-auth: &auth
   build:
     context: ../../
     dockerfile: Dockerfile.katzenmint
-  healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:26657/block_results?height=1"]
-    interval: 10s
-    timeout: 10s
-    retries: 10
 
 services:
   provider1:

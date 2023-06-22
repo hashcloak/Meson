@@ -24,4 +24,7 @@ COPY --from=builder /go/Meson/katzenmint/katzenmint /go/bin/katzenmint
 
 VOLUME /chain
 
+HEALTHCHECK --interval=10s --timeout=10s --retries=10 \
+    CMD curl -f http://localhost:26657/block_results?height=1 || exit 1
+
 ENTRYPOINT /go/bin/katzenmint run --config /chain/katzenmint.toml
