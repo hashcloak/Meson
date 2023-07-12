@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 
@@ -32,8 +33,10 @@ var (
 		Short: "Run katzenmint PKI node",
 		RunE:  runNode,
 	}
-	configFile  string
-	dbCacheSize int
+	configFile     string
+	dbCacheSize    int
+	cpuProfilePath string
+	memProfilePath string
 )
 
 func readTendermintConfig(tConfigFile string) (config *cfg.Config, err error) {
@@ -107,6 +110,8 @@ func newTendermint(app abci.Application, config *cfg.Config, logger log.Logger) 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&configFile, "config", "katzenmint.toml", "Path to katzenmint.toml")
 	runCmd.Flags().IntVar(&dbCacheSize, "dbcachesize", 100, "Cache size for katzenmint db")
+	runCmd.Flags().StringVar(&cpuProfilePath, "cpuprofilepath", "", "Path to the pprof cpu profile")
+	runCmd.Flags().StringVar(&memProfilePath, "memprofilepath", "", "Path to the pprof memory profile")
 	rootCmd.AddCommand(runCmd)
 	rootCmd.AddCommand(registerValidatorCmd)
 	rootCmd.AddCommand(showNodeIDCmd)
@@ -125,6 +130,27 @@ func runNode(cmd *cobra.Command, args []string) error {
 	kConfig, config, err := initConfig()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %v", err)
+	}
+	if cpuProfilePath != "" {
+		f, err := os.Create(cpuProfilePath)
+		if err != nil {
+			return fmt.Errorf("failed to create CPU profile '%v': %v\n", cpuProfilePath, err)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			return fmt.Errorf("failed to start CPU profile '%v': %v\n", cpuProfilePath, err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	if memProfilePath != "" {
+		f, err := os.Create(memProfilePath)
+		if err != nil {
+			return fmt.Errorf("failed to create memory profile '%v': %v\n", memProfilePath, err)
+		}
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			return fmt.Errorf("failed to write memory profile'%v': %v\n", memProfilePath, err)
+		}
+		f.Close()
 	}
 	db, err := dbm.NewDB("katzenmint_db", dbm.GoLevelDBBackend, kConfig.DBPath)
 	if err != nil {
