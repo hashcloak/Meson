@@ -22,6 +22,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/pprof"
 	"syscall"
 
 	server "github.com/hashcloak/Meson/server"
@@ -32,7 +33,35 @@ func main() {
 	cfgFile := flag.String("f", "katzenpost.toml", "Path to the server config file.")
 	genOnly := flag.Bool("g", false, "Generate the keys and exit immediately.")
 	testConfig := flag.Bool("t", false, "Test meson server config.")
+	cpuProfilePath := flag.String("cpuprofilepath", "", "Path to the pprof cpu profile")
+	memProfilePath := flag.String("memprofilepath", "", "Path to the pprof memory profile")
 	flag.Parse()
+
+	if *cpuProfilePath != "" {
+		f, err := os.Create(*cpuProfilePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create CPU profile '%v': %v\n", *cpuProfilePath, err)
+			os.Exit(1)
+		}
+		if err := pprof.StartCPUProfile(f); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to start CPU profile '%v': %v\n", *cpuProfilePath, err)
+			os.Exit(1)
+		}
+		defer pprof.StopCPUProfile()
+	}
+
+	if *memProfilePath != "" {
+		f, err := os.Create(*memProfilePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create memory profile '%v': %v\n", *memProfilePath, err)
+			os.Exit(1)
+		}
+		if err := pprof.WriteHeapProfile(f); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to write memory profile'%v': %v\n", *memProfilePath, err)
+			os.Exit(1)
+		}
+		f.Close()
+	}
 
 	// Set the umask to something "paranoid".
 	syscall.Umask(0077)

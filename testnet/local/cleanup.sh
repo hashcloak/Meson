@@ -22,6 +22,12 @@ clean_provider_dir () {
         if [ -d $d/data ]; then
             rm -rf $d/data/*
         fi;
+        if [ -f $d/cpu.prof ]; then
+            rm -rf $d/cpu.prof
+        fi;
+        if [ -f $d/mem.prof ]; then
+            rm -rf $d/mem.prof
+        fi;
     fi;
 }
 
