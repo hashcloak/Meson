@@ -90,10 +90,10 @@ func main() {
 	}
 
 	// Setup the signal handling.
-	haltCh := make(chan os.Signal)
+	haltCh := make(chan os.Signal, 1)
 	signal.Notify(haltCh, os.Interrupt, syscall.SIGTERM) // nolint
 
-	rotateCh := make(chan os.Signal)
+	rotateCh := make(chan os.Signal, 1)
 	signal.Notify(rotateCh, syscall.SIGHUP) // nolint
 
 	// Start up the server.

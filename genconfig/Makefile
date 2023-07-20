@@ -6,14 +6,13 @@ default: lint test
 # Exclude S1034: assigning the result of this type assertion to a variable (switch cfg := cfg.(type)) could eliminate type assertions in switch cases
 .PHONY: lint
 lint:
-	# go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0
-	# $(GOPATH)/bin/golangci-lint run -e gosec -e S1034 ./... --timeout 2m
+	go vet ./...
 	go fmt ./...
 	go mod tidy
 
 .PHONY: test
 test:
-	go test ./...
+	go test --race ./...
 
 .PHONY: build
 build:
