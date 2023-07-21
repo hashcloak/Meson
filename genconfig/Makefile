@@ -12,7 +12,7 @@ lint:
 
 .PHONY: test
 test:
-	go test --race ./...
+	go test -race ./...
 
 .PHONY: build
 build:

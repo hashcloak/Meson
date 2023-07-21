@@ -12,7 +12,7 @@ lint:
 
 .PHONY: test
 test:
-	go test --race -tags=$(GOTAGS) ./...
+	go test -race -tags=$(GOTAGS) ./...
 
 .PHONY: build
 build:
