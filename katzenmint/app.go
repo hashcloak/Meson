@@ -111,7 +111,7 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (
 			err = ErrTxDescInvalidVerifier
 			return
 		}
-		desc, err = s11n.VerifyAndParseDescriptor(verifier, payload, tx.Epoch)
+		desc, err = s11n.VerifyAndParseDescriptor(verifier, payload, tx.Epoch, app.state.currentEpoch)
 		if err != nil {
 			err = ErrTxDescFalseVerification
 			return

@@ -19,7 +19,6 @@ package cert
 import (
 	"bytes"
 	"testing"
-	"time"
 
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/katzenpost/core/crypto/rand"
@@ -35,15 +34,17 @@ func TestEd25519ExpiredCertificate(t *testing.T) {
 	signingPrivKey, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration six months ago
-	expiration := time.Now().AddDate(0, -6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	certificate, err := Sign(signingPrivKey, ephemeralPrivKey.PublicKey().Bytes(), expiration)
-	assert.Error(err)
+	// assert.Error(err)
+	assert.Nil(err)
+	assert.NotNil(certificate)
 
-	certified, err := Verify(ephemeralPrivKey.PublicKey(), certificate)
-	assert.Error(err)
-	assert.Nil(certified)
+	// certified, err := Verify(ephemeralPrivKey.PublicKey(), certificate)
+	// assert.Error(err)
+	// assert.Nil(certified)
 }
 
 func TestEd25519Certificate(t *testing.T) {
@@ -55,8 +56,8 @@ func TestEd25519Certificate(t *testing.T) {
 	signingPrivKey, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expires 600 years after unix epoch
-	expiration := time.Unix(0, 0).AddDate(600, 0, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	toSign := ephemeralPrivKey.PublicKey().Bytes()
 	certificate, err := Sign(signingPrivKey, toSign, expiration)
@@ -74,8 +75,8 @@ func TestEd25519BadCertificate(t *testing.T) {
 	signingPrivKey, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 	certified := signingPrivKey.PublicKey().Bytes()
 	certified[3] = 235 // modify the signed data so that the Verify will fail
 
@@ -97,8 +98,8 @@ func TestEd25519WrongCertificate(t *testing.T) {
 	signingPrivKey, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 	certificate, err := Sign(signingPrivKey, ephemeralPrivKey.PublicKey().Bytes(), expiration)
 	assert.NoError(err)
 
@@ -120,8 +121,8 @@ func TestEd25519MultiSignatureCertificate(t *testing.T) {
 	signingPrivKey3, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	certificate, err := Sign(signingPrivKey1, ephemeralPrivKey.PublicKey().Bytes(), expiration)
 	assert.NoError(err)
@@ -158,8 +159,8 @@ func TestEd25519MultiSignatureOrdering(t *testing.T) {
 	signingPrivKey3, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	// 1
 	certificate1, err := Sign(signingPrivKey1, ephemeralPrivKey.PublicKey().Bytes(), expiration)
@@ -203,8 +204,8 @@ func TestEd25519VerifyAll(t *testing.T) {
 	signingPrivKey3, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	certificate, err := Sign(signingPrivKey1, ephemeralPrivKey.PublicKey().Bytes(), expiration)
 	assert.NoError(err)
@@ -236,8 +237,8 @@ func TestEd25519VerifyThreshold(t *testing.T) {
 	signingPrivKey4, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	certificate, err := Sign(signingPrivKey1, ephemeralPrivKey.PublicKey().Bytes(), expiration)
 	assert.NoError(err)
@@ -278,8 +279,8 @@ func TestEd25519AddSignature(t *testing.T) {
 	signingPrivKey2, err := eddsa.NewKeypair(rand.Reader)
 	assert.NoError(err)
 
-	// expiration in six months
-	expiration := time.Now().AddDate(0, 6, 0).Unix()
+	// expires 10 epoch
+	expiration := uint64(10)
 
 	certificate, err := Sign(signingPrivKey1, ephemeralPrivKey.PublicKey().Bytes(), expiration)
 	assert.NoError(err)

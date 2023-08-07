@@ -70,13 +70,13 @@ func TestDescriptor(t *testing.T) {
 	t.Logf("Descriptor: '%v'", d)
 
 	// Sign the descriptor.
-	signed, err := SignDescriptor(identityPriv, d)
+	signed, err := SignDescriptor(identityPriv, d, debugTestEpoch+CertificateExpiration)
 	require.NoError(err, "SignDescriptor()")
 
 	t.Logf("signed descriptor: '%v'", signed)
 
 	// Verify and deserialize the signed descriptor.
-	dd, err := VerifyAndParseDescriptor(identityPriv.PublicKey(), signed, debugTestEpoch)
+	dd, err := VerifyAndParseDescriptor(identityPriv.PublicKey(), signed, debugTestEpoch, debugTestEpoch)
 	require.NoError(err, "VerifyAndParseDescriptor()")
 
 	t.Logf("Deserialized descriptor: '%v'", dd)

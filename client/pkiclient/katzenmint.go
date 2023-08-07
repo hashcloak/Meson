@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	kpki "github.com/hashcloak/Meson/katzenmint"
@@ -127,7 +128,7 @@ func (p *PKIClient) GetDoc(ctx context.Context, epoch uint64) (*cpki.Document, [
 	}
 
 	// Verify and parse the document
-	doc, err := s11n.VerifyAndParseDocument(resp.Response.Value)
+	doc, err := s11n.VerifyAndParseDocument(resp.Response.Value, epoch)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to extract doc: %v", err)
 	}
@@ -167,7 +168,7 @@ func (p *PKIClient) Post(ctx context.Context, epoch uint64, signingKey *eddsa.Pr
 	}
 
 	// Make a serialized + signed + serialized descriptor.
-	signed, err := s11n.SignDescriptor(signingKey, d)
+	signed, err := s11n.SignDescriptor(signingKey, d, epoch+s11n.CertificateExpiration)
 	if err != nil {
 		return err
 	}
@@ -208,7 +209,13 @@ func (p *PKIClient) PostTx(ctx context.Context, tx []byte) (*ctypes.ResultBroadc
 
 // Deserialize returns PKI document given the raw bytes.
 func (p *PKIClient) Deserialize(raw []byte) (*cpki.Document, error) {
-	return s11n.VerifyAndParseDocument(raw)
+	// TODO: figure out a better way
+	return s11n.VerifyAndParseDocument(raw, math.MaxUint64)
+}
+
+// DeserializeWithEpoch returns PKI document given the raw bytes.
+func (p *PKIClient) DeserializeWithEpoch(raw []byte, epoch uint64) (*cpki.Document, error) {
+	return s11n.VerifyAndParseDocument(raw, epoch)
 }
 
 // NewPKIClient create PKI Client from PKI config

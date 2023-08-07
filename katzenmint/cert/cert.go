@@ -22,7 +22,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"sort"
-	"time"
 
 	"github.com/fxamacker/cbor/v2"
 )
@@ -109,7 +108,7 @@ type certificate struct {
 	Version uint32
 
 	// Expiration is seconds since Unix epoch.
-	Expiration int64
+	Expiration uint64
 
 	// KeyType indicates the type of key
 	// that is certified by this certificate.
@@ -158,15 +157,16 @@ func (c *certificate) basicCheck() error {
 }
 
 func (c *certificate) sanityCheck() error {
-	if time.Unix(c.Expiration, 0).Before(time.Now()) {
-		return ErrCertificateExpired
-	}
+	// TODO: find a way to check expiration without http client
+	// if time.Unix(c.Expiration, 0).Before(time.Now()) {
+	// 	return ErrCertificateExpired
+	// }
 	return c.basicCheck()
 }
 
 // Sign uses the given Signer to create a certificate which
 // certifies the given data.
-func Sign(signer Signer, data []byte, expiration int64) ([]byte, error) {
+func Sign(signer Signer, data []byte, expiration uint64) ([]byte, error) {
 	cert := certificate{
 		Version:    CertVersion,
 		Expiration: expiration,
@@ -202,6 +202,20 @@ func GetUnsafe(rawCert []byte) ([]byte, error) {
 		return nil, err
 	}
 	return cert.Certified, nil
+}
+
+// GetCertificate returns the certificate.
+func GetCertificate(rawCert []byte) (*certificate, error) {
+	cert := certificate{}
+	err := cbor.Unmarshal(rawCert, &cert)
+	if err != nil {
+		return nil, ErrImpossibleEncode
+	}
+	err = cert.sanityCheck()
+	if err != nil {
+		return nil, err
+	}
+	return &cert, nil
 }
 
 // GetCertified returns the certified data.

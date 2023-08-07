@@ -83,7 +83,7 @@ func TestMockPKIClientGetDocument(t *testing.T) {
 
 	// create a test document
 	_, docSer := testutil.CreateTestDocument(require, epoch)
-	testDoc, err := s11n.VerifyAndParseDocument(docSer)
+	testDoc, err := s11n.VerifyAndParseDocument(docSer, epoch)
 	require.NoError(err)
 
 	var (
@@ -216,7 +216,7 @@ func TestMockPKIClientPostTx(t *testing.T) {
 		tmtx,
 	).Run(
 		func(args mock.Arguments) {
-			parsed, err := s11n.ParseDescriptorWithoutVerify(signed)
+			parsed, err := s11n.ParseDescriptor(signed, epoch)
 			require.NoError(err)
 			require.Equal(desc.IdentityKey, parsed.IdentityKey)
 			require.Equal(desc.LinkKey, parsed.LinkKey)
@@ -259,7 +259,7 @@ func TestDeserialize(t *testing.T) {
 
 	// create a test document
 	_, docSer := testutil.CreateTestDocument(require, epoch)
-	testDoc, err := s11n.VerifyAndParseDocument(docSer)
+	testDoc, err := s11n.VerifyAndParseDocument(docSer, epoch)
 	require.NoError(err)
 
 	// make the abci query
@@ -282,7 +282,7 @@ func TestDeserialize(t *testing.T) {
 	require.NoError(err)
 	require.NotNil(pkiClient)
 
-	doc, err := pkiClient.Deserialize(docSer)
+	doc, err := pkiClient.DeserializeWithEpoch(docSer, epoch)
 	require.NoError(err)
 	require.Equal(doc, testDoc)
 }

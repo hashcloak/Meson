@@ -58,7 +58,7 @@ func genDescriptor(require *require.Assertions, idx int, layer int) (*pki.MixDes
 	err = IsDescriptorWellFormed(d, debugTestEpoch)
 	require.NoError(err, "IsDescriptorWellFormed(good)")
 
-	signed, err := SignDescriptor(identityPriv, d)
+	signed, err := SignDescriptor(identityPriv, d, debugTestEpoch+CertificateExpiration)
 	require.NoError(err, "SignDescriptor()")
 
 	return d, []byte(signed)
@@ -100,7 +100,7 @@ func TestDocument(t *testing.T) {
 	require.NoError(err, "SerializeDocument()")
 
 	// Validate and deserialize.
-	ddoc, err := VerifyAndParseDocument([]byte(serialized))
+	ddoc, err := VerifyAndParseDocument([]byte(serialized), debugTestEpoch)
 	require.NoError(err, "VerifyAndParseDocument()")
 	require.Equal(doc.Epoch, ddoc.Epoch, "VerifyAndParseDocument(): Epoch")
 	require.Equal(doc.SendRatePerMinute, testSendRate, "VerifyAndParseDocument(): SendRatePerMinute")

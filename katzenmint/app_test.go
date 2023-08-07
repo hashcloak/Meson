@@ -203,7 +203,7 @@ func TestPostDescriptorAndCommit(t *testing.T) {
 	loaded, _, err := app.state.GetDocument(epoch, app.state.blockHeight-1)
 	require.Nil(err, "Failed to get pki document from state: %+v\n", err)
 	require.NotNil(loaded, "Failed to get pki document from state: wrong key")
-	_, err = s11n.VerifyAndParseDocument(loaded)
+	_, err = s11n.VerifyAndParseDocument(loaded, app.state.currentEpoch)
 	require.Nil(err, "Failed to parse pki document: %+v\n", err)
 
 	// prepare verification metadata (in an old block)

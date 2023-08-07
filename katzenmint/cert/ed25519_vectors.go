@@ -19,7 +19,6 @@ package cert
 import (
 	"encoding/hex"
 	"testing"
-	"time"
 
 	"github.com/katzenpost/core/crypto/eddsa"
 	"github.com/stretchr/testify/assert"
@@ -68,8 +67,8 @@ func TestEd25519SingleSignatureCertificateVectors(t *testing.T) {
 	}
 
 	for _, test := range certificateTests {
-		// expires 600 years after unix epoch
-		expiration := time.Unix(18934214400, 0).Unix()
+		// expires 10 epoch
+		expiration := uint64(10)
 		signingKeyRaw, err := hex.DecodeString(test.in.signingKey)
 		assert.NoError(err)
 		toSign, err := hex.DecodeString(test.in.toSign)
@@ -135,8 +134,8 @@ func TestEd25519MultipleSignatureCertificateVectors(t *testing.T) {
 	}
 
 	for _, test := range certificateTests {
-		// expires 600 years after unix epoch
-		expiration := time.Unix(18934214400, 0).Unix()
+		// expires 10 epoch
+		expiration := uint64(10)
 
 		sigKeys := []*eddsa.PrivateKey{}
 		for _, key := range test.in.signingKeys {
