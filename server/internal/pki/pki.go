@@ -352,12 +352,10 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 	}
 	if till < publishGracePeriod {
 		// check whether the certificate is expired and the network stuck
-		if p.lastPublishedEpoch > 0 {
-			if epoch > 0 && (epoch-p.lastPublishedEpoch) > s11n.CertificateExpiration {
-				// Should we republish epoch + 1?
-				p.log.Debugf("Publish epoch again: %d.", epoch)
-				p.lastPublishedEpoch = 0
-			}
+		if p.lastPublishedEpoch > 0 && (epoch > 0 && (epoch-p.lastPublishedEpoch) > s11n.CertificateExpiration) {
+			// Should we republish epoch + 1?
+			p.log.Debugf("Publish epoch again: %d.", epoch)
+			p.lastPublishedEpoch = 0
 		} else {
 			epoch++
 		}
