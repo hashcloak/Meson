@@ -72,7 +72,7 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var gotValue ethRequest
+	var gotValue jsonrpcRequest
 	err = json.Unmarshal(postRequest.Body, &gotValue)
 	if err != nil {
 		t.Fatalf("err unmarshal: %v\n", err)

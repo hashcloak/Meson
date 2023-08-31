@@ -8,20 +8,6 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-// An bitcoin request abstraction.
-// Only need it for one method, though.
-type btcRequest struct {
-	ID uint `json:"id"`
-	// Indicates which version of JSON RPC to use
-	// Since all networks support JSON RPC 2.0,
-	// this attribute is a constant
-	JSONRPC string `json:"jsonrpc"`
-	// Which method you want to call
-	METHOD string `json:"method"`
-	// Params for the method you want to call
-	Params interface{} `json:"params"`
-}
-
 // BTCChain is a struct for identifier blockchains and their forks
 type BTCChain struct {
 	testnet bool
@@ -42,7 +28,7 @@ func (ec *BTCChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		marshalledRequest, err = json.Marshal(btcRequest{
+		marshalledRequest, err = json.Marshal(jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "sendrawtransaction",
@@ -59,7 +45,7 @@ func (ec *BTCChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		marshalledRequest, err = json.Marshal(btcRequest{
+		marshalledRequest, err = json.Marshal(jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "getrawtransaction",
@@ -76,7 +62,7 @@ func (ec *BTCChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		marshalledRequest, err = json.Marshal(btcRequest{
+		marshalledRequest, err = json.Marshal(jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "listunspent",

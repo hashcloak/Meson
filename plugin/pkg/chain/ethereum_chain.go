@@ -8,21 +8,6 @@ import (
 	"github.com/ugorji/go/codec"
 )
 
-// An ethereum request abstraction.
-// Only need it for one method, though.
-type ethRequest struct {
-	// ChainId to indicate which Ethereum-based network
-	ID uint `json:"id"`
-	// Indicates which version of JSON RPC to use
-	// Since all networks support JSON RPC 2.0,
-	// this attribute is a constant
-	JSONRPC string `json:"jsonrpc"`
-	// Which method you want to call
-	METHOD string `json:"method"`
-	// Params for the method you want to call
-	Params interface{} `json:"params"`
-}
-
 // ETHChain is a struct for identifier blockchains and their forks
 type ETHChain struct {
 	chainID uint
@@ -43,7 +28,7 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		marshalledRequest, err = json.Marshal(ethRequest{
+		marshalledRequest, err = json.Marshal(jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "eth_sendRawTransaction",
@@ -60,18 +45,18 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		blockNumberRequest := ethRequest{
+		blockNumberRequest := jsonrpcRequest{
 			ID:      2,
 			JSONRPC: "2.0",
 			METHOD:  "eth_blockNumber",
 		}
-		receiptRequest := ethRequest{
+		receiptRequest := jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "eth_getTransactionReceipt",
 			Params:  []string{req.TxHash},
 		}
-		marshalledRequest, err = json.Marshal([]ethRequest{
+		marshalledRequest, err = json.Marshal([]jsonrpcRequest{
 			blockNumberRequest,
 			receiptRequest,
 		})
@@ -86,13 +71,13 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if err != nil {
 			return nil, err
 		}
-		nonceRequest := ethRequest{
+		nonceRequest := jsonrpcRequest{
 			ID:      1,
 			JSONRPC: "2.0",
 			METHOD:  "eth_getTransactionCount",
 			Params:  []string{req.From, "pending"},
 		}
-		gasPriceRequest := ethRequest{
+		gasPriceRequest := jsonrpcRequest{
 			ID:      2,
 			JSONRPC: "2.0",
 			METHOD:  "eth_gasPrice",
@@ -105,19 +90,19 @@ func (ec *ETHChain) WrapRequest(rpcURL string, cmd uint8, payload []byte) (*Http
 		if req.Data != "" {
 			param["data"] = req.Data
 		}
-		gasEstimateRequest := ethRequest{
+		gasEstimateRequest := jsonrpcRequest{
 			ID:      3,
 			JSONRPC: "2.0",
 			METHOD:  "eth_estimateGas",
 			Params:  []interface{}{param},
 		}
-		ethCallRequest := ethRequest{
+		ethCallRequest := jsonrpcRequest{
 			ID:      3,
 			JSONRPC: "2.0",
 			METHOD:  "eth_call",
 			Params:  []interface{}{param, "latest"},
 		}
-		marshalledRequest, err = json.Marshal([]ethRequest{
+		marshalledRequest, err = json.Marshal([]jsonrpcRequest{
 			nonceRequest,
 			gasPriceRequest,
 			gasEstimateRequest,
