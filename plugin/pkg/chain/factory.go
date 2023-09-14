@@ -39,6 +39,10 @@ func GetChain(ticker string) (IChain, error) {
 		return &ETHChain{ticker: "TOPT", chainID: 69}, nil
 	case "OPT":
 		return &ETHChain{ticker: "OPT", chainID: 10}, nil
+	case "BTC":
+		return &BTCChain{ticker: "BTC", testnet: false}, nil
+	case "TBTC":
+		return &BTCChain{ticker: "BTC", testnet: true}, nil
 	default:
 		return nil, fmt.Errorf("unsupported chain")
 	}

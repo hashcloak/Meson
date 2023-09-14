@@ -20,6 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
@@ -30,7 +32,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func mockServer() *httptest.Server {
+	f := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		w.Header().Set("Content-Type", "application/xml")
+		// empty json output
+		w.Write([]byte("{}"))
+	}
+	return httptest.NewServer(http.HandlerFunc(f))
+}
+
 func TestProxy(t *testing.T) {
+	server := mockServer()
+	defer server.Close()
+
 	assert := assert.New(t)
 
 	logDir, err := ioutil.TempDir("", "example")
@@ -42,10 +57,10 @@ LogDir = "%s"
 LogLevel = "DEBUG"
 
 [Rpc.%s]
-  Url = "http://localhost:8545"
+  Url = "%s"
   User = "somerpcusername"
   Pass = "somepassword"
-`, logDir, ticker))
+`, logDir, ticker, server.URL))
 	tmpfn := filepath.Join(logDir, "currency.toml")
 	err = ioutil.WriteFile(tmpfn, content, 0666)
 	assert.NoError(err)
@@ -74,6 +89,9 @@ LogLevel = "DEBUG"
 }
 
 func TestProxyWithoutAuth(t *testing.T) {
+	server := mockServer()
+	defer server.Close()
+
 	assert := assert.New(t)
 
 	logDir, err := ioutil.TempDir("", "example")
@@ -85,8 +103,8 @@ LogDir = "%s"
 LogLevel = "DEBUG"
 
 [Rpc.%s]
-  Url = "http://localhost:8545"
-`, logDir, ticker))
+  Url = "%s"
+`, logDir, ticker, server.URL))
 	tmpfn := filepath.Join(logDir, "currency.toml")
 	err = ioutil.WriteFile(tmpfn, content, 0666)
 	assert.NoError(err)
