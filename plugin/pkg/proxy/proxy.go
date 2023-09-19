@@ -28,6 +28,7 @@ import (
 	"path"
 
 	"github.com/hashcloak/Meson/plugin/pkg/chain"
+	"github.com/hashcloak/Meson/plugin/pkg/command"
 	"github.com/hashcloak/Meson/plugin/pkg/common"
 	"github.com/hashcloak/Meson/plugin/pkg/config"
 	"github.com/ugorji/go/codec"
@@ -101,10 +102,19 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 		return nil, err
 	}
 
-	// Wrap command into transactions
-	sendData, err := c.WrapRequest(rpc.Url, req.Command, req.Payload)
-	if err != nil {
-		return nil, err
+	var sendData *chain.HttpData
+	if req.Command == command.DirectPost {
+		// Directly send payload to rpc without passing to iChain
+		sendData, err = wrapRequest(rpc.Url, req.Command, req.Payload)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Wrap command into transactions
+		sendData, err = c.WrapRequest(rpc.Url, req.Command, req.Payload)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Send the transactions
@@ -113,14 +123,31 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 		return nil, fmt.Errorf("failed to send currency request: %v", err)
 	}
 
-	// Unwrap responses
-	result, err := c.UnwrapResponse(req.Command, response)
+	var result []byte
+	if req.Command == 0x01 {
+		// Directly return rpc response without passing to iChain
+		result, err = json.Marshal(response)
+	} else {
+		// Unwrap responses
+		result, err = c.UnwrapResponse(req.Command, response)
+	}
+
 	if err != nil {
 		k.log.Debug("Error response for currency request: (%v)", err)
 		return common.RespondFailure(err), nil
 	}
 
 	return common.RespondSuccess(string(result)), nil
+}
+
+// Called when cmd==0x01 (DirectPost), directly sends payload to rpcURL.
+// Payload data is handled by User (Wallet)
+func wrapRequest(rpcURL string, cmd uint8, payload []byte) (*chain.HttpData, error) {
+	if cmd != 0x01 {
+		return nil, fmt.Errorf("expect cmd to be 0x00, got %d", cmd)
+	}
+	return &chain.HttpData{Method: "POST", URL: rpcURL, Body: payload}, nil
+
 }
 
 // Halt : Stops the plugin
