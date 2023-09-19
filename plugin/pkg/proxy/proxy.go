@@ -124,7 +124,7 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 	}
 
 	var result []byte
-	if req.Command == 0x01 {
+	if req.Command == command.DirectPost {
 		// Directly return rpc response without passing to iChain
 		result, err = json.Marshal(response)
 	} else {
@@ -143,8 +143,8 @@ func (k *Currency) OnRequest(id uint64, payload []byte, hasSURB bool) ([]byte, e
 // Called when cmd==0x01 (DirectPost), directly sends payload to rpcURL.
 // Payload data is handled by User (Wallet)
 func wrapRequest(rpcURL string, cmd uint8, payload []byte) (*chain.HttpData, error) {
-	if cmd != 0x01 {
-		return nil, fmt.Errorf("expect cmd to be 0x00, got %d", cmd)
+	if cmd != command.DirectPost {
+		return nil, fmt.Errorf("expect cmd to be 0x01, got %d", cmd)
 	}
 	return &chain.HttpData{Method: "POST", URL: rpcURL, Body: payload}, nil
 
