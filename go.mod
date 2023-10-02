@@ -31,7 +31,6 @@ require (
 )
 
 require (
-	github.com/btcsuite/btcd v0.22.3 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/klauspost/compress v1.15.12 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
