@@ -19,6 +19,8 @@ func GetChain(ticker string) (IChain, error) {
 		return &ETHChain{ticker: "KOT", chainID: 6}, nil
 	case "SEP":
 		return &ETHChain{ticker: "SEP", chainID: 11155111}, nil
+	case "HOL":
+		return &ETHChain{ticker: "HOL", chainID: 17000}, nil
 	case "TBC":
 		return &CosmosChain{ticker: "TBNB", chainID: 0}, nil
 	case "BC":
