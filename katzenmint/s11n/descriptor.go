@@ -111,7 +111,7 @@ func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64) (*
 		return nil, err
 	}
 	if len(signatures) != 1 {
-		return nil, fmt.Errorf("Expected 1 signature, got: %v", len(signatures))
+		return nil, fmt.Errorf("expected 1 signature, got: %v", len(signatures))
 	}
 
 	// Verify that the descriptor is signed by the verifier.
@@ -129,7 +129,7 @@ func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64) (*
 
 	// Ensure the descriptor is well formed.
 	if d.Version != nodeDescriptorVersion {
-		return nil, fmt.Errorf("Invalid Descriptor Version: '%v'", d.Version)
+		return nil, fmt.Errorf("invalid Descriptor Version: '%v'", d.Version)
 	}
 	if err = IsDescriptorWellFormed(&d.MixDescriptor, epoch); err != nil {
 		return nil, err
@@ -142,38 +142,38 @@ func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64) (*
 // a PKI Document.
 func IsDescriptorWellFormed(d *pki.MixDescriptor, epoch uint64) error {
 	if d.Name == "" {
-		return fmt.Errorf("Descriptor missing Name")
+		return fmt.Errorf("descriptor missing Name")
 	}
 	if len(d.Name) > constants.NodeIDLength {
-		return fmt.Errorf("Descriptor Name '%v' exceeds max length", d.Name)
+		return fmt.Errorf("descriptor Name '%v' exceeds max length", d.Name)
 	}
 	if d.LinkKey == nil {
-		return fmt.Errorf("Descriptor missing LinkKey")
+		return fmt.Errorf("descriptor missing LinkKey")
 	}
 	if d.IdentityKey == nil {
-		return fmt.Errorf("Descriptor missing IdentityKey")
+		return fmt.Errorf("descriptor missing IdentityKey")
 	}
 	if d.MixKeys[epoch] == nil {
-		return fmt.Errorf("Descriptor missing MixKey[%v]", epoch)
+		return fmt.Errorf("descriptor missing MixKey[%v]", epoch)
 	}
 	for e := range d.MixKeys {
 		// TODO: Should this check that the epochs in MixKey are sequential?
 		if e < epoch || e >= epoch+3 {
-			return fmt.Errorf("Descriptor contains MixKey for invalid epoch: %v", d)
+			return fmt.Errorf("descriptor contains MixKey for invalid epoch: %v", d)
 		}
 	}
 	if len(d.Addresses) == 0 {
-		return fmt.Errorf("Descriptor missing Addresses")
+		return fmt.Errorf("descriptor missing Addresses")
 	}
 	for transport, addrs := range d.Addresses {
 		if len(addrs) == 0 {
-			return fmt.Errorf("Descriptor contains empty Address list for transport '%v'", transport)
+			return fmt.Errorf("descriptor contains empty Address list for transport '%v'", transport)
 		}
 
 		var expectedIPVer int
 		switch transport {
 		case pki.TransportInvalid:
-			return fmt.Errorf("Descriptor contains invalid Transport")
+			return fmt.Errorf("descriptor contains invalid Transport")
 		case pki.TransportTCPv4:
 			expectedIPVer = 4
 		case pki.TransportTCPv6:
@@ -182,7 +182,7 @@ func IsDescriptorWellFormed(d *pki.MixDescriptor, epoch uint64) error {
 			// Unknown transports are only supported between the client and
 			// provider.
 			if d.Layer != pki.LayerProvider {
-				return fmt.Errorf("Non-provider published Transport '%v'", transport)
+				return fmt.Errorf("non-provider published Transport '%v'", transport)
 			}
 			if transport != pki.TransportTCP {
 				// Ignore transports that don't have validation logic.
@@ -194,44 +194,44 @@ func IsDescriptorWellFormed(d *pki.MixDescriptor, epoch uint64) error {
 		for _, v := range addrs {
 			h, p, err := net.SplitHostPort(v)
 			if err != nil {
-				return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
+				return fmt.Errorf("descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
 			}
 			if len(h) == 0 {
-				return fmt.Errorf("Descriptor contains invalid address ['%v']'%v'", transport, v)
+				return fmt.Errorf("descriptor contains invalid address ['%v']'%v'", transport, v)
 			}
 			if port, err := strconv.ParseUint(p, 10, 16); err != nil {
-				return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
+				return fmt.Errorf("descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
 			} else if port == 0 {
-				return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': port is 0", transport, v)
+				return fmt.Errorf("descriptor contains invalid address ['%v']'%v': port is 0", transport, v)
 			}
 			switch expectedIPVer {
 			case 4, 6:
 				if ver, err := getIPVer(h); err != nil {
-					return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
+					return fmt.Errorf("descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
 				} else if ver != expectedIPVer {
-					return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': IP version mismatch", transport, v)
+					return fmt.Errorf("descriptor contains invalid address ['%v']'%v': IP version mismatch", transport, v)
 				}
 			default:
 				// This must be TransportTCP or something else that supports
 				// "sensible" DNS style hostnames.  Validate that they are
 				// at least somewhat well formed.
 				if _, err := idna.Lookup.ToASCII(h); err != nil {
-					return fmt.Errorf("Descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
+					return fmt.Errorf("descriptor contains invalid address ['%v']'%v': %v", transport, v, err)
 				}
 			}
 		}
 	}
 	if len(d.Addresses[pki.TransportTCPv4]) == 0 {
-		return fmt.Errorf("Descriptor contains no TCPv4 addresses")
+		return fmt.Errorf("descriptor contains no TCPv4 addresses")
 	}
 	switch d.Layer {
 	case 0:
 		if d.Kaetzchen != nil {
-			return fmt.Errorf("Descriptor contains Kaetzchen when a mix")
+			return fmt.Errorf("descriptor contains Kaetzchen when a mix")
 		}
 	case pki.LayerProvider:
 		if err := validateKaetzchen(d.Kaetzchen); err != nil {
-			return fmt.Errorf("Descriptor contains invalid Kaetzchen block: %v", err)
+			return fmt.Errorf("descriptor contains invalid Kaetzchen block: %v", err)
 		}
 	default: // it's ok
 	}

@@ -16,8 +16,11 @@ default: lint test
 
 .PHONY: lint
 lint:
-	# go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0
-	# $(GOPATH)/bin/golangci-lint run --timeout 2m0s -e gosec ./...
+	# cd ../tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	# $(GOPATH)/bin/golangci-lint run -e gosec ./... --timeout=2m
+	cd ../ test && go install honnef.co/go/tools/cmd/staticcheck@latest
+	$(GOPATH)/bin/staticcheck ./...
+	go vet ./...
 	go fmt ./...
 	go mod tidy
 

@@ -4,7 +4,6 @@
 package katzenmint
 
 import (
-	"bytes"
 	"encoding/binary"
 	"math/rand"
 	"sort"
@@ -36,19 +35,19 @@ func storageKey(keyPrefix string, keyID []byte, epoch uint64) (key []byte) {
 	return
 }
 
-func unpackStorageKey(key []byte) (keyID []byte, epoch uint64) {
-	pre := bytes.Index(key, []byte(":"))
-	post := bytes.LastIndex(key, []byte(":"))
-	if pre < 0 || post <= pre {
-		return nil, 0
-	}
-	epoch, read := binary.Uvarint(DecodeHex(string(key[pre+1 : post])))
-	keyID = DecodeHex(string(key[post+1:]))
-	if read <= 0 {
-		return nil, 0
-	}
-	return
-}
+// func unpackStorageKey(key []byte) (keyID []byte, epoch uint64) {
+// 	pre := bytes.Index(key, []byte(":"))
+// 	post := bytes.LastIndex(key, []byte(":"))
+// 	if pre < 0 || post <= pre {
+// 		return nil, 0
+// 	}
+// 	epoch, read := binary.Uvarint(DecodeHex(string(key[pre+1 : post])))
+// 	keyID = DecodeHex(string(key[post+1:]))
+// 	if read <= 0 {
+// 		return nil, 0
+// 	}
+// 	return
+// }
 
 func sortNodesByPublicKey(nodes []*descriptor) {
 	dTos := func(d *descriptor) string {

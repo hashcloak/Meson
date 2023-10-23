@@ -18,7 +18,7 @@ var (
 func showNodeID(cmd *cobra.Command, args []string) error {
 	_, config, err := initConfig()
 	if err != nil {
-		return fmt.Errorf("failed to load config: %v\n", err)
+		return fmt.Errorf("failed to load config: %v", err)
 	}
 	nodeKey, err := p2p.LoadNodeKey(config.NodeKeyFile())
 	if err != nil {
