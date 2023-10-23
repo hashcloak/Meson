@@ -274,8 +274,8 @@ func (c *outgoingConn) onConnEstablished(conn net.Conn, closeCh <-chan struct{})
 	defer w.Close()
 
 	// Bind the session to the conn, handshake, authenticate.
-	timeoutMs := time.Duration(c.co.glue.Config().Debug.HandshakeTimeout) * time.Millisecond
-	_ = conn.SetDeadline(time.Now().Add(timeoutMs))
+	timeoutDu := time.Duration(c.co.glue.Config().Debug.HandshakeTimeout) * time.Millisecond
+	_ = conn.SetDeadline(time.Now().Add(timeoutDu))
 	if err = w.Initialize(conn); err != nil {
 		c.log.Errorf("Handshake failed: %v", err)
 		return
@@ -326,8 +326,8 @@ func (c *outgoingConn) onConnEstablished(conn net.Conn, closeCh <-chan struct{})
 	}()
 
 	// Start the reauthenticate ticker.
-	reauthMs := time.Duration(c.co.glue.Config().Debug.ReauthInterval) * time.Millisecond
-	reauth := time.NewTicker(reauthMs)
+	reauthDu := time.Duration(c.co.glue.Config().Debug.ReauthInterval) * time.Millisecond
+	reauth := time.NewTicker(reauthDu)
 	defer reauth.Stop()
 
 	// Shuffle packets from the send queue out to the peer.

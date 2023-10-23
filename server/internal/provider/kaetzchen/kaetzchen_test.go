@@ -33,7 +33,6 @@ import (
 	"github.com/katzenpost/core/log"
 	"github.com/katzenpost/core/monotime"
 	"github.com/katzenpost/core/sphinx/commands"
-	"github.com/katzenpost/core/sphinx/constants"
 	sConstants "github.com/katzenpost/core/sphinx/constants"
 	"github.com/katzenpost/core/thwack"
 	"github.com/katzenpost/core/wire"
@@ -70,7 +69,7 @@ type mockSpool struct{}
 
 func (s *mockSpool) StoreMessage(u, msg []byte) error { return nil }
 
-func (s *mockSpool) StoreSURBReply(u []byte, id *[constants.SURBIDLength]byte, msg []byte) error {
+func (s *mockSpool) StoreSURBReply(u []byte, id *[sConstants.SURBIDLength]byte, msg []byte) error {
 	return nil
 }
 
