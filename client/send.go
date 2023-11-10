@@ -51,6 +51,13 @@ func (s *Session) sendNext() {
 	}
 }
 
+func (s *Session) doRetransmit(msg *Message) {
+	msg.Retransmissions++
+	msgIdStr := fmt.Sprintf("[%v]", hex.EncodeToString(msg.ID[:]))
+	s.log.Debugf("doRetransmit: %d for %s", msg.Retransmissions, msgIdStr)
+	s.egressQueue.Push(msg)
+}
+
 func (s *Session) doSend(msg *Message) {
 	surbID := [sConstants.SURBIDLength]byte{}
 	_, err := io.ReadFull(rand.Reader, surbID[:])
@@ -80,6 +87,12 @@ func (s *Session) doSend(msg *Message) {
 			msg.ReplyETA = eta
 			msg.Key = key
 			s.surbIDMap.Store(surbID, msg)
+			if msg.Reliable {
+				s.log.Debugf("Sending reliable message with retransmissions")
+				timeSlop := eta // add a round-trip worth of delay before timing out
+				msg.QueuePriority = uint64(msg.SentAt.Add(msg.ReplyETA).Add(timeSlop).UnixNano())
+				s.timerQ.Push(msg)
+			}
 		}
 		// write to waiting channel or close channel if message failed to send
 		if msg.IsBlocking {
@@ -180,6 +193,20 @@ func (s *Session) composeMessage(recipient, provider string, message []byte, isB
 	return &msg, nil
 }
 
+// SendReliableMessage asynchronously sends messages with automatic retransmissiosn.
+func (s *Session) SendReliableMessage(recipient, provider string, message []byte) (*[cConstants.MessageIDLength]byte, error) {
+	msg, err := s.composeMessage(recipient, provider, message, false)
+	if err != nil {
+		return nil, err
+	}
+	msg.Reliable = true
+	err = s.egressQueue.Push(msg)
+	if err != nil {
+		return nil, err
+	}
+	return msg.ID, nil
+}
+
 // SendUnreliableMessage asynchronously sends message without any automatic retransmissions.
 func (s *Session) SendUnreliableMessage(recipient, provider string, message []byte) (*[cConstants.MessageIDLength]byte, error) {
 	msg, err := s.composeMessage(recipient, provider, message, false)
@@ -225,6 +252,45 @@ func (s *Session) BlockingSendUnreliableMessage(recipient, provider string, mess
 		return reply, nil
 	// these timeouts are often far too aggressive
 	case <-time.After(sentMessage.ReplyETA + cConstants.RoundTripTimeSlop):
+		return nil, ErrReplyTimeout
+	}
+	// unreachable
+}
+
+// BlockingSendReliableMessage sends a message with automatic message retransmission enabled
+func (s *Session) BlockingSendReliableMessage(recipient, provider string, message []byte) ([]byte, error) {
+	msg, err := s.composeMessage(recipient, provider, message, true)
+	if err != nil {
+		return nil, err
+	}
+	msg.Reliable = true
+	sentWaitChan := make(chan *Message)
+	s.sentWaitChanMap.Store(*msg.ID, sentWaitChan)
+	defer s.sentWaitChanMap.Delete(*msg.ID)
+
+	replyWaitChan := make(chan []byte)
+	s.replyWaitChanMap.Store(*msg.ID, replyWaitChan)
+	defer s.replyWaitChanMap.Delete(*msg.ID)
+
+	err = s.egressQueue.Push(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	// wait until sent so that we know the ReplyETA for the waiting below
+	sentMessage := <-sentWaitChan
+
+	// if the message failed to send we will receive a nil message
+	if sentMessage == nil {
+		return nil, ErrMessageNotSent
+	}
+
+	// TODO: it would be better to have the message automatically retransmitted a configurable number of times before emitting a failure to this channel
+	// wait for reply or round trip timeout
+	select {
+	case reply := <-replyWaitChan:
+		return reply, nil
+	case <-time.After(cConstants.RoundTripTimeSlop):
 		return nil, ErrReplyTimeout
 	}
 	// unreachable
