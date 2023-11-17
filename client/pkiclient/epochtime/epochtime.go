@@ -8,7 +8,7 @@ import (
 	"github.com/hashcloak/Meson/katzenmint"
 )
 
-//! The duration of a katzenmint epoch. Should refer to katzenmint PKI.
+// ! The duration of a katzenmint epoch. Should refer to katzenmint PKI.
 var TestPeriod = katzenmint.HeightPeriod * time.Duration(katzenmint.EpochInterval)
 
 func Now(client kpki.Client) (epoch uint64, ellapsed, till time.Duration, err error) {
