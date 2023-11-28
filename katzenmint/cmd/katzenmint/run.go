@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	katzenmint "github.com/hashcloak/Meson/katzenmint"
 	kcfg "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/spf13/cobra"

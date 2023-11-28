@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 
+	dbm "github.com/cometbft/cometbft-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
@@ -21,7 +22,6 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	dbm "github.com/tendermint/tm-db"
 	"gopkg.in/op/go-logging.v1"
 )
 
