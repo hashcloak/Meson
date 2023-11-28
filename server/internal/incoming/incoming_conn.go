@@ -197,8 +197,8 @@ func (c *incomingConn) worker() {
 	defer c.w.Close()
 
 	// Bind the session to the conn, handshake, authenticate.
-	timeoutMs := time.Duration(c.l.glue.Config().Debug.HandshakeTimeout) * time.Millisecond
-	_ = c.c.SetDeadline(time.Now().Add(timeoutMs))
+	timeoutDu := time.Duration(c.l.glue.Config().Debug.HandshakeTimeout) * time.Millisecond
+	_ = c.c.SetDeadline(time.Now().Add(timeoutDu))
 	if err = c.w.Initialize(c.c); err != nil {
 		c.log.Errorf("Handshake failed: %v", err)
 		return
@@ -233,8 +233,8 @@ func (c *incomingConn) worker() {
 	}
 
 	// Start the reauthenticate ticker.
-	reauthMs := time.Duration(c.l.glue.Config().Debug.ReauthInterval) * time.Millisecond
-	reauth := time.NewTicker(reauthMs)
+	reauthDu := time.Duration(c.l.glue.Config().Debug.ReauthInterval) * time.Millisecond
+	reauth := time.NewTicker(reauthDu)
 	defer reauth.Stop()
 
 	// Start reading from the peer.

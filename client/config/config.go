@@ -131,13 +131,13 @@ func (tcCfg *Katzenmint) validate() error {
 		return err
 	}
 	if tcCfg.PrimaryAddress == "" {
-		return errors.New("Primary address is missing")
+		return errors.New("primary address is missing")
 	}
 	if tcCfg.DatabaseName == "" || tcCfg.DatabaseDir == "" {
-		return errors.New("Database name or directory is missing")
+		return errors.New("database name or directory is missing")
 	}
 	if tcCfg.RPCAddress == "" {
-		return errors.New("RPC address is missing")
+		return errors.New("rpc address is missing")
 	}
 	return nil
 }

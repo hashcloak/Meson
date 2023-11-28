@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	errCantModify   = errors.New("Not implemented: External authentication is enabled, you can not modify users")
-	errNotSupported = errors.New("Not implemented: Support not implemented yet")
+	errCantModify   = errors.New("not implemented: External authentication is enabled, you can not modify users")
+	errNotSupported = errors.New("not implemented: Support not implemented yet")
 	jsonHandle      = &codec.JsonHandle{}
 )
 

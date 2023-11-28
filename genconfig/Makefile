@@ -6,8 +6,11 @@ default: lint test
 # Exclude S1034: assigning the result of this type assertion to a variable (switch cfg := cfg.(type)) could eliminate type assertions in switch cases
 .PHONY: lint
 lint:
-	# go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0
-	# $(GOPATH)/bin/golangci-lint run -e gosec -e S1034 ./... --timeout 2m
+	# cd ../tools && go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	# $(GOPATH)/bin/golangci-lint run -e gosec ./... --timeout=2m
+	# cd ../ test && go install honnef.co/go/tools/cmd/staticcheck@v0.4.6
+	# $(GOPATH)/bin/staticcheck ./...
+	go vet ./...
 	go fmt ./...
 	go mod tidy
 

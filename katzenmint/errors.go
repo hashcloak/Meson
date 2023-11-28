@@ -7,8 +7,6 @@ import (
 )
 
 type KatzenmintError struct {
-	error
-
 	Code uint32
 	Msg  string
 }

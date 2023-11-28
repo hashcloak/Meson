@@ -32,12 +32,10 @@ import (
 )
 
 var (
-	errNotSupported = errors.New("pkiclient: operation not supported")
-	errHalted       = errors.New("pkiclient: client was halted")
+	errHalted = errors.New("pkiclient: client was halted")
 
-	fetchBacklog          = 8
-	lruMaxSize            = 8
-	epochRetrieveInterval = 3 * time.Second
+	fetchBacklog = 8
+	lruMaxSize   = 8
 )
 
 type cacheEntry struct {

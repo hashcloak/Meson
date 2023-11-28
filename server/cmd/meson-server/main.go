@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 package main
 
 import (
@@ -61,10 +60,10 @@ func main() {
 	}
 
 	// Setup the signal handling.
-	haltCh := make(chan os.Signal)
+	haltCh := make(chan os.Signal, 1)
 	signal.Notify(haltCh, os.Interrupt, syscall.SIGTERM) // nolint
 
-	rotateCh := make(chan os.Signal)
+	rotateCh := make(chan os.Signal, 1)
 	signal.Notify(rotateCh, syscall.SIGHUP) // nolint
 
 	// Start up the server.

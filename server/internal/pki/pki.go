@@ -695,7 +695,7 @@ func (p *pki) GetRawConsensus(epoch uint64) ([]byte, error) {
 
 func (p *pki) Now() (epoch uint64, ellapsed time.Duration, till time.Duration, err error) {
 	if p.impl == nil {
-		return 0, 0, 0, fmt.Errorf("PKI client uninitialized.")
+		return 0, 0, 0, fmt.Errorf("PKI client uninitialized")
 	}
 	return epochtime.Now(p.impl)
 }
@@ -732,7 +732,7 @@ func New(glue glue.Glue) (glue.PKI, error) {
 	}
 
 	if len(p.descAddrMap) == 0 {
-		return nil, errors.New("Descriptor address map is zero size.")
+		return nil, errors.New("descriptor address map is zero size")
 	}
 
 	if glue.Config().PKI.Nonvoting != nil {

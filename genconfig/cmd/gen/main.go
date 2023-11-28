@@ -87,7 +87,6 @@ type katzenpost struct {
 	currency    int
 	mainnet     bool
 
-	authIdentity    *eddsa.PrivateKey
 	authPubIdentity string
 
 	nodeConfigs []*sConfig.Config
@@ -627,9 +626,9 @@ func configName(cfg interface{}) string {
 }
 
 func identifier(cfg interface{}) string {
-	switch cfg.(type) {
+	switch cfg := cfg.(type) {
 	case *sConfig.Config:
-		return cfg.(*sConfig.Config).Server.Identifier
+		return cfg.Server.Identifier
 	default:
 		log.Fatalf("identifier() passed unexpected type")
 		return ""
@@ -654,12 +653,12 @@ func saveCfg(outputDir string, cfg interface{}) error {
 }
 
 // links between mix and providers
-func (s *katzenpost) spk(a *sConfig.Config) *eddsa.PublicKey {
-	priv := filepath.Join(s.outputDir, a.Server.Identifier, "identity.private.pem")
-	public := filepath.Join(s.outputDir, a.Server.Identifier, "identity.public.pem")
-	idKey, err := eddsa.Load(priv, public, rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-	return idKey.PublicKey()
-}
+// func (s *katzenpost) spk(a *sConfig.Config) *eddsa.PublicKey {
+// 	priv := filepath.Join(s.outputDir, a.Server.Identifier, "identity.private.pem")
+// 	public := filepath.Join(s.outputDir, a.Server.Identifier, "identity.public.pem")
+// 	idKey, err := eddsa.Load(priv, public, rand.Reader)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return idKey.PublicKey()
+// }
