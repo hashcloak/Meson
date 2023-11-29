@@ -6,6 +6,8 @@ This docker-compose configuration is meant to be used in combination with the [M
 $ cd testnet/local/
 $ docker-compose build
 $ docker-compose up
+# To enable grafana and prometheus, add profile metrics-tools
+$ docker compose --profile metrics-tools up
 ```
 
 2. checkout information of katzenmint pki nodes with curl command
@@ -68,9 +70,11 @@ You can simply cleanup chaindata in one command.
 $ sh cleanup.sh
 ```
 
-Then, restart three katzenmint pki nodes.
+Then, restart four katzenmint pki nodes.
 ```BASH
 $ docker-compose up
+# To enable grafana and prometheus, add profile metrics-tools
+$ docker compose --profile metrics-tools up
 ```
 
 # TBD
