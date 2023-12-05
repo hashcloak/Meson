@@ -36,8 +36,8 @@ const (
 
 var (
 	// CertificateExpiration is the time a descriptor certificate will be valid for.
-	// 10 epoch by default
-	CertificateExpiration uint64 = 10
+	// 600 epoch by default
+	CertificateExpiration uint64 = 600
 )
 
 type nodeDescriptor struct {
@@ -93,7 +93,7 @@ func ParseDescriptor(b []byte, epochNow uint64) (*pki.MixDescriptor, error) {
 	if err != nil {
 		return nil, err
 	}
-	if epochNow > signedCert.Expiration {
+	if (epochNow + 1) > signedCert.Expiration {
 		return nil, cert.ErrCertificateExpired
 	}
 	payload, err := cert.GetCertified(b)
