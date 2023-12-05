@@ -12,3 +12,11 @@ build-docker-containers: build-docker-katzenmint build-docker-server
 .PHONY: clean-docker-images
 clean-docker-images:
 	docker rmi -f $$(docker images | grep '^<none>' | awk '{print $$3}')
+
+.PHONE: test-all
+test-all:
+	@$(MAKE) $(MAKE_FLAGS) -C client/. test
+	@$(MAKE) $(MAKE_FLAGS) -C genconfig/. test
+	@$(MAKE) $(MAKE_FLAGS) -C katzenmint/. test
+	@$(MAKE) $(MAKE_FLAGS) -C plugin/. test
+	@$(MAKE) $(MAKE_FLAGS) -C server/. test
