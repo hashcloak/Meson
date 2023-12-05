@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sort"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/cert"
 	"github.com/hashcloak/Meson/katzenmint/config"
@@ -150,14 +150,14 @@ func (app *KatzenmintApplication) executeTx(
 	auth *AuthorityChecked,
 ) error {
 	// check for the epoch relative to the current epoch
-	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+uint64(LifeCycle) {
+	if tx.Epoch < app.state.currentEpoch || tx.Epoch >= app.state.currentEpoch+LifeCycle {
 		return ErrTxWrongEpoch
 	}
 	switch tx.Command {
 	case PublishMixDescriptor:
 		err := app.state.updateMixDescriptor(payload, desc, tx.Epoch)
 		if err != nil {
-			app.logger.Error("failed to publish descriptor", "epoch", app.state.currentEpoch, "error", err)
+			app.logger.Error("failed to publish descriptor", "epoch", tx.Epoch, "error", err)
 			return ErrTxUpdateDesc
 		}
 	case AddNewAuthority:

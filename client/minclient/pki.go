@@ -101,8 +101,8 @@ func (p *pki) currentDocument() *cpki.Document {
 		p.log.Debugf("Couldn't find epoch: %+v", err)
 		return nil
 	}
-	for i := 0; i < katzenmint.LifeCycle; i++ {
-		if d, _ := p.docs.Load(now - uint64(i)); d != nil {
+	for i := uint64(0); i < katzenmint.LifeCycle; i++ {
+		if d, _ := p.docs.Load(now - i); d != nil {
 			return d.(*cpki.Document)
 		}
 	}

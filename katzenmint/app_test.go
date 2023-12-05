@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"testing"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/katzenmint/testutil"

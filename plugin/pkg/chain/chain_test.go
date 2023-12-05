@@ -72,7 +72,7 @@ func TestEthereumChainTxnInBody(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var gotValue ethRequest
+	var gotValue jsonrpcRequest
 	err = json.Unmarshal(postRequest.Body, &gotValue)
 	if err != nil {
 		t.Fatalf("err unmarshal: %v\n", err)
@@ -143,5 +143,18 @@ func TestCosmosChainURL(t *testing.T) {
 	}
 	if getRequest.URL != expectedURL+broadcastTxAsync {
 		t.Fatalf("URL should have value %s, got %s", broadcastTxAsync, getRequest.URL)
+	}
+}
+
+func TestBTCChainURL(t *testing.T) {
+	chainInterface, _ := GetChain("BTC")
+	expectedURL := "EXPECTED_URL"
+	req, _ := json.Marshal(command.PostTransactionRequest{TxHex: ""})
+	postRequest, err := chainInterface.WrapRequest(expectedURL, command.PostTransaction, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if postRequest.Method != "POST" {
+		t.Fatalf("Expected %s, got %s", "POST", postRequest.Method)
 	}
 }

@@ -86,7 +86,7 @@ type ClientConfig struct {
 	// an error will be treated as a signal to tear down the connection.
 	OnACKFn func(*[constants.SURBIDLength]byte, []byte) error
 
-	// OnDocumentFn is the callback function taht will be called when a
+	// OnDocumentFn is the callback function that will be called when a
 	// new directory document is retreived for the current epoch.
 	OnDocumentFn func(*cpki.Document)
 

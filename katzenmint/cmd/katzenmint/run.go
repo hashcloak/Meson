@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	katzenmint "github.com/hashcloak/Meson/katzenmint"
 	kcfg "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/spf13/cobra"
@@ -152,7 +152,7 @@ func runNode(cmd *cobra.Command, args []string) error {
 		}
 		f.Close()
 	}
-	db, err := dbm.NewDB("katzenmint_db", dbm.GoLevelDBBackend, kConfig.DBPath)
+	db, err := dbm.NewDB("katzenmint", dbm.GoLevelDBBackend, kConfig.DBPath)
 	if err != nil {
 		return fmt.Errorf("failed to open badger db: %v\ntry running with -tags badgerdb", err)
 	}

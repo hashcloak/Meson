@@ -909,7 +909,7 @@ func Store(cfg *Config, fileName string) error {
 // returns the Config.
 func Load(b []byte) (*Config, error) {
 	if b == nil {
-		return nil, errors.New("No nil buffer as config file")
+		return nil, errors.New("no nil buffer as config file")
 	}
 
 	cfg := new(Config)
@@ -918,7 +918,7 @@ func Load(b []byte) (*Config, error) {
 		return nil, err
 	}
 	if undecoded := md.Undecoded(); len(undecoded) != 0 {
-		return nil, fmt.Errorf("config: Undecoded keys in config file: %v", undecoded)
+		return nil, fmt.Errorf("undecoded keys in config file: %v", undecoded)
 	}
 	if err := cfg.FixupAndValidate(); err != nil {
 		return nil, err

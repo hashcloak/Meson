@@ -8,23 +8,24 @@ import (
 	"time"
 
 	ics23 "github.com/confio/ics23/go"
-	dbm "github.com/cosmos/cosmos-db"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
+	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/iavl"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
 	katvoting "github.com/katzenpost/authority/voting/server/config"
 	"github.com/katzenpost/core/pki"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/crypto/ed25519"
-	cryptoenc "github.com/tendermint/tendermint/crypto/encoding"
-	pc "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 const (
 	GenesisEpoch  uint64        = 1
 	EpochInterval int64         = 10
 	HeightPeriod  time.Duration = 1 * time.Second
-	LifeCycle     int           = 3
+	LifeCycle     uint64        = 3
 )
 
 var (
@@ -206,7 +207,7 @@ func (state *KatzenmintState) updateMixDescriptor(rawDesc []byte, desc *pki.MixD
 	if epoch < state.currentEpoch {
 		return fmt.Errorf("late descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
-	if epoch >= state.currentEpoch+uint64(LifeCycle) {
+	if epoch >= state.currentEpoch+LifeCycle {
 		return fmt.Errorf("early descriptor upload with key (%x) for epoch (%d)", desc.IdentityKey.Bytes(), epoch)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 
+	dbm "github.com/cometbft/cometbft-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
@@ -22,7 +23,6 @@ import (
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	ctypes "github.com/tendermint/tendermint/rpc/core/types"
-	dbm "github.com/tendermint/tm-db"
 	"gopkg.in/op/go-logging.v1"
 )
 
@@ -87,8 +87,6 @@ func (p *PKIClient) query(ctx context.Context, epoch uint64, command kpki.Comman
 
 // GetEpoch returns the epoch information of PKI.
 func (p *PKIClient) GetEpoch(ctx context.Context) (epoch uint64, ellapsedHeight uint64, err error) {
-	p.log.Debugf("Query epoch")
-
 	resp, err := p.query(ctx, 0, kpki.GetEpoch)
 	if err != nil {
 		return

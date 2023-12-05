@@ -1,25 +1,14 @@
 # Docker
 This docker-compose configuration is meant to be used in combination with the [Meson server](https://github.com/hashcloak/Meson/tree/monorepo/server) and [Katzenmint PKI](https://github.com/hashcloak/Meson/tree/monorepo/katzenmint) repositories. It is meant for testing client and server mix network components as part of the core Meson developer work flow. It should be obvious that this docker-compose situation is not meant for production use.
 
-1. clone meson server and build docker image of meson server
+1. start four katzenmint pki nodes / three mix nodes / two providers.
 ```BASH
-$ git clone https://github.com/hashcloak/Meson.git
-$ cd Meson/server
-$ docker build --no-cache -t meson/server .
-```
-
-2. build docker image for katzenmint
-```BASH
-$ cd Meson/katzenmint
-$ docker build --no-cache -t katzenmint/pki .
-```
-
-3. start four katzenmint pki nodes / three mix nodes / two providers.
-```BASH
+$ cd testnet/local/
+$ docker-compose build
 $ docker-compose up
 ```
 
-4. checkout information of katzenmint pki nodes with curl command
+2. checkout information of katzenmint pki nodes with curl command
 ```BASH
 # node1
 $ curl http://127.0.0.1:21483/net_info

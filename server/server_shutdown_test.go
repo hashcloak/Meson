@@ -25,7 +25,7 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cosmos/cosmos-db"
+	dbm "github.com/cometbft/cometbft-db"
 	kpki "github.com/hashcloak/Meson/katzenmint"
 	kconf "github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/server/config"
