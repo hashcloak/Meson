@@ -47,6 +47,9 @@ clean_katzenmint_dir () {
         if [ -d $d/katzenmint ]; then
             rm -rf $d/katzenmint
         fi;
+        if [ -d $d/config ]; then
+            rm -rf $d/config/write-file-atomic*
+        fi;
         echo "{
           \"height\": \"0\",
           \"round\": 0,
