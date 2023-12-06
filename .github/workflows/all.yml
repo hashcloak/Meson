@@ -1,4 +1,4 @@
-name: Plugin
+name: All
 
 on: ["push", "pull_request"]
 
@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macOS-latest"]
-        go: ["1.17.x", "1.18.x", "1.19.x", "1.20.x"]
+        go: ["1.19.x", "1.20.x", "1.21.x"]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/setup-go@v3
@@ -19,28 +19,29 @@ jobs:
     
     - uses: actions/checkout@v3
     
-    - name: "Test plugin"
+    - name: "Test all"
       run: |
-        cd plugin
-        make
+        make test-all
 
-    - name: "Build plugin"
+    - name: "Build all"
       run: |
-        cd plugin
-        make build
+        make build-all
         mkdir dist
-        mv meson-plugin dist
+        mv katzenmint/katzenmint dist
+        mv server/meson-server dist
+        mv plugin/meson-plugin dist
+        mv genconfig/genconfig dist
 
     - if: runner.os == 'macOS'
-      name: "Setup plugin filename"
-      run: echo "ZIPNAME=meson_plugin_darwin_${{ matrix.go }}" >> $GITHUB_ENV
+      name: "Setup filename"
+      run: echo "ZIPNAME=meson_darwin_${{ matrix.go }}" >> $GITHUB_ENV
 
     - if: runner.os == 'Linux'
-      name: "Setup plugin filename"
-      run: echo "ZIPNAME=meson_plugin_linux_${{ matrix.go }}" >> $GITHUB_ENV
+      name: "Setup filename"
+      run: echo "ZIPNAME=meson_linux_${{ matrix.go }}" >> $GITHUB_ENV
 
-    - name: Archive plugin
+    - name: Archive all
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.ZIPNAME }}
-        path: plugin/dist
+        path: dist
