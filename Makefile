@@ -20,3 +20,18 @@ test-all:
 	@$(MAKE) $(MAKE_FLAGS) -C katzenmint/. test
 	@$(MAKE) $(MAKE_FLAGS) -C plugin/. test
 	@$(MAKE) $(MAKE_FLAGS) -C server/. test
+
+.PHONE: build-all
+build-all:
+	@$(MAKE) $(MAKE_FLAGS) -C genconfig/. build
+	@$(MAKE) $(MAKE_FLAGS) -C katzenmint/. build
+	@$(MAKE) $(MAKE_FLAGS) -C plugin/. build
+	@$(MAKE) $(MAKE_FLAGS) -C server/. build
+
+.PHONE: all
+all:
+	@$(MAKE) $(MAKE_FLAGS) -C client/.
+	@$(MAKE) $(MAKE_FLAGS) -C genconfig/.
+	@$(MAKE) $(MAKE_FLAGS) -C katzenmint/.
+	@$(MAKE) $(MAKE_FLAGS) -C plugin/.
+	@$(MAKE) $(MAKE_FLAGS) -C server/.
