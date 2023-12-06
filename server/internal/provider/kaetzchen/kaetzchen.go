@@ -239,8 +239,9 @@ func (k *KaetzchenWorker) worker() {
 }
 
 func (k *KaetzchenWorker) processKaetzchen(pkt *packet.Packet) {
+	k.Lock()
 	kaetzchenRequestsTimer = prometheus.NewTimer(kaetzchenRequestsDuration)
-	defer kaetzchenRequestsTimer.ObserveDuration()
+	k.Unlock()
 	defer pkt.Dispose()
 
 	ct, surb, err := packet.ParseForwardPacket(pkt)
@@ -287,6 +288,7 @@ func (k *KaetzchenWorker) processKaetzchen(pkt *packet.Packet) {
 		// implementation should have caught this.
 		k.log.Debugf("Kaetzchen message: %v (Has reply but no SURB)", pkt.ID)
 	}
+	kaetzchenRequestsTimer.ObserveDuration()
 }
 
 func (k *KaetzchenWorker) KaetzchenForPKI() map[string]map[string]interface{} {

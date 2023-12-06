@@ -14,11 +14,9 @@ lint:
 	go fmt ./...
 	go mod tidy
 
-# added -race in future (badger fatal error: checkptr: pointer arithmetic result points to invalid allocation)
-# https://github.com/golang/go/issues/40917
 .PHONY: test
 test:
-	go test -tags=$(GOTAGS) ./...
+	go test -race -tags=$(GOTAGS) ./...
 
 .PHONY: build
 build:

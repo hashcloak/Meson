@@ -7,9 +7,9 @@ import (
 
 	dbm "github.com/cometbft/cometbft-db"
 	costypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/hashcloak/Meson/katzenmint/cert"
 	"github.com/hashcloak/Meson/katzenmint/config"
 	"github.com/hashcloak/Meson/katzenmint/s11n"
-	"github.com/katzenpost/core/crypto/cert"
 	"github.com/katzenpost/core/pki"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -111,7 +111,7 @@ func (app *KatzenmintApplication) isTxValid(rawTx []byte) (
 			err = ErrTxDescInvalidVerifier
 			return
 		}
-		desc, err = s11n.VerifyAndParseDescriptor(verifier, payload, tx.Epoch)
+		desc, err = s11n.VerifyAndParseDescriptor(verifier, payload, tx.Epoch, app.state.currentEpoch)
 		if err != nil {
 			err = ErrTxDescFalseVerification
 			return

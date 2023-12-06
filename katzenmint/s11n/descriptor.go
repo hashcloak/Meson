@@ -22,10 +22,8 @@ import (
 	"fmt"
 	"net"
 	"strconv"
-	"time"
 
-	"github.com/katzenpost/core/crypto/cert"
-	"github.com/katzenpost/core/epochtime"
+	"github.com/hashcloak/Meson/katzenmint/cert"
 	"github.com/katzenpost/core/pki"
 	"github.com/katzenpost/core/sphinx/constants"
 	"github.com/ugorji/go/codec"
@@ -38,7 +36,8 @@ const (
 
 var (
 	// CertificateExpiration is the time a descriptor certificate will be valid for.
-	CertificateExpiration = (epochtime.Period * 3) + (time.Minute * 10)
+	// 600 epoch by default
+	CertificateExpiration uint64 = 600
 )
 
 type nodeDescriptor struct {
@@ -51,7 +50,9 @@ type nodeDescriptor struct {
 
 // SignDescriptor signs and serializes the descriptor with the provided signing
 // key.
-func SignDescriptor(signer cert.Signer, base *pki.MixDescriptor) ([]byte, error) {
+// TODO: figure out a way to calculate epoch without initialize a http client
+// then we can remove expiration from function
+func SignDescriptor(signer cert.Signer, base *pki.MixDescriptor, expiration uint64) ([]byte, error) {
 	d := new(nodeDescriptor)
 	d.MixDescriptor = *base
 	d.Version = nodeDescriptorVersion
@@ -64,7 +65,6 @@ func SignDescriptor(signer cert.Signer, base *pki.MixDescriptor) ([]byte, error)
 	}
 
 	// Sign the descriptor.
-	expiration := time.Now().Add(CertificateExpiration).Unix()
 	signed, err := cert.Sign(signer, payload, expiration)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,14 @@ func GetVerifierFromDescriptor(rawDesc []byte) (cert.Verifier, error) {
 	return d.IdentityKey, nil
 }
 
-func ParseDescriptorWithoutVerify(b []byte) (*pki.MixDescriptor, error) {
+func ParseDescriptor(b []byte, epochNow uint64) (*pki.MixDescriptor, error) {
+	signedCert, err := cert.GetCertificate(b)
+	if err != nil {
+		return nil, err
+	}
+	if (epochNow + 1) > signedCert.Expiration {
+		return nil, cert.ErrCertificateExpired
+	}
 	payload, err := cert.GetCertified(b)
 	if err != nil {
 		return nil, err
@@ -105,7 +112,7 @@ func ParseDescriptorWithoutVerify(b []byte) (*pki.MixDescriptor, error) {
 // descriptor.  MixDescriptors returned from this routine are guaranteed
 // to have been correctly self signed by the IdentityKey listed in the
 // MixDescriptor.
-func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64) (*pki.MixDescriptor, error) {
+func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64, epochNow uint64) (*pki.MixDescriptor, error) {
 	signatures, err := cert.GetSignatures(b)
 	if err != nil {
 		return nil, err
@@ -118,6 +125,15 @@ func VerifyAndParseDescriptor(verifier cert.Verifier, b []byte, epoch uint64) (*
 	payload, err := cert.Verify(verifier, b)
 	if err != nil {
 		return nil, err
+	}
+
+	signedCert, err := cert.GetCertificate(b)
+	if err != nil {
+		return nil, err
+	}
+
+	if epochNow > signedCert.Expiration {
+		return nil, cert.ErrCertificateExpired
 	}
 
 	// Parse the payload.

@@ -110,7 +110,7 @@ func NewKatzenmintState(kConfig *config.Config, db dbm.DB, dbCacheSize int) *Kat
 	if err != nil {
 		panic(fmt.Errorf("failed to get document (%d): %v", state.currentEpoch-1, err))
 	}
-	state.prevDocument, _ = s11n.VerifyAndParseDocument(rawDoc)
+	state.prevDocument, _ = s11n.VerifyAndParseDocument(rawDoc, state.currentEpoch)
 	return state
 }
 
@@ -146,8 +146,8 @@ func (state *KatzenmintState) Commit() ([]byte, error) {
 			}
 			state.currentEpoch++
 			state.epochStartHeight = state.blockHeight + 1
-			// TODO: Prune related descriptors
 		}
+		// TODO: state.pruneDocument()
 	}
 
 	// Save epoch info persistently
@@ -392,7 +392,12 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 	begin := storageKey(descriptorsBucket, []byte{}, s.currentEpoch)
 	end := storageKey(descriptorsBucket, []byte{}, s.currentEpoch+1)
 	_ = s.tree.IterateRange(begin, end, true, func(key, value []byte) (ret bool) {
-		desc, _ := s11n.ParseDescriptorWithoutVerify(value)
+		desc, err := s11n.ParseDescriptor(value, s.currentEpoch)
+		// might happened when the data was corrupted
+		if err != nil {
+			// s.tree.Remove(key)
+			return true
+		}
 		v := &descriptor{desc: desc, raw: value}
 		if v.desc.Layer == pki.LayerProvider {
 			providersDesc = append(providersDesc, v)
@@ -452,7 +457,7 @@ func (s *KatzenmintState) generateDocument() (*document, error) {
 	}
 
 	// Ensure the document is sane.
-	pDoc, err := s11n.VerifyAndParseDocument(serialized)
+	pDoc, err := s11n.VerifyAndParseDocument(serialized, s.currentEpoch)
 	if err != nil {
 		return nil, fmt.Errorf("signed document failed validation: %v", err)
 	}

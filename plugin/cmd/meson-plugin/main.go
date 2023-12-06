@@ -135,11 +135,11 @@ func main() {
 	// Ensure that the log directory exists.
 	s, err := os.Stat(logDir)
 	if os.IsNotExist(err) {
-		fmt.Printf("Log directory '%s' doesn't exist.", logDir)
+		log.Errorf("Log directory '%s' doesn't exist.", logDir)
 		os.Exit(1)
 	}
 	if !s.IsDir() {
-		fmt.Println("Log directory must actually be a directory.")
+		log.Error("Log directory must actually be a directory.")
 		os.Exit(1)
 	}
 
@@ -147,8 +147,7 @@ func main() {
 	logFile := path.Join(logDir, fmt.Sprintf("currency.%d.log", os.Getpid()))
 	f, err := os.Create(logFile)
 	if err != nil {
-		log.Errorf("Failed to create log file '%v: %v\n'", logFile, err)
-		log.Error("Exiting")
+		log.Errorf("Failed to create log file '%v: %v\n'Exiting\n", logFile, err)
 		os.Exit(-1)
 	}
 	logBackend := setupLoggerBackend(level, f)
@@ -161,16 +160,14 @@ func main() {
 	// Load config file.
 	cfg, err := config.LoadFile(*cfgFile)
 	if err != nil {
-		log.Errorf("Failed to load config file '%v: %v\n'", *cfgFile, err)
-		log.Error("Exiting")
+		log.Errorf("Failed to load config file '%v: %v\n'Exiting\n", *cfgFile, err)
 		os.Exit(-1)
 	}
 
 	// Start service.
 	currency, err := proxy.New(cfg)
 	if err != nil {
-		log.Errorf("Failed to load proxy config: %v\n", err)
-		log.Error("Exiting")
+		log.Errorf("Failed to load proxy config: %v\nExiting\n", err)
 		os.Exit(-1)
 	}
 	_requestHandler := func(response http.ResponseWriter, request *http.Request) {
@@ -181,10 +178,10 @@ func main() {
 	}
 	server := http.Server{}
 	socketFile := fmt.Sprintf("/tmp/%d.currency.socket", os.Getpid())
+	defer os.Remove(socketFile)
 	unixListener, err := net.Listen("unix", socketFile)
 	if err != nil {
-		log.Errorf("Failed to start server: %v\n", err)
-		log.Error("Exiting")
+		log.Errorf("Failed to start server: %v\nExiting\n", err)
 		os.Exit(-1)
 	}
 	http.HandleFunc("/request", _requestHandler)
@@ -192,7 +189,7 @@ func main() {
 	fmt.Printf("%s\n", socketFile)
 	err = server.Serve(unixListener)
 	if err != nil {
-		fmt.Println(err)
+		log.Errorf("Failed to start server: %v\nExiting\n", err)
+		os.Exit(-1)
 	}
-	os.Remove(socketFile)
 }

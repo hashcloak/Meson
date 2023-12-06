@@ -46,7 +46,7 @@ func CreateTestDescriptor(require *require.Assertions, idx int, layer int, epoch
 	require.NoError(err, "IsDescriptorWellFormed(good)")
 
 	// Sign the descriptor.
-	signed, err := s11n.SignDescriptor(identityPriv, desc)
+	signed, err := s11n.SignDescriptor(identityPriv, desc, epoch+s11n.CertificateExpiration)
 	require.NoError(err, "SignDescriptor()")
 	return desc, signed, *identityPriv
 }

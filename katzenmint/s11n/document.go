@@ -72,7 +72,7 @@ func SerializeDocument(d *Document) ([]byte, error) {
 	return payload, nil
 }
 
-func VerifyAndParseDocument(payload []byte) (*pki.Document, error) {
+func VerifyAndParseDocument(payload []byte, epochNow uint64) (*pki.Document, error) {
 	d := new(Document)
 	dec := codec.NewDecoderBytes(payload, jsonHandle)
 	if err := dec.Decode(d); err != nil {
@@ -112,7 +112,7 @@ func VerifyAndParseDocument(payload []byte) (*pki.Document, error) {
 			if err != nil {
 				return nil, err
 			}
-			desc, err := VerifyAndParseDescriptor(verifier, rawDesc, doc.Epoch)
+			desc, err := VerifyAndParseDescriptor(verifier, rawDesc, doc.Epoch, epochNow)
 			if err != nil {
 				return nil, err
 			}
@@ -125,7 +125,7 @@ func VerifyAndParseDocument(payload []byte) (*pki.Document, error) {
 		if err != nil {
 			return nil, err
 		}
-		desc, err := VerifyAndParseDescriptor(verifier, rawDesc, doc.Epoch)
+		desc, err := VerifyAndParseDescriptor(verifier, rawDesc, doc.Epoch, epochNow)
 		if err != nil {
 			return nil, err
 		}
