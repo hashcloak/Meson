@@ -28,7 +28,7 @@ func TestConfig(t *testing.T) {
 
 	_, err := Load(nil)
 	require.Error(err, "no Load() with nil config")
-	require.EqualError(err, "No nil buffer as config file")
+	require.EqualError(err, "no nil buffer as config file")
 
 	const basicConfig = `# A basic configuration example.
 [server]

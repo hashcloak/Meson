@@ -233,6 +233,6 @@ func TestDocumentGenerationUponCommit(t *testing.T) {
 	loaded, _, err := state.GetDocument(testEpoch, state.blockHeight-1)
 	require.Nil(err, "Failed to get pki document from state: %+v\n", err)
 	require.NotNil(loaded, "Failed to get pki document from state: wrong key")
-	_, err = s11n.VerifyAndParseDocument(loaded)
+	_, err = s11n.VerifyAndParseDocument(loaded, state.currentEpoch)
 	require.Nil(err, "Failed to parse pki document: %+v\n", err)
 }

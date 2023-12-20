@@ -29,6 +29,7 @@ import (
 
 	kpki "github.com/hashcloak/Meson/client/pkiclient"
 	"github.com/hashcloak/Meson/client/pkiclient/epochtime"
+	"github.com/hashcloak/Meson/katzenmint/s11n"
 	"github.com/hashcloak/Meson/server/internal/constants"
 	"github.com/hashcloak/Meson/server/internal/debug"
 	"github.com/hashcloak/Meson/server/internal/glue"
@@ -58,10 +59,10 @@ type pki struct {
 	impl               kpki.Client
 	descAddrMap        map[cpki.Transport][]string
 	docs               map[uint64]*pkicache.Entry
-	rawDocs            map[uint64][]byte
 	failedFetches      map[uint64]error
 	lastPublishedEpoch uint64
 	lastWarnedEpoch    uint64
+	lastPublishedTime  time.Time
 }
 
 var (
@@ -170,54 +171,54 @@ func (p *pki) worker() {
 
 		// Fetch the PKI documents as required.
 		var didUpdate bool
-		now, _, _, _ := epochtime.Now(p.impl)
-		for _, epoch := range p.documentsToFetch() {
-			fetchedPKIDocsTimer = prometheus.NewTimer(fetchedPKIDocsDuration)
-			// Certain errors in fetching documents are treated as hard
-			// failures that suppress further attempts to fetch the document
-			// for the epoch.
-			if ok, err := p.getFailedFetch(epoch); ok {
-				p.log.Debugf("Skipping fetch for epoch %v: %v", epoch, err)
-				continue
-			}
-
-			d, rawDoc, err := p.impl.GetDoc(pkiCtx, epoch)
-			if isCanceled() {
-				// Canceled mid-fetch.
-				return
-			}
-			if err != nil {
-				if epoch <= now {
-					p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
-					failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-					if err == cpki.ErrNoDocument {
-						p.setFailedFetch(epoch, err)
-					}
+		if now, _, _, err := p.Now(); err == nil {
+			for _, epoch := range p.documentsToFetch() {
+				fetchedPKIDocsTimer = prometheus.NewTimer(fetchedPKIDocsDuration)
+				// Certain errors in fetching documents are treated as hard
+				// failures that suppress further attempts to fetch the document
+				// for the epoch.
+				if ok, err := p.getFailedFetch(epoch); ok {
+					p.log.Debugf("Skipping fetch for epoch %v: %v", epoch, err)
+					continue
 				}
-				continue
-			}
 
-			ent, err := pkicache.New(d, p.glue.IdentityKey().PublicKey(), p.glue.Config().Server.IsProvider)
-			if err != nil {
-				p.log.Warningf("Failed to generate PKI cache for epoch %v: %v", epoch, err)
-				p.setFailedFetch(epoch, err)
-				failedPKICacheGeneration.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-				continue
-			}
-			if err = p.validateCacheEntry(ent); err != nil {
-				p.log.Warningf("Generated PKI cache is invalid: %v", err)
-				p.setFailedFetch(epoch, err)
-				invalidPKICache.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
-				continue
-			}
+				d, _, err := p.impl.GetDoc(pkiCtx, epoch)
+				if isCanceled() {
+					// Canceled mid-fetch.
+					return
+				}
+				if err != nil {
+					if epoch <= now {
+						p.log.Warningf("Failed to fetch PKI for epoch %v: %v", epoch, err)
+						failedFetchPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+						if err == cpki.ErrNoDocument {
+							p.setFailedFetch(epoch, err)
+						}
+					}
+					continue
+				}
 
-			p.Lock()
-			p.rawDocs[epoch] = rawDoc
-			p.docs[epoch] = ent
-			p.Unlock()
-			didUpdate = true
-			fetchedPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)})
-			fetchedPKIDocsTimer.ObserveDuration()
+				ent, err := pkicache.New(d, p.glue.IdentityKey().PublicKey(), p.glue.Config().Server.IsProvider)
+				if err != nil {
+					p.log.Warningf("Failed to generate PKI cache for epoch %v: %v", epoch, err)
+					p.setFailedFetch(epoch, err)
+					failedPKICacheGeneration.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+					continue
+				}
+				if err = p.validateCacheEntry(ent); err != nil {
+					p.log.Warningf("Generated PKI cache is invalid: %v", err)
+					p.setFailedFetch(epoch, err)
+					invalidPKICache.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)}).Inc()
+					continue
+				}
+
+				p.Lock()
+				p.docs[epoch] = ent
+				p.Unlock()
+				didUpdate = true
+				fetchedPKIDocs.With(prometheus.Labels{"epoch": fmt.Sprintf("%v", epoch)})
+				fetchedPKIDocsTimer.ObserveDuration()
+			}
 		}
 
 		p.pruneFailures()
@@ -333,7 +334,6 @@ func (p *pki) pruneDocuments() {
 		if epoch+(constants.NumMixKeys-1) < now {
 			p.log.Debugf("Discarding PKI for epoch: %v", epoch)
 			delete(p.docs, epoch)
-			delete(p.rawDocs, epoch)
 		}
 		if epoch > now+1 {
 			// This should NEVER happen.
@@ -351,13 +351,21 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 		return err
 	}
 	if till < publishGracePeriod {
-		epoch++
+		// check whether the certificate is expired and the network stuck
+		if p.lastPublishedEpoch > 0 && (epoch > 0 && (epoch-p.lastPublishedEpoch) > s11n.CertificateExpiration) {
+			// Should we republish epoch + 1?
+			p.log.Debugf("Publish epoch again: %d.", epoch)
+			p.lastPublishedEpoch = 0
+		} else {
+			epoch++
+		}
 	}
 	doPublishEpoch := uint64(0)
 	switch p.lastPublishedEpoch {
 	case 0:
 		// Initial startup.  Regardless of the deadline, publish.
-		p.log.Debugf("Initial startup or correcting for time jump.")
+		// Or publish if network stuck
+		p.log.Debugf("Initial startup or correcting for network stuck.")
 		doPublishEpoch = epoch
 	case epoch:
 		// Check the deadline for the next publication time.
@@ -454,15 +462,18 @@ func (p *pki) publishDescriptorIfNeeded(pkiCtx context.Context) error {
 	case nil:
 		p.log.Debugf("Posted descriptor for epoch: %v", doPublishEpoch)
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	case cpki.ErrInvalidPostEpoch:
 		// Treat this class (conflict/late descriptor) as a permanent rejection
 		// and suppress further uploads.
 		p.log.Warningf("Authority rejected upload for epoch: %v (Conflict/Late)", doPublishEpoch)
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	default:
 		// XXX: the voting authority implementation does not return any of the above error types...
 		// and the mix will continue to fail to submit the same descriptor repeatedly.
 		p.lastPublishedEpoch = doPublishEpoch
+		p.lastPublishedTime = time.Now()
 	}
 
 	return err
@@ -671,26 +682,9 @@ func (p *pki) OutgoingDestinations() map[[sConstants.NodeIDLength]byte]*cpki.Mix
 	return descMap
 }
 
+// TODO: remove this from interface
 func (p *pki) GetRawConsensus(epoch uint64) ([]byte, error) {
-	if ok, err := p.getFailedFetch(epoch); ok {
-		p.log.Debugf("GetRawConsensus failure: no cached PKI document for epoch %v: %v", epoch, err)
-		return nil, cpki.ErrNoDocument
-	}
-	p.RLock()
-	defer p.RUnlock()
-	val, ok := p.rawDocs[epoch]
-	if !ok {
-		now, _, _, err := p.Now()
-		if err != nil {
-			return nil, err
-		}
-		// Return cpki.ErrNoDocument if documents will never exist.
-		if epoch < now-1 {
-			return nil, cpki.ErrNoDocument
-		}
-		return nil, errNotCached
-	}
-	return val, nil
+	return nil, nil
 }
 
 func (p *pki) Now() (epoch uint64, ellapsed time.Duration, till time.Duration, err error) {
@@ -706,7 +700,6 @@ func New(glue glue.Glue) (glue.PKI, error) {
 		glue:          glue,
 		log:           glue.LogBackend().GetLogger("pki"),
 		docs:          make(map[uint64]*pkicache.Entry),
-		rawDocs:       make(map[uint64][]byte),
 		failedFetches: make(map[uint64]error),
 	}
 
