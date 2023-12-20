@@ -222,6 +222,8 @@ services:
       interval: 10s
       timeout: 10s
       retries: 10
+    profiles:
+      - metrics-tools
     networks:
       katzenmint_net:
         ipv4_address: 172.29.1.128
@@ -240,6 +242,8 @@ services:
       - mix1
       - mix2
       - mix3
+    profiles:
+      - metrics-tools
     networks:
       katzenmint_net:
         ipv4_address: 172.29.1.129
