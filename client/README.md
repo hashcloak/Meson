@@ -41,3 +41,4 @@ example: `go test -fuzz=FuzzQueuePushSerial`
   - FuzzQueue
   - FuzzQueuePushSerial
   - FuzzQueuePushParalell
+  - FuzzTimerQueue

@@ -33,6 +33,30 @@ func TestNewTimerQueue(t *testing.T) {
 	a.Halt()
 }
 
+func FuzzTimerQueue(f *testing.F) {
+	f.Add(-91, "2")
+	f.Fuzz(func(t *testing.T, i int, s string) {
+		q := new(Queue)
+		a := NewTimerQueue(q)
+		m := &Message{
+			ID: new([16]byte),
+			QueuePriority: uint64(time.Now().UnixNano()),
+		}
+		l := len(s)
+		if l > 15 { l = 15 }
+		copy(m.ID[:], s[0:l])
+		a.Push(m)
+		t.Logf("Send Message %v", m)
+		<-time.After(2 * time.Second)
+
+		item, err := q.Pop()
+		if err != nil {
+			t.Errorf("Pop expect:%v got:%v err:%v", m, item, err)
+		}
+	})
+}
+
+
 func TestTimerQueuePush(t *testing.T) {
 	assert := assert.New(t)
 
